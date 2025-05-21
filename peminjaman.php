@@ -67,10 +67,7 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Data Buku</span>
                 </a>
-                <a href="profil.php" class="flex items-center px-4 py-3 hover:bg-blue-600 text-gray-800">
-                    <i class="fas fa-user w-6"></i>
-                    <span class="ml-2">Profil Saya</span>
-                </a>
+              
             </nav>
         </div>
 
