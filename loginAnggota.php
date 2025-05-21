@@ -49,6 +49,7 @@
             Login
             </a>
 
+
            <!-- Optional: Link to register -->
 
             <!-- Admin Login Option -->
@@ -57,13 +58,14 @@
                     Login admin
                     <a href="loginAdmin.php" class="text-blue-500 font-medium ml-1">Klik disini</a>
                 </p>
-              </div>
-         
+            </div>
+
+
             <p class="text-center text-sm text-gray-600">
                 Don’t have an account? 
                 <a href="register.html" class="text-blue-500 hover:underline">Register</a>
             </p>
-          
+           </div>
         </form>
       </div>
 </body>
