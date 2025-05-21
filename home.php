@@ -29,11 +29,25 @@
         </ul>
     </nav>
 
-    <div class="mt-10">
-        <h1 class="text-5xl font-bold text-center">Kelola Perpustakaan Anda<br>dengan Mudah dan Efisien</h1>
-    <p class="text-center mt-5 text-lg">SiPerpus adalah sistem perpustakaan digital terpadu yang 
-        memudahkan<br>pengoleksian buku, peminjaman dan anggota perpustakan anda</p>
-    </div>
+    <section class="h-[80vh] flex items-center justify-center">
+        <div class="text-center">
+            <h1 class="text-6xl font-bold">
+            Kelola Perpustakaan Anda<br />
+            dengan Mudah dan Efisien
+            </h1>
+            <p class="mt-5 text-xl">
+            SiPerpus adalah sistem perpustakaan digital terpadu yang memudahkan<br />
+            pengoleksian buku, peminjaman dan anggota perpustakan anda
+            </p>
+            <div class="mt-8">
+            <a
+                href="loginAnggota.php"
+                class="bg-sky-800 p-4 rounded-lg text-white font-semibold"
+                >Daftar anggota</a
+            >
+            </div>
+        </div>
+    </section>
     
 </body>
 </html>
