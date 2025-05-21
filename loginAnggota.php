@@ -47,10 +47,10 @@
            </div>
 
            <!-- Sign In Button -->
-          <a href="schedule.html" class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-6 rounded-md hover:bg-[#2f3238] transition-colors">
+          <a href="dashboard.php" class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-6 rounded-md hover:bg-[#2f3238] transition-colors">
             Login
             </a>
-
+  
            <!-- Optional: Link to register -->
             <p class="text-center text-sm text-gray-600">
             Don’t have an account? 
