@@ -131,10 +131,7 @@ $recent_returns = [
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Data Buku</span>
                 </a>
-                <a href="profil.php" class="flex items-center px-4 py-3 hover:bg-blue-600 text-gray-800">
-                    <i class="fas fa-user w-6"></i>
-                    <span class="ml-2">Profil Saya</span>
-                </a>
+               
             </nav>
         </div>
 
@@ -207,7 +204,7 @@ $recent_returns = [
                         </div>
                         <div class="mt-4 flex justify-end">
                             <button type="submit" name="cari_peminjaman" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                                <i class="fas fa-search mr-2"></i>Cari Peminjaman
+                                <i class="fas fa-search mr-2"></i>Kembalikan Buku
                             </button>
                         </div>
                     </form>
