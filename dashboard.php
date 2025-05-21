@@ -4,7 +4,7 @@ session_start();
 
 // Simple authentication check (would be more robust in production)
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    header("Location: loginAnggota.php");
     exit;
 }
 
