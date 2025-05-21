@@ -6,8 +6,8 @@
     <title>Document</title>
     <link rel="stylesheet" href="./src/output.css">
 </head>
-<body>
-    <nav class="flex justify-around items-center mt-5">
+<body class="bg-violet-200">
+    <nav class="flex justify-around items-center py-4 bg-white shadow-sm">
         <div class="flex items-center gap-2">
             <img src="./images/Logo.png" alt="" class="w-11 h-11">
             <div>
@@ -18,10 +18,10 @@
 
         <ul class="flex list-style-none gap-6 text-lg">
             <li>
-                <a href="">Home</a>
+                <a href="home.php">Home</a>
             </li>
             <li>
-                <a href="" class="px-6 py-2 bg-violet-300 rounded-md text-violet-700 font-semibold">Login</a>
+                <a href="loginAnggota.php" class="px-6 py-2 bg-violet-300 rounded-md text-violet-700 font-semibold">Login</a>
             </li>
             <li>
                 <a href="" class="px-6 py-2 bg-violet-600 rounded-md text-white font-semibold">Register</a>
