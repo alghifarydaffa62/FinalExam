@@ -1,5 +1,4 @@
 <?php
-// Start session for admin authentication
 session_start();
 
 // Check if admin is logged in
@@ -8,13 +7,11 @@ session_start();
 //     exit;
 // }
 
-// Get admin information
 $admin = [
     'name' => $_SESSION['admin_name'] ?? 'Admin',
     'id' => $_SESSION['admin_id'] ?? '1'
 ];
 
-// Mock data for book statistics
 $book_stats = [
     'total_buku' => $_SESSION['total_books'] ?? 150,
     'dipinjam' => $_SESSION['books_borrowed'] ?? 45,
@@ -22,7 +19,6 @@ $book_stats = [
     'kategori' => $_SESSION['book_categories'] ?? 12
 ];
 
-// Mock data for books
 $books = [
     [
         'id' => '1',
@@ -86,7 +82,6 @@ $books = [
     ]
 ];
 
-// Mock data for categories with counts
 $categories = [
     ['nama' => 'Novel', 'jumlah' => 45],
     ['nama' => 'Fiksi', 'jumlah' => 38],
@@ -98,20 +93,14 @@ $categories = [
     ['nama' => 'Lainnya', 'jumlah' => 8]
 ];
 
-// Handle search if present
 $search_query = $_GET['search'] ?? '';
 if (!empty($search_query)) {
-    // In a real application, you would search through database
-    // For this mock, we'll just pretend to filter
-    // (the data remains the same for demonstration)
+    
 }
 
-// Handle filter by category if present
 $filter_category = $_GET['category'] ?? '';
 if (!empty($filter_category)) {
-    // In a real application, you would filter by category in database
-    // For this mock, we'll just pretend to filter
-    // (the data remains the same for demonstration)
+    
 }
 ?>
 
@@ -121,14 +110,11 @@ if (!empty($filter_category)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Buku - SiPerpus</title>
-    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-blue-100">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="w-64 bg-white flex-shrink-0">
             <div class="bg-white p-4 flex items-center space-x-3 text-black border-b border-gray-200">
                 <div class="bg-blue-800 p-2 rounded">
@@ -163,9 +149,7 @@ if (!empty($filter_category)) {
             </nav>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Top Header -->
             <header class="bg-white shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Kelola Buku</div>
@@ -193,7 +177,6 @@ if (!empty($filter_category)) {
                 </div>
             </header>
 
-            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-medium">Daftar Buku Perpustakaan</h2>
@@ -202,7 +185,6 @@ if (!empty($filter_category)) {
                     </a>
                 </div>
 
-                <!-- Book Statistics -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku</h3>
@@ -237,12 +219,9 @@ if (!empty($filter_category)) {
                     </div>
                 </div>
 
-                <!-- Book List and Categories -->
                 <div class="flex flex-col md:flex-row gap-6">
-                    <!-- Book List Section (Main Content) -->
                     <div class="md:w-3/4">
                         <div class="bg-white rounded-lg shadow-sm p-6">
-                            <!-- Filters and Actions -->
                             <div class="flex flex-wrap items-center justify-between mb-6">
                                 <div class="flex items-center space-x-2 mb-2 md:mb-0">
                                     <label class="text-sm text-gray-500">Filter:</label>
@@ -277,7 +256,6 @@ if (!empty($filter_category)) {
                                 </div>
                             </div>
 
-                            <!-- Books Table -->
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm text-left">
                                     <thead class="text-xs text-gray-700 uppercase bg-gray-100">
@@ -335,7 +313,6 @@ if (!empty($filter_category)) {
                                 </table>
                             </div>
 
-                            <!-- Pagination -->
                             <div class="flex items-center justify-between mt-6">
                                 <div class="text-sm text-gray-500">
                                     Menampilkan 1 - 6 dari 150 buku
@@ -357,7 +334,6 @@ if (!empty($filter_category)) {
                         </div>
                     </div>
 
-                    <!-- Categories Section (Sidebar) -->
                     <div class="md:w-1/4">
                         <div class="bg-white rounded-lg shadow-sm p-6">
                             <div class="flex justify-between items-center mb-4">
@@ -382,7 +358,6 @@ if (!empty($filter_category)) {
                             </div>
                         </div>
 
-                        <!-- Recent Activities Widget -->
                         <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
                             <h3 class="font-medium mb-4">Aktivitas Terbaru</h3>
                             <div class="space-y-4">
@@ -424,7 +399,6 @@ if (!empty($filter_category)) {
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal (hidden by default) -->
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-sm mx-auto">
             <h3 class="text-lg font-medium mb-4">Konfirmasi Hapus</h3>
@@ -437,17 +411,13 @@ if (!empty($filter_category)) {
     </div>
 
     <script>
-        // Functions for delete confirmation modal
         function confirmDelete(id) {
             const modal = document.getElementById('deleteModal');
             const confirmButton = document.getElementById('confirmDeleteButton');
             
             modal.classList.remove('hidden');
             
-            // Set up the confirm button to actually delete when clicked
             confirmButton.onclick = function() {
-                // In a real application, you would make an AJAX request to delete the book
-                // For this demo, we'll just close the modal
                 alert('Buku dengan ID: ' + id + ' telah dihapus.');
                 closeDeleteModal();
             };
@@ -457,8 +427,7 @@ if (!empty($filter_category)) {
             const modal = document.getElementById('deleteModal');
             modal.classList.add('hidden');
         }
-        
-        // Close modal when clicking outside of it
+
         window.onclick = function(event) {
             const modal = document.getElementById('deleteModal');
             if (event.target === modal) {

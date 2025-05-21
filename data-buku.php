@@ -1,31 +1,26 @@
 <?php
-// Start session for user authentication
 session_start();
 
-// Simple authentication check (would be more robust in production)
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-// Get user information
 $user = [
     'name' => $_SESSION['user_name'] ?? 'Anggota',
     'id' => $_SESSION['user_id'] ?? '1'
 ];
 
-// Mock data for filter options
+
 $categories = ['Semua', 'Fiksi', 'Non-Fiksi', 'Pendidikan', 'Bisnis', 'Pengembangan Diri', 'Filsafat', 'Sejarah', 'Sains', 'Teknologi'];
 $languages = ['Semua', 'Indonesia', 'Inggris', 'Arab', 'Jepang', 'Mandarin'];
 $statuses = ['Semua', 'Tersedia', 'Dipinjam', 'Dipesan', 'Diperbaiki'];
 
-// Get filter values from request
 $category_filter = $_GET['category'] ?? 'Semua';
 $language_filter = $_GET['language'] ?? 'Semua';
 $status_filter = $_GET['status'] ?? 'Semua';
 $search_query = $_GET['search'] ?? '';
 
-// Mock data for books
 $books = [
     [
         'id' => 'BK-1001',
@@ -159,7 +154,6 @@ $books = [
     ]
 ];
 
-// Apply filters if not "Semua"
 if ($category_filter != 'Semua') {
     $books = array_filter($books, function($book) use ($category_filter) {
         return $book['category'] == $category_filter;
@@ -178,7 +172,6 @@ if ($status_filter != 'Semua') {
     });
 }
 
-// Apply search if provided
 if (!empty($search_query)) {
     $books = array_filter($books, function($book) use ($search_query) {
         return (stripos($book['title'], $search_query) !== false || 
@@ -187,7 +180,6 @@ if (!empty($search_query)) {
     });
 }
 
-// Pagination
 $books_per_page = 8;
 $total_books = count($books);
 $total_pages = ceil($total_books / $books_per_page);
@@ -195,7 +187,6 @@ $current_page = isset($_GET['page']) ? max(1, min($total_pages, intval($_GET['pa
 $offset = ($current_page - 1) * $books_per_page;
 $books = array_slice($books, $offset, $books_per_page);
 
-// Handle form submission for book reservation
 $message = '';
 $message_type = '';
 if (isset($_POST['reserve_book'])) {
@@ -216,14 +207,11 @@ if (isset($_POST['reserve_book'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Buku - SiPerpus</title>
-    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-blue-100">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="w-64 bg-white flex-shrink-0">
             <div class="bg-white p-4 flex items-center space-x-3 text-black border-b border-gray-200">
                 <div class="bg-blue-800 p-2 rounded">
@@ -234,7 +222,8 @@ if (isset($_POST['reserve_book'])) {
                     <div class="text-xs">Sistem Perpustakaan Digital</div>
                 </div>
             </div>
-             <nav class="mt-4">
+
+            <nav class="mt-4">
                 <a href="dashboard.php" class="flex items-center px-4 py-3 hover:bg-blue-600 text-gray-800">
                     <i class="fas fa-chart-bar w-6"></i>
                     <span class="ml-2">Dashboard</span>
@@ -251,13 +240,10 @@ if (isset($_POST['reserve_book'])) {
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Data Buku</span>
                 </a>
-               
             </nav>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Top Header -->
             <header class="bg-white shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Data Buku</div>
@@ -280,7 +266,6 @@ if (isset($_POST['reserve_book'])) {
                 </div>
             </header>
 
-            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
                 <div class="flex justify-between items-center mb-6">
                     <div class="text-sm">
@@ -297,7 +282,6 @@ if (isset($_POST['reserve_book'])) {
                 </div>
                 <?php endif; ?>
 
-                <!-- Filters -->
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <div class="flex flex-wrap justify-between items-center">
                         <h3 class="text-lg font-medium mb-4">Filter</h3>
@@ -331,7 +315,6 @@ if (isset($_POST['reserve_book'])) {
                     </div>
                 </div>
 
-                <!-- Book List -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     <?php foreach ($books as $book): ?>
                     <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition">
@@ -361,7 +344,6 @@ if (isset($_POST['reserve_book'])) {
                     <?php endforeach; ?>
                 </div>
 
-                <!-- Pagination -->
                 <?php if ($total_pages > 1): ?>
                 <div class="flex justify-center mt-6">
                     <div class="flex space-x-1">

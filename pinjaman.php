@@ -1,29 +1,23 @@
 <?php
-// Start session for user authentication
 session_start();
 
-// Simple authentication check (would be more robust in production)
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-// Get user information
 $user = [
     'name' => $_SESSION['user_name'] ?? 'Anggota',
     'id' => $_SESSION['user_id'] ?? '1'
 ];
 
-// Mock data for book collection - this would typically come from a database
 $books = [
-    // Empty initially to represent no borrowed books
+    
 ];
 
-// Handle category and status filtering
 $selected_category = $_GET['category'] ?? 'Semua Kategori';
 $selected_status = $_GET['status'] ?? 'Semua Status';
 
-// In a real application, this would be a database query with filters
 ?>
 
 <!DOCTYPE html>
@@ -32,14 +26,11 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Koleksi Buku - SiPerpus</title>
-    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="w-64 bg-white flex-shrink-0">
             <div class="bg-white p-4 flex items-center space-x-3 text-black border-b border-gray-200">
                 <div class="bg-blue-800 p-2 rounded">
@@ -74,9 +65,7 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
             </nav>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Top Header -->
             <header class="bg-white shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Peminjaman Buku</div>
@@ -97,14 +86,11 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
                 </div>
             </header>
 
-            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6">
-                <!-- Breadcrumb -->
                 <div class="text-sm text-gray-500 mb-4">
                     Dashboard / <span class="text-gray-700">Peminjaman</span>
                 </div>
 
-                <!-- Page Title -->
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-medium">Manajemen Koleksi Buku</h2>
                     <button class="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center text-sm">
@@ -112,13 +98,11 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
                     </button>
                 </div>
 
-                <!-- Book List Section -->
                 <div class="bg-white rounded-lg shadow-sm mb-6">
                     <div class="p-4 border-b border-gray-200">
                         <h3 class="font-medium">Daftar Buku Dipinjam</h3>
                     </div>
                     
-                    <!-- Filters -->
                     <div class="p-4 flex flex-wrap items-center justify-between gap-2 border-b border-gray-200">
                         <div class="flex flex-wrap gap-2">
                             <select class="border border-gray-300 rounded-md px-3 py-1 text-sm">
@@ -136,7 +120,6 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
                         </div>
                     </div>
                     
-                    <!-- Table -->
                     <div class="overflow-x-auto">
                         <table class="min-w-full">
                             <thead>
@@ -192,7 +175,6 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Peminjaman page loaded');
-            // Additional JavaScript functionality can be added here
         });
     </script>
 </body>
