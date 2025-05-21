@@ -22,19 +22,17 @@
             class="w-full text-sm text-gray-700 placeholder-gray-400" />
         </div>
 
-          <!-- Password -->
           <div class="flex items-center border rounded-md px-3 py-2 w-full focus-within:ring-2 focus-within:ring-blue-400">
-            <img src="./images/Group 3(1).png" alt="User Icon" />
+            <img src="./images/Group 3 (1).png" alt="User Icon" />
             <input 
                 type="text" 
                 id="password" 
                 name="password" 
                 placeholder="Password"
                 class="w-full text-sm text-gray-700 placeholder-gray-400" />
-                <img src="./images/Group 5.png" alt="User Icon" />
+            <img src="./images/Group 5.png" alt="User Icon" />
             </div>
-    
-          <!-- Optional: Forgot password?-->
+
            <div class="flex items-center space-x-23 mt-1">
                 <div class="flex items-center space-x-2">
             <input type="checkbox" id="remember" />
@@ -45,13 +43,12 @@
             Forgot password?
             </p>
            </div>
-
+          
            <!-- Sign In Button -->
           <a href="dashboard.php" class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-6 rounded-md hover:bg-[#2f3238] transition-colors">
             Login
             </a>
   
-           <!-- Optional: Link to register -->
             <p class="text-center text-sm text-gray-600">
             Don’t have an account? 
             <a href="register.html" class="text-blue-500 hover:underline">Register</a>
