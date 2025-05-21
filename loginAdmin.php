@@ -36,7 +36,7 @@
            </div>
 
            <!-- Sign In Button -->
-          <a href="schedule.html" class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-6 rounded-md hover:bg-[#2f3238] transition-colors">
+          <a href="dashboardAdmin.php" class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-6 rounded-md hover:bg-[#2f3238] transition-colors">
             Login
             </a>
                <!-- Anggota Login Option -->
