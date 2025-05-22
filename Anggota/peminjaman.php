@@ -98,6 +98,10 @@ if (isset($_POST['pinjam_buku'])) {
                 <a href="data-buku.php" class="flex items-center px-4 py-3 hover:bg-blue-600 text-gray-800">
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Data Buku</span>
+                    <a href="loginAnggota.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                    <i class="fas fa-sign-out-alt w-6"></i>
+                    <span class="ml-2">Logout</span>
+                 </a>
                 </a>
             </nav>
         </div>
