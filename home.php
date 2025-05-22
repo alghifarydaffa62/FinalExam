@@ -41,7 +41,7 @@
             </p>
             <div class="mt-8">
             <a
-                href="loginAnggota.php"
+                href="./Anggota/loginAnggota.php"
                 class="bg-sky-800 p-4 rounded-lg text-white font-semibold"
                 >Daftar anggota</a
             >
