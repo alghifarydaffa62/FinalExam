@@ -11,28 +11,27 @@
         <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Login Anggota</h2>
     
         <form action="#" method="POST" class="space-y-5">
-          <div class="flex items-center border rounded-md px-3 py-2 w-full focus-within:ring-2 focus-within:ring-blue-400">
-            <img src="./images/Group 1.png" alt="User Icon" />
-            <input 
+            <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2 bg-[#e1d2b9]">
+              <img src="./images/Group 1.png" alt="User Icon" class="w-5 h-5 mr-3" />
+              <input 
                 type="text" 
                 id="username" 
                 name="username" 
                 placeholder="Username"
-                class="w-full text-sm text-gray-700 placeholder-gray-400" />
-          </div>
+                class="w-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none border-none bg-transparent" />
+            </div>
 
-          <div class="flex items-center border rounded-md px-3 py-2 w-full focus-within:ring-2 focus-within:ring-blue-400">
-            <img src="./images/Group 3 (1).png" alt="User Icon" />
-            <input 
-                type="text" 
-                id="password" 
-                name="password" 
-                placeholder="Password"
-                class="w-full text-sm text-gray-700 placeholder-gray-400" />
-            <img src="./images/Group 5.png" alt="User Icon" />
-          </div>
+            <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2">
+              <img src="./images/Group 3 (1).png" alt="User Icon" />
+              <input 
+                  type="password" 
+                  id="password" 
+                  name="password" 
+                  placeholder="Password"
+                  class="w-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none" />
+            </div>
 
-           <div class="flex items-center space-x-23 mt-1">
+            <div class="flex items-center space-x-23 mt-1">
                 <div class="flex items-center space-x-2">
                   <input type="checkbox" id="remember" />
                   <label for="remember" class="text-sm text-gray-600">Remember me</label>
@@ -41,24 +40,23 @@
                 <p class="text-center text-sm text-gray-600">
                 Forgot password?
                 </p>
-           </div>
+            </div>
 
             <a href="dashboard.php" class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-6 rounded-md hover:bg-[#2f3238] transition-colors">
             Login
             </a>
 
-            <div class="flex justify-center items-center mt-4 border-t pt-4">
-                <p class="text-center text-sm text-gray-700">
-                    Login admin
-                    <a href="loginAdmin.php" class="text-blue-500 font-medium ml-1">Klik disini</a>
-                </p>
+            <div class="flex flex-col gap-2 pt-4 border-t">
+              <div class="flex justify-center items-center">
+                <p class="text-center text-sm text-gray-700">Login admin ?</p>
+                <a href="loginAdmin.php" class="text-blue-500 text-sm hover:underline ml-1">Klik disini</a>
+              </div>
+              
+              <div class="flex justify-center items-center">
+                  <p class="text-center text-sm text-gray-700">Belum punya akun ?</p>
+                  <a href="register.html" class="text-blue-500 text-sm hover:underline ml-1">Register</a>
+              </div>
             </div>
-
-            <p class="text-center text-sm text-gray-600">
-                Don’t have an account? 
-                <a href="register.html" class="text-blue-500 hover:underline">Register</a>
-            </p>
-           </div>
         </form>
       </div>
 </body>

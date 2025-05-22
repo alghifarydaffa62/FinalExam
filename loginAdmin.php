@@ -21,32 +21,35 @@
               class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"/>
           </div>
 
-          <div class="flex items-center space-x-23 mt-1">
-              <div class="flex items-center space-x-2">
-              <input type="checkbox" id="remember" />
-              <label for="remember" class="text-sm text-gray-600">Remember me</label>
-          </div>
+          <div class="mt-1">
+              <div class="flex items-center justify-between space-x-2">
+                <div>
+                  <input type="checkbox" id="remember" />
+                  <label for="remember" class="text-sm text-gray-600">Remember me</label>
+                </div>
+    
+                  <p class=" text-sm text-blue-600">
+                    Forgot password?
+                  </p>
+              </div>
 
-          <p class="text-center text-sm text-gray-600">
-            Forgot password?
-          </p>
+              <a href="dashboardAdmin.php" class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-6 rounded-md hover:bg-[#2f3238] transition-colors mt-4">
+                Login
+              </a>
 
-          <a href="dashboardAdmin.php" class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-6 rounded-md hover:bg-[#2f3238] transition-colors">
-            Login
-          </a>
+              <div class="flex justify-center items-center mt-4 border-t pt-4">
+                  <p class="text-center text-sm text-gray-700">
+                      Login Anggota ?
+                      <a href="loginAnggota.php" class="text-blue-500 font-medium hover:underline ml-1">Klik disini</a>
+                  </p>
+              </div>
 
-          <div class="flex justify-center items-center mt-4 border-t pt-4">
-              <p class="text-center text-sm text-gray-700">
-                  Login Anggota
-                  <a href="loginAnggota.php" class="text-blue-500 font-medium ml-1">Klik disini</a>
+              <p class="text-center text-sm text-gray-700 mt-3">
+                Belum punya akun ? 
+                <a href="register.html" class="text-blue-500 font-medium hover:underline ml-1">Register</a>
               </p>
           </div>
-
-          <p class="text-center text-sm text-gray-600">
-            Don’t have an account? 
-            <a href="register.html" class="text-blue-500 hover:underline">Register</a>
-          </p>
         </form>
-      </div>
+    </div>
 </body>
 </html>
