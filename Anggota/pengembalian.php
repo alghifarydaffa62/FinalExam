@@ -1,32 +1,25 @@
 <?php
-// Start session for user authentication
 session_start();
 
-// Simple authentication check (would be more robust in production)
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-// Get user information
 $user = [
     'name' => $_SESSION['user_name'] ?? 'Anggota',
     'id' => $_SESSION['user_id'] ?? '1'
 ];
 
-// Mock peminjaman data that would be processed on form submission
 $peminjaman = null;
 $message = '';
 $message_type = '';
 
-// Handle form submission for searching peminjaman
 if (isset($_POST['cari_peminjaman'])) {
     $transaksi_id = $_POST['transaksi_id'] ?? '';
     $anggota_id = $_POST['anggota_id'] ?? '';
-    
-    // This would normally check the database, we'll mock it here
+
     if (!empty($transaksi_id) || !empty($anggota_id)) {
-        // Mock found peminjaman
         $peminjaman = [
             'id' => $transaksi_id ?: 'T-'.rand(1000, 9999),
             'anggota_id' => $anggota_id ?: $user['id'],
@@ -45,20 +38,16 @@ if (isset($_POST['cari_peminjaman'])) {
     }
 }
 
-// Handle form submission for book return
 if (isset($_POST['proses_pengembalian']) && isset($_POST['peminjaman_id'])) {
-    // This would normally update the database, we'll mock it here
     $_SESSION['total_borrowed'] = ($_SESSION['total_borrowed'] ?? 1) - 1;
     $_SESSION['total_returned'] = ($_SESSION['total_returned'] ?? 2) + 1;
     
     $message = 'Buku berhasil dikembalikan!';
     $message_type = 'success';
-    
-    // Reset peminjaman after successful return
+
     $peminjaman = null;
 }
 
-// Mock data for recent returns
 $recent_returns = [
     [
         'id' => 'T-1234',
@@ -96,14 +85,11 @@ $recent_returns = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengembalian Buku - SiPerpus</title>
-    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-blue-100">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="w-64 bg-white flex-shrink-0">
             <div class="bg-white p-4 flex items-center space-x-3 text-black border-b border-gray-200">
                 <div class="bg-blue-800 p-2 rounded">
@@ -135,9 +121,7 @@ $recent_returns = [
             </nav>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Top Header -->
             <header class="bg-white shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Pengembalian Buku</div>
@@ -158,7 +142,6 @@ $recent_returns = [
                 </div>
             </header>
 
-            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
                 <div class="flex justify-between items-center mb-6">
                     <div class="text-sm">
@@ -178,7 +161,6 @@ $recent_returns = [
                 </div>
                 <?php endif; ?>
 
-                <!-- Search Form -->
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <h3 class="text-lg font-medium mb-4">Cari Peminjaman</h3>
                     <form method="post" action="">
@@ -210,7 +192,6 @@ $recent_returns = [
                     </form>
                 </div>
 
-                <!-- Pengembalian Form (if peminjaman is found) -->
                 <?php if ($peminjaman): ?>
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <h3 class="text-lg font-medium mb-4">Proses Pengembalian</h3>
@@ -251,7 +232,6 @@ $recent_returns = [
                 </div>
                 <?php endif; ?>
 
-                <!-- Recent Returns -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6 border-b border-gray-200">
                         <h3 class="text-lg font-medium">Pengembalian Terbaru</h3>

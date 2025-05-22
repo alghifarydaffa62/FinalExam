@@ -1,27 +1,22 @@
 <?php
-// Start session for user authentication
 session_start();
 
-// Simple authentication check (would be more robust in production)
-if (!isset($_SESSION['user_id'])) {
-    header("Location: loginAnggota.php");
-    exit;
-}
+// if (!isset($_SESSION['user_id'])) {
+//     header("Location: loginAnggota.php");
+//     exit;
+// }
 
-// Get user information
 $user = [
     'name' => $_SESSION['user_name'] ?? 'Anggota',
     'id' => $_SESSION['user_id'] ?? '1'
 ];
 
-// Mock data for dashboard statistics
 $stats = [
     'total_borrowed' => $_SESSION['total_borrowed'] ?? 1,
     'total_returned' => $_SESSION['total_returned'] ?? 2,
     'total_buku' => $_SESSION['total_books'] ?? 150
 ];
 
-// Mock data for borrowing history
 $borrowing_history = [
     [
         'title' => 'Harry Potter dan Batu Bertuah',
@@ -50,17 +45,13 @@ $borrowing_history = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Anggota - SiPerpus</title>
-    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-blue-100">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="w-64 bg-white flex-shrink-0">
             <div class="bg-white p-4 flex items-center space-x-3 text-black border-b border-gray-200">
-
                 <div class="bg-blue-800 p-2 rounded">
                     <span class="font-bold text-white">SP</span>
                 </div>
@@ -69,6 +60,7 @@ $borrowing_history = [
                     <div class="text-xs">Sistem Perpustakaan Digital</div>
                 </div>
             </div>
+
             <nav class="mt-4">
                 <a href="dashboard.php" class="flex items-center px-4 py-3 bg-blue-600 text-white">
                     <i class="fas fa-chart-bar w-6"></i>
@@ -90,9 +82,7 @@ $borrowing_history = [
             </nav>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Top Header -->
             <header class="bg-white shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Dashboard Anggota</div>
@@ -113,11 +103,9 @@ $borrowing_history = [
                 </div>
             </header>
 
-            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
                 <h2 class="text-lg font-medium mb-6">Selamat datang, <?php echo htmlspecialchars($user['name']); ?>!</h2>
 
-                <!-- Action Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-4">Pinjam</h3>
@@ -129,7 +117,6 @@ $borrowing_history = [
                     </div>
                 </div>
 
-                <!-- Statistics -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Peminjaman</h3>
@@ -148,7 +135,6 @@ $borrowing_history = [
                     </div>
                 </div>
 
-                <!-- Borrowed Books -->
                 <div class="mt-8">
                     <h3 class="text-lg font-medium mb-4">Buku yang Dipinjam</h3>
                     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -189,7 +175,6 @@ $borrowing_history = [
                     </div>
                 </div>
 
-                <!-- Book Recommendations -->
                 <div class="mt-8">
                     <h3 class="text-lg font-medium mb-4">Rekomendasi Buku</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
