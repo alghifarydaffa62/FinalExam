@@ -14,15 +14,15 @@
 
         <form action="#" method="POST" class="space-y-5">
             <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2">
+                <img src="./images/peoples.png" alt="admin icon" class="w-5 h-5"/>
                 <a href="./Anggota/loginAnggota.php"
-                    class="w-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none border-none bg-transparent">As
-                    Member</a>
+                    class="w-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none border-none bg-transparent">
+                    Sign In Anggota</a>
             </div>
             <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2">
-                <img src="../images/admin.png" alt="admin icon" />
+                <img src="./images/admin.png" alt="admin icon" class="w-5 h-5"/>
                 <a href="./Admin/loginAdmin.php"
-                    class="w-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none border-none bg-transparent">as
-                    Admin</a>
+                    class="w-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none border-none bg-transparent">Sign In Admin</a>
             </div>
         </form>
     </div>

@@ -1,11 +1,6 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
-}
-
 $user = [
     'name' => $_SESSION['user_name'] ?? 'Anggota',
     'id' => $_SESSION['user_id'] ?? '1'
@@ -139,14 +134,12 @@ $books = [
     ]
 ];
 
-// Filter berdasarkan status
 if ($status_filter != 'Semua') {
     $books = array_filter($books, function($book) use ($status_filter) {
         return $book['status'] == $status_filter;
     });
 }
 
-// Filter berdasarkan pencarian
 if (!empty($search_query)) {
     $books = array_filter($books, function($book) use ($search_query) {
         return (stripos($book['title'], $search_query) !== false || 
@@ -155,7 +148,6 @@ if (!empty($search_query)) {
     });
 }
 
-// Pagination
 $books_per_page = 8;
 $total_books = count($books);
 $total_pages = ceil($total_books / $books_per_page);
@@ -304,7 +296,6 @@ $books = array_slice($books, $offset, $books_per_page);
         </div>
     </div>
 
-    <!-- Modal Detail Buku -->
     <div id="bookDetailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg w-full max-w-2xl max-h-screen overflow-y-auto">
@@ -317,14 +308,12 @@ $books = array_slice($books, $offset, $books_per_page);
                     </div>
                     
                     <div class="grid md:grid-cols-3 gap-6">
-                        <!-- Book Cover -->
                         <div class="md:col-span-1">
                             <div class="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-book text-gray-400 text-6xl"></i>
                             </div>
                         </div>
-                        
-                        <!-- Book Information -->
+
                         <div class="md:col-span-2">
                             <div class="space-y-4">
                                 <div>
@@ -383,15 +372,12 @@ $books = array_slice($books, $offset, $books_per_page);
     </div>
 
     <script>
-        // Data buku untuk JavaScript
         const booksData = <?php echo json_encode(array_merge($books, array_slice($books, -count($books)))); ?>;
         
         function showBookDetail(bookId) {
-            // Cari buku berdasarkan ID
             const book = <?php echo json_encode($books); ?>.find(b => b.id === bookId);
             
             if (book) {
-                // Isi data ke dalam modal
                 document.getElementById('modal-title').textContent = book.title;
                 document.getElementById('modal-author').textContent = book.author;
                 document.getElementById('modal-id').textContent = book.id;
@@ -402,7 +388,6 @@ $books = array_slice($books, $offset, $books_per_page);
                 document.getElementById('modal-location').textContent = book.location;
                 document.getElementById('modal-description').textContent = book.description;
                 
-                // Set status dengan warna yang sesuai
                 const statusElement = document.getElementById('modal-status');
                 statusElement.textContent = book.status;
                 if (book.status === 'Tersedia') {
@@ -411,7 +396,6 @@ $books = array_slice($books, $offset, $books_per_page);
                     statusElement.className = 'inline-block px-3 py-1 text-sm rounded-full mt-1 bg-yellow-100 text-yellow-800';
                 }
                 
-                // Tampilkan modal
                 document.getElementById('bookDetailModal').classList.remove('hidden');
             }
         }
@@ -423,14 +407,12 @@ $books = array_slice($books, $offset, $books_per_page);
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Halaman Data Buku loaded');
             
-            // Close modal when clicking outside
             document.getElementById('bookDetailModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeBookDetail();
                 }
             });
             
-            // Close modal with Escape key
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     closeBookDetail();

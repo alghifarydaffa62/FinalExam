@@ -12,10 +12,8 @@ $admin = [
     'id' => $_SESSION['admin_id'] ?? '1'
 ];
 
-// Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'edit_status') {
-        // Update payment status
         $id = $_POST['id'];
         foreach ($late_returns as &$late) {
             if ($late['id'] === $id) {
@@ -304,7 +302,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Edit Status Modal -->
     <div id="editStatusModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
             <div class="flex justify-between items-center mb-4">
@@ -321,7 +318,7 @@ if (!empty($search_query)) {
                     <div>
                         <span class="block text-sm font-medium text-gray-700 mb-2">Detail Keterlambatan:</span>
                         <div id="editStatusDetails" class="bg-gray-50 p-3 rounded text-sm">
-                            <!-- Details will be filled by JavaScript -->
+
                         </div>
                     </div>
                     <div>
@@ -342,16 +339,13 @@ if (!empty($search_query)) {
     </div>
 
     <script>
-        // Edit Status
         function editStatus(late) {
             const modal = document.getElementById('editStatusModal');
             const details = document.getElementById('editStatusDetails');
-            
-            // Fill form with current data
+
             document.getElementById('editStatusId').value = late.id;
             document.getElementById('editStatusDenda').value = late.status_denda;
-            
-            // Fill details
+
             details.innerHTML = `
                 <div class="space-y-2">
                     <div><strong>Nama:</strong> ${late.nama_anggota}</div>
@@ -370,7 +364,6 @@ if (!empty($search_query)) {
             modal.classList.add('hidden');
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const editStatusModal = document.getElementById('editStatusModal');
             
