@@ -105,11 +105,11 @@ $lending_stats = [
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-4">Tambah Buku</h3>
-                        <a href="tambahBuku.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Tambah Buku</a>
+                        <a href="kelolaBuku.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Tambah Buku</a>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-4">Tambah Anggota</h3>
-                        <a href="tambahAnggota.php" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Tambah Anggota</a>
+                        <a href="kelolaAnggota.php" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Tambah Anggota</a>
                     </div>
                 </div>
 
