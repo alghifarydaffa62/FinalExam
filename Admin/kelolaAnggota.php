@@ -67,11 +67,9 @@ $members = [
     ]
 ];
 
-// Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'edit') {
-            // Update member data
             $id = $_POST['id'];
             foreach ($members as &$member) {
                 if ($member['id'] === $id) {
@@ -85,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $success_message = "Data anggota berhasil diperbarui!";
         } elseif ($_POST['action'] === 'delete') {
-            // Delete member
             $id = $_POST['id'];
             $members = array_filter($members, function($member) use ($id) {
                 return $member['id'] !== $id;
@@ -280,7 +277,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Detail Modal -->
     <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
             <div class="flex justify-between items-center mb-4">
@@ -290,7 +286,7 @@ if (!empty($search_query)) {
                 </button>
             </div>
             <div id="detailContent">
-                <!-- Content will be filled by JavaScript -->
+
             </div>
             <div class="flex justify-end mt-6">
                 <button onclick="closeDetailModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg">Tutup</button>
@@ -298,7 +294,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Edit Modal -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
             <div class="flex justify-between items-center mb-4">
@@ -349,7 +344,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Delete Modal -->
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-sm mx-auto">
             <h3 class="text-lg font-medium mb-4">Konfirmasi Hapus</h3>
@@ -366,7 +360,6 @@ if (!empty($search_query)) {
     </div>
 
     <script>
-        // View Member Details
         function viewMember(member) {
             const modal = document.getElementById('detailModal');
             const content = document.getElementById('detailContent');
@@ -408,11 +401,9 @@ if (!empty($search_query)) {
             modal.classList.add('hidden');
         }
 
-        // Edit Member
         function editMember(member) {
             const modal = document.getElementById('editModal');
-            
-            // Fill form with current data
+
             document.getElementById('editId').value = member.id;
             document.getElementById('editNrp').value = member.nrp;
             document.getElementById('editNama').value = member.nama;
@@ -428,7 +419,6 @@ if (!empty($search_query)) {
             modal.classList.add('hidden');
         }
 
-        // Delete Member
         function confirmDelete(id, name) {
             const modal = document.getElementById('deleteModal');
             
@@ -443,7 +433,6 @@ if (!empty($search_query)) {
             modal.classList.add('hidden');
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const detailModal = document.getElementById('detailModal');
             const editModal = document.getElementById('editModal');

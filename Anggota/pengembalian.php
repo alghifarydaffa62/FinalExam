@@ -1,11 +1,6 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
-}
-
 $user = [
     'name' => $_SESSION['user_name'] ?? 'Anggota',
     'id' => $_SESSION['user_id'] ?? '1'
@@ -14,29 +9,24 @@ $user = [
 $message = '';
 $message_type = '';
 
-// Proses pengembalian buku
 if (isset($_POST['kembalikan_buku']) && isset($_POST['id_buku'])) {
     $id_buku = $_POST['id_buku'];
-    
-    // Update session counters
+
     $_SESSION['total_borrowed'] = ($_SESSION['total_borrowed'] ?? 5) - 1;
     $_SESSION['total_returned'] = ($_SESSION['total_returned'] ?? 3) + 1;
     
     $message = "Buku dengan ID {$id_buku} berhasil dikembalikan!";
     $message_type = 'success';
-    
-    // Redirect untuk mencegah double submission
+
     header("Location: " . $_SERVER['PHP_SELF'] . "?success=1&id=" . urlencode($id_buku));
     exit;
 }
 
-// Handle success message dari redirect
 if (isset($_GET['success']) && isset($_GET['id'])) {
     $message = "Buku dengan ID " . htmlspecialchars($_GET['id']) . " berhasil dikembalikan!";
     $message_type = 'success';
 }
 
-// Data buku yang sedang dipinjam
 $borrowed_books = [
     [
         'id_buku' => 'BK-1001',
@@ -166,7 +156,7 @@ $borrowed_books = [
 
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6 border-b border-gray-200">
-                        <h3 class="text-lg font-medium">Tabel Yang Dipinjam</h3>
+                        <h3 class="text-lg font-medium">Buku Yang Dipinjam</h3>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full">
@@ -213,12 +203,10 @@ $borrowed_books = [
             console.log('Halaman Pengembalian Buku loaded');
         });
 
-        // Fungsi konfirmasi sebelum mengembalikan buku
         function confirmReturn(judulBuku) {
             return confirm('Apakah Anda yakin ingin mengembalikan buku "' + judulBuku + '"?');
         }
 
-        // Auto hide success message after 5 seconds
         setTimeout(function() {
             const successMessage = document.querySelector('.bg-green-100');
             if (successMessage) {

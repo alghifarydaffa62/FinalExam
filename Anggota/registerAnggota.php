@@ -8,15 +8,11 @@
 </head>
 <body class="flex justify-center items-center min-h-screen p-6 bg-[#948979]">
     <div class="bg-[#DFD0B8] p-6 rounded-lg shadow-lg w-full max-w-sm">
-        <!-- Header -->
         <div class="text-center mb-6">
-            <h2 class="text-xl font-bold text-gray-700 mb-1">Daftar Anggota</h2>
-            <p class="text-xs text-gray-600">Perpustakaan Digital</p>
+            <h2 class="text-xl font-bold text-gray-700 mb-1">Daftar Anggota - SiPerpus</h2>
         </div>
 
-        <!-- Form -->
         <form action="#" method="POST" class="space-y-4">
-            <!-- Nama Lengkap -->
             <div>
                 <label class="block text-xs text-gray-600 mb-1">Nama Lengkap</label>
                 <input 
@@ -28,7 +24,6 @@
                     required />
             </div>
 
-            <!-- Jurusan Dropdown -->
             <div>
                 <label class="block text-xs text-gray-600 mb-1">Jurusan</label>
                 <div class="relative">
@@ -41,8 +36,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </div>
-                    
-                    <!-- Dropdown Menu -->
+
                     <div id="dropdownMenu" class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg hidden">
                         <div class="py-1 max-h-48 overflow-y-auto">
                             <a href="#" onclick="selectOption('Teknik Informatika')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Teknik Informatika</a>
@@ -57,7 +51,6 @@
                 </div>
             </div>
 
-            <!-- NRP -->
             <div>
                 <label class="block text-xs text-gray-600 mb-1">NRP</label>
                 <input 
@@ -71,7 +64,6 @@
                     required />
             </div>
 
-            <!-- Email -->
             <div>
                 <label class="block text-xs text-gray-600 mb-1">Email</label>
                 <input 
@@ -83,7 +75,6 @@
                     required />
             </div>
 
-            <!-- Password -->
             <div>
                 <label class="block text-xs text-gray-600 mb-1">Password</label>
                 <div class="relative">
@@ -104,7 +95,6 @@
                 </div>
             </div>
 
-            <!-- No Telepon -->
             <div>
                 <label class="block text-xs text-gray-600 mb-1">Nomor Telepon</label>
                 <input 
@@ -117,18 +107,16 @@
                     required />
             </div>
 
-            <!-- Submit Button -->
             <button 
                 type="submit" 
                 class="w-full bg-[#393E46] text-white py-2 px-4 rounded-md hover:bg-[#2f3238] focus:outline-none focus:ring-1 focus:ring-[#393E46] font-medium text-sm">
                 Daftar Sekarang
             </button>
 
-            <!-- Login Link -->
             <div class="text-center mt-4">
-                <p class="text-xs text-gray-600">
+                <p class="text-md text-gray-600">
                     Sudah punya akun? 
-                    <a href="login.html" class="text-[#948979] hover:underline font-medium">Masuk di sini</a>
+                    <a href="../choose.php" class="text-[#948979] hover:underline font-medium">Masuk di sini</a>
                 </p>
             </div>
         </form>
@@ -164,7 +152,6 @@
             }
         }
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('dropdownMenu');
             const button = document.getElementById('dropdownButton');
@@ -174,11 +161,9 @@
             }
         });
 
-        // Form validation
         document.querySelector('form').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Basic validation
+
             const requiredFields = ['namaLengkap', 'nrp', 'email', 'password', 'phoneNumber'];
             let isValid = true;
             
@@ -191,8 +176,7 @@
                     input.classList.remove('border-red-500');
                 }
             });
-            
-            // Check if jurusan is selected
+
             const jurusan = document.getElementById('jurusan');
             if (!jurusan.value) {
                 document.getElementById('dropdownButton').classList.add('border-red-500');
@@ -200,8 +184,7 @@
             } else {
                 document.getElementById('dropdownButton').classList.remove('border-red-500');
             }
-            
-            // Check terms
+
             const terms = document.getElementById('terms');
             if (terms && !terms.checked) {
                 terms.classList.add('ring-2', 'ring-red-500');
@@ -212,8 +195,6 @@
             
             if (isValid) {
                 alert('Pendaftaran berhasil! Data Anda sedang diproses.');
-                // Here you would normally submit the form to your backend
-                // this.submit();
             } else {
                 alert('Mohon lengkapi semua field yang diperlukan.');
             }

@@ -24,7 +24,7 @@
                 <a href="choose.php" class="px-6 py-2 bg-violet-300 rounded-md text-violet-700 font-semibold">Login</a>
             </li>
             <li>
-                <a href="" class="px-6 py-2 bg-violet-600 rounded-md text-white font-semibold">Register</a>
+                <a href="./Anggota/registerAnggota.php" class="px-6 py-2 bg-violet-600 rounded-md text-white font-semibold">Register</a>
             </li>
         </ul>
     </nav>
@@ -41,7 +41,7 @@
             </p>
             <div class="mt-8">
             <a
-                href="./Anggota/loginAnggota.php"
+                href="./Anggota/registerAnggota.php"
                 class="bg-sky-800 p-4 rounded-lg text-white font-semibold"
                 >Daftar anggota</a
             >

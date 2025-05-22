@@ -1,17 +1,11 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
-}
-
 $user = [
     'name' => $_SESSION['user_name'] ?? 'Anggota',
     'id' => $_SESSION['user_id'] ?? '1'
 ];
 
-// Contoh data buku yang dipinjam
 $books = [
     [
         'id' => 1,
@@ -44,14 +38,11 @@ $books = [
 
 $selected_status = $_GET['status'] ?? 'Semua Status';
 
-// Fungsi untuk memproses peminjaman buku baru
 if (isset($_POST['pinjam_buku'])) {
     $judul_buku = $_POST['judul_buku'] ?? '';
     $isbn_buku = $_POST['isbn_buku'] ?? '';
     
     if (!empty($judul_buku) && !empty($isbn_buku)) {
-        // Di sini biasanya Anda akan menyimpan ke database
-        // Untuk contoh, kita akan redirect dengan pesan sukses
         $_SESSION['success_message'] = "Buku berhasil dipinjam!";
         header("Location: peminjaman.php");
         exit;
@@ -210,7 +201,6 @@ if (isset($_POST['pinjam_buku'])) {
         </div>
     </div>
 
-    <!-- Modal Pinjam Buku Baru -->
     <div id="pinjamModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg w-full max-w-md">
@@ -267,8 +257,7 @@ if (isset($_POST['pinjam_buku'])) {
         
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Peminjaman page loaded');
-            
-            // Close modal when clicking outside
+
             document.getElementById('pinjamModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closePinjamModal();
