@@ -19,6 +19,7 @@
                     Member</a>
             </div>
             <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2">
+                <img src="../images/admin.png" alt="admin icon" />
                 <a href="./Admin/loginAdmin.php"
                     class="w-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none border-none bg-transparent">as
                     Admin</a>
