@@ -11,15 +11,54 @@ $user = [
     'id' => $_SESSION['user_id'] ?? '1'
 ];
 
-
+// Contoh data buku yang dipinjam
 $books = [
-    
+    [
+        'id' => 1,
+        'title' => 'Belajar PHP untuk Pemula',
+        'isbn' => '978-602-123-456-7',
+        'author' => 'John Doe',
+        'tanggal_pinjam' => '2024-05-15',
+        'tanggal_kembali' => '2024-05-22',
+        'status' => 'Dipinjam'
+    ],
+    [
+        'id' => 2,
+        'title' => 'JavaScript Modern Development',
+        'isbn' => '978-602-987-654-3',
+        'author' => 'Jane Smith',
+        'tanggal_pinjam' => '2024-05-10',
+        'tanggal_kembali' => '2024-05-17',
+        'status' => 'Terlambat'
+    ],
+    [
+        'id' => 3,
+        'title' => 'Database Design Fundamentals',
+        'isbn' => '978-602-555-111-2',
+        'author' => 'Robert Johnson',
+        'tanggal_pinjam' => '2024-05-18',
+        'tanggal_kembali' => '2024-05-25',
+        'status' => 'Dipinjam'
+    ]
 ];
 
-$selected_category = $_GET['category'] ?? 'Semua Kategori';
 $selected_status = $_GET['status'] ?? 'Semua Status';
 
-
+// Fungsi untuk memproses peminjaman buku baru
+if (isset($_POST['pinjam_buku'])) {
+    $judul_buku = $_POST['judul_buku'] ?? '';
+    $isbn_buku = $_POST['isbn_buku'] ?? '';
+    
+    if (!empty($judul_buku) && !empty($isbn_buku)) {
+        // Di sini biasanya Anda akan menyimpan ke database
+        // Untuk contoh, kita akan redirect dengan pesan sukses
+        $_SESSION['success_message'] = "Buku berhasil dipinjam!";
+        header("Location: peminjaman.php");
+        exit;
+    } else {
+        $error_message = "Mohon lengkapi semua data buku yang akan dipinjam.";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -60,7 +99,6 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Data Buku</span>
                 </a>
-              
             </nav>
         </div>
 
@@ -90,10 +128,22 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
                     Dashboard / <span class="text-gray-700">Peminjaman</span>
                 </div>
 
+                <?php if (isset($_SESSION['success_message'])): ?>
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                    <?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?>
+                </div>
+                <?php endif; ?>
+
+                <?php if (isset($error_message)): ?>
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <?php echo $error_message; ?>
+                </div>
+                <?php endif; ?>
+
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-medium">Manajemen Koleksi Buku</h2>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center text-sm">
-                        <i class="fas fa-plus mr-2"></i> Tambah Buku Baru
+                    <button onclick="openPinjamModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center text-sm hover:bg-blue-700">
+                        <i class="fas fa-plus mr-2"></i> Pinjam Buku Baru
                     </button>
                 </div>
 
@@ -104,17 +154,10 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
 
                     <div class="p-4 flex flex-wrap items-center justify-between gap-2 border-b border-gray-200">
                         <div class="flex flex-wrap gap-2">
-                            <select class="border border-gray-300 rounded-md px-3 py-1 text-sm">
-                                <option value="all" <?php echo $selected_category == 'Semua Kategori' ? 'selected' : ''; ?>>Semua Kategori</option>
-                                <option value="fiction">Fiksi</option>
-                                <option value="non-fiction">Non-Fiksi</option>
-                                <option value="education">Pendidikan</option>
-                            </select>
-                            
-                            <select class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                            <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="filterByStatus(this.value)">
                                 <option value="all" <?php echo $selected_status == 'Semua Status' ? 'selected' : ''; ?>>Semua Status</option>
-                                <option value="available">Tersedia</option>
-                                <option value="borrowed">Dipinjam</option>
+                                <option value="dipinjam" <?php echo $selected_status == 'Dipinjam' ? 'selected' : ''; ?>>Dipinjam</option>
+                                <option value="terlambat" <?php echo $selected_status == 'Terlambat' ? 'selected' : ''; ?>>Terlambat</option>
                             </select>
                         </div>
                     </div>
@@ -124,45 +167,37 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
                             <thead>
                                 <tr class="bg-gray-50 text-xs text-gray-500 uppercase">
                                     <th class="px-6 py-3 text-left">Judul</th>
-                                    <th class="px-6 py-3 text-left">Buku/ISBN</th>
-                                    <th class="px-6 py-3 text-left">Kategori</th>
+                                    <th class="px-6 py-3 text-left">ISBN</th>
+                                    <th class="px-6 py-3 text-left">Penulis</th>
+                                    <th class="px-6 py-3 text-left">Tanggal Pinjam</th>
+                                    <th class="px-6 py-3 text-left">Tanggal Kembali</th>
                                     <th class="px-6 py-3 text-left">Status</th>
                                     <th class="px-6 py-3 text-left">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
-                                <?php if (empty($books)): ?>
+                                <?php foreach ($books as $book): ?>
                                 <tr>
-                                    <td colspan="5" class="px-6 py-16 text-center text-gray-500">
-                                        <div class="flex flex-col items-center justify-center">
-                                            <i class="fas fa-book text-gray-300 text-5xl mb-4"></i>
-                                            <p class="mb-2">Tidak ada buku yang sedang dipinjam</p>
-                                            <p class="text-sm">Untuk meminjam buku, silahkan pilih buku dari katalog</p>
+                                    <td class="px-6 py-4 font-medium"><?php echo htmlspecialchars($book['title']); ?></td>
+                                    <td class="px-6 py-4"><?php echo htmlspecialchars($book['isbn']); ?></td>
+                                    <td class="px-6 py-4"><?php echo htmlspecialchars($book['author']); ?></td>
+                                    <td class="px-6 py-4"><?php echo date('d/m/Y', strtotime($book['tanggal_pinjam'])); ?></td>
+                                    <td class="px-6 py-4"><?php echo date('d/m/Y', strtotime($book['tanggal_kembali'])); ?></td>
+                                    <td class="px-6 py-4">
+                                        <?php if ($book['status'] == 'Dipinjam'): ?>
+                                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Dipinjam</span>
+                                        <?php elseif ($book['status'] == 'Terlambat'): ?>
+                                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Terlambat</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex space-x-2">
+                                            <a href="detail-buku.php?id=<?php echo $book['id']; ?>" class="text-blue-600 hover:text-blue-800 text-sm">Detail</a>
+                                            <a href="kembalikan.php?id=<?php echo $book['id']; ?>" class="text-green-600 hover:text-green-800 text-sm">Kembalikan</a>
                                         </div>
                                     </td>
                                 </tr>
-                                <?php else: ?>
-                                    <?php foreach ($books as $book): ?>
-                                    <tr>
-                                        <td class="px-6 py-4"><?php echo htmlspecialchars($book['title']); ?></td>
-                                        <td class="px-6 py-4"><?php echo htmlspecialchars($book['isbn']); ?></td>
-                                        <td class="px-6 py-4"><?php echo htmlspecialchars($book['category']); ?></td>
-                                        <td class="px-6 py-4">
-                                            <?php if ($book['status'] == 'Tersedia'): ?>
-                                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Tersedia</span>
-                                            <?php else: ?>
-                                                <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Dipinjam</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex space-x-2">
-                                                <a href="detail-buku.php?id=<?php echo $book['id']; ?>" class="text-blue-600 hover:text-blue-800">Detail</a>
-                                                <a href="edit-buku.php?id=<?php echo $book['id']; ?>" class="text-gray-600 hover:text-gray-800">Edit</a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
@@ -171,9 +206,70 @@ $selected_status = $_GET['status'] ?? 'Semua Status';
         </div>
     </div>
 
+    <!-- Modal Pinjam Buku Baru -->
+    <div id="pinjamModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg w-full max-w-md">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium">Pinjam Buku Baru</h3>
+                        <button onclick="closePinjamModal()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <form method="POST" action="">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Judul Buku</label>
+                            <input type="text" name="judul_buku" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan judul buku" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ISBN</label>
+                            <input type="text" name="isbn_buku" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan ISBN buku" required>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Penulis</label>
+                            <input type="text" name="penulis_buku" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan nama penulis">
+                        </div>
+                        
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" onclick="closePinjamModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Batal</button>
+                            <button type="submit" name="pinjam_buku" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Pinjam Buku</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        function openPinjamModal() {
+            document.getElementById('pinjamModal').classList.remove('hidden');
+        }
+        
+        function closePinjamModal() {
+            document.getElementById('pinjamModal').classList.add('hidden');
+        }
+        
+        function filterByStatus(status) {
+            if (status === 'all') {
+                window.location.href = 'peminjaman.php';
+            } else {
+                window.location.href = 'peminjaman.php?status=' + status;
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Peminjaman page loaded');
+            
+            // Close modal when clicking outside
+            document.getElementById('pinjamModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePinjamModal();
+                }
+            });
         });
     </script>
 </body>

@@ -21,7 +21,7 @@
                 <a href="home.php">Home</a>
             </li>
             <li>
-                <a href="loginAnggota.php" class="px-6 py-2 bg-violet-300 rounded-md text-violet-700 font-semibold">Login</a>
+                <a href="choose.php" class="px-6 py-2 bg-violet-300 rounded-md text-violet-700 font-semibold">Login</a>
             </li>
             <li>
                 <a href="" class="px-6 py-2 bg-violet-600 rounded-md text-white font-semibold">Register</a>
