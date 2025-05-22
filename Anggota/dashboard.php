@@ -77,6 +77,10 @@ $borrowing_history = [
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Data Buku</span>
                 </a>
+                 <a href="loginAnggota.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                    <i class="fas fa-sign-out-alt w-6"></i>
+                    <span class="ml-2">Logout</span>
+                 </a>
                 
             </nav>
         </div>

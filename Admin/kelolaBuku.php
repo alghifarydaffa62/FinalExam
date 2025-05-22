@@ -171,9 +171,11 @@ if (!empty($search_query)) {
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
                 </a>
-                <a href="logoutAdmin.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                    <a href="loginAdmin.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
+                 </a>
+
                 </a>
             </nav>
         </div>
