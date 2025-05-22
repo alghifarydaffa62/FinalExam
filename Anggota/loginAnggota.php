@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="./src/output.css" rel="stylesheet">
-    <title>Login Admin Page</title>
+    <link href="../src/output.css" rel="stylesheet">
+    <title>Login Anggota</title>
 </head>
 <body class="flex justify-center items-center min-h-screen m-6 bg-[#948979]">
     <div class="bg-[#DFD0B8] p-8 rounded-lg shadow-md w-full max-w-sm">
-        <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Login Anggota</h2>
+        <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Sign In Member - SiPerpus</h2>
     
         <form action="#" method="POST" class="space-y-5">
-            <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2 bg-[#e1d2b9]">
-              <img src="./images/Group 1.png" alt="User Icon" class="w-5 h-5 mr-3" />
+            <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2">
+              <img src="../images/Group 1.png" alt="User Icon" class="w-5 h-5" />
               <input 
                 type="text" 
                 id="username" 
@@ -22,7 +22,7 @@
             </div>
 
             <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2">
-              <img src="./images/Group 3 (1).png" alt="User Icon" />
+              <img src="../images/Group 3 (1).png" alt="User Icon" />
               <input 
                   type="password" 
                   id="password" 
@@ -49,7 +49,7 @@
             <div class="flex flex-col gap-2 pt-4 border-t">
               <div class="flex justify-center items-center">
                 <p class="text-center text-sm text-gray-700">Login admin ?</p>
-                <a href="loginAdmin.php" class="text-blue-500 text-sm hover:underline ml-1">Klik disini</a>
+                <a href="../Admin/loginAdmin.php" class="text-blue-500 text-sm hover:underline ml-1">Klik disini</a>
               </div>
               
               <div class="flex justify-center items-center">
