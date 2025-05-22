@@ -11,70 +11,72 @@ $user = [
     'id' => $_SESSION['user_id'] ?? '1'
 ];
 
-$peminjaman = null;
 $message = '';
 $message_type = '';
 
-if (isset($_POST['cari_peminjaman'])) {
-    $transaksi_id = $_POST['transaksi_id'] ?? '';
-    $anggota_id = $_POST['anggota_id'] ?? '';
-
-    if (!empty($transaksi_id) || !empty($anggota_id)) {
-        $peminjaman = [
-            'id' => $transaksi_id ?: 'T-'.rand(1000, 9999),
-            'anggota_id' => $anggota_id ?: $user['id'],
-            'anggota_nama' => $user['name'],
-            'buku_judul' => 'Harry Potter dan Batu Bertuah',
-            'buku_id' => 'BK-'.rand(1000, 9999),
-            'tanggal_pinjam' => '15/05/2025',
-            'tanggal_kembali' => '22/05/2025',
-            'status' => 'Dipinjam'
-        ];
-        $message = 'Data peminjaman ditemukan.';
-        $message_type = 'success';
-    } else {
-        $message = 'Mohon masukkan ID Transaksi atau ID Anggota.';
-        $message_type = 'error';
-    }
-}
-
-if (isset($_POST['proses_pengembalian']) && isset($_POST['peminjaman_id'])) {
-    $_SESSION['total_borrowed'] = ($_SESSION['total_borrowed'] ?? 1) - 1;
-    $_SESSION['total_returned'] = ($_SESSION['total_returned'] ?? 2) + 1;
+// Proses pengembalian buku
+if (isset($_POST['kembalikan_buku']) && isset($_POST['id_buku'])) {
+    $id_buku = $_POST['id_buku'];
     
-    $message = 'Buku berhasil dikembalikan!';
+    // Update session counters
+    $_SESSION['total_borrowed'] = ($_SESSION['total_borrowed'] ?? 5) - 1;
+    $_SESSION['total_returned'] = ($_SESSION['total_returned'] ?? 3) + 1;
+    
+    $message = "Buku dengan ID {$id_buku} berhasil dikembalikan!";
     $message_type = 'success';
-
-    $peminjaman = null;
+    
+    // Redirect untuk mencegah double submission
+    header("Location: " . $_SERVER['PHP_SELF'] . "?success=1&id=" . urlencode($id_buku));
+    exit;
 }
 
-$recent_returns = [
+// Handle success message dari redirect
+if (isset($_GET['success']) && isset($_GET['id'])) {
+    $message = "Buku dengan ID " . htmlspecialchars($_GET['id']) . " berhasil dikembalikan!";
+    $message_type = 'success';
+}
+
+// Data buku yang sedang dipinjam
+$borrowed_books = [
     [
-        'id' => 'T-1234',
-        'buku_judul' => 'Laskar Pelangi',
-        'anggota_nama' => 'Ahmad Fauzi',
-        'tanggal_pinjam' => '10/05/2025',
-        'tanggal_kembali' => '17/05/2025',
-        'tanggal_dikembalikan' => '16/05/2025',
-        'status' => 'Dikembalikan'
+        'id_buku' => 'BK-1001',
+        'judul' => 'Harry Potter dan Batu Bertuah',
+        'penerbit' => 'Gramedia Pustaka Utama',
+        'isbn' => '978-979-22-0000-1',
+        'jumlah_halaman' => 320,
+        'tahun_terbit' => 2001
     ],
     [
-        'id' => 'T-1235',
-        'buku_judul' => 'Bumi Manusia',
-        'anggota_nama' => 'Siti Nurhaliza',
-        'tanggal_pinjam' => '05/05/2025',
-        'tanggal_kembali' => '12/05/2025',
-        'tanggal_dikembalikan' => '12/05/2025',
-        'status' => 'Dikembalikan'
+        'id_buku' => 'BK-1002',
+        'judul' => 'Laskar Pelangi',
+        'penerbit' => 'Bentang Pustaka',
+        'isbn' => '978-979-22-0000-2',
+        'jumlah_halaman' => 529,
+        'tahun_terbit' => 2005
     ],
     [
-        'id' => 'T-1236',
-        'buku_judul' => 'Filosofi Teras',
-        'anggota_nama' => 'Budi Santoso',
-        'tanggal_pinjam' => '01/05/2025',
-        'tanggal_kembali' => '08/05/2025',
-        'tanggal_dikembalikan' => '07/05/2025',
-        'status' => 'Dikembalikan'
+        'id_buku' => 'BK-1003',
+        'judul' => 'Bumi Manusia',
+        'penerbit' => 'Hasta Mitra',
+        'isbn' => '978-979-22-0000-3',
+        'jumlah_halaman' => 535,
+        'tahun_terbit' => 1980
+    ],
+    [
+        'id_buku' => 'BK-1004',
+        'judul' => 'Filosofi Teras',
+        'penerbit' => 'Kompas Gramedia',
+        'isbn' => '978-979-22-0000-4',
+        'jumlah_halaman' => 320,
+        'tahun_terbit' => 2018
+    ],
+    [
+        'id_buku' => 'BK-1005',
+        'judul' => 'Ayat-Ayat Cinta',
+        'penerbit' => 'Republika',
+        'isbn' => '978-979-22-0000-5',
+        'jumlah_halaman' => 416,
+        'tahun_terbit' => 2004
     ]
 ];
 ?>
@@ -148,9 +150,6 @@ $recent_returns = [
                         <a href="dashboard.php" class="text-blue-600 hover:text-blue-800">Dashboard</a> / 
                         <span class="text-gray-600">Pengembalian</span>
                     </div>
-                    <a href="#" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
-                        <i class="fas fa-plus mr-2"></i>Tambah Buku Baru
-                    </a>
                 </div>
 
                 <h2 class="text-xl font-medium mb-6">Pengembalian Buku</h2>
@@ -161,107 +160,39 @@ $recent_returns = [
                 </div>
                 <?php endif; ?>
 
-                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h3 class="text-lg font-medium mb-4">Cari Peminjaman</h3>
-                    <form method="post" action="">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="transaksi_id" class="block text-sm font-medium text-gray-700 mb-1">ID Transaksi / Barcode</label>
-                                <div class="relative">
-                                    <input type="text" id="transaksi_id" name="transaksi_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10" placeholder="Masukkan ID Transaksi atau ID Barcode...">
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                        <i class="fas fa-barcode text-gray-400"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <label for="anggota_id" class="block text-sm font-medium text-gray-700 mb-1">ID Anggota</label>
-                                <div class="relative">
-                                    <input type="text" id="anggota_id" name="anggota_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10" placeholder="Masukkan ID Anggota...">
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                        <i class="fas fa-user text-gray-400"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex justify-end">
-                            <button type="submit" name="cari_peminjaman" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                                <i class="fas fa-search mr-2"></i>Kembalikan Buku
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <?php if ($peminjaman): ?>
-                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h3 class="text-lg font-medium mb-4">Proses Pengembalian</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">ID Transaksi</p>
-                            <p class="font-medium"><?php echo htmlspecialchars($peminjaman['id']); ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">ID Anggota</p>
-                            <p class="font-medium"><?php echo htmlspecialchars($peminjaman['anggota_id']); ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">Nama Anggota</p>
-                            <p class="font-medium"><?php echo htmlspecialchars($peminjaman['anggota_nama']); ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">Judul Buku</p>
-                            <p class="font-medium"><?php echo htmlspecialchars($peminjaman['buku_judul']); ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">Tanggal Pinjam</p>
-                            <p class="font-medium"><?php echo htmlspecialchars($peminjaman['tanggal_pinjam']); ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500 mb-1">Tanggal Kembali</p>
-                            <p class="font-medium"><?php echo htmlspecialchars($peminjaman['tanggal_kembali']); ?></p>
-                        </div>
-                    </div>
-                    <form method="post" action="">
-                        <input type="hidden" name="peminjaman_id" value="<?php echo htmlspecialchars($peminjaman['id']); ?>">
-                        <div class="mt-4 flex justify-end">
-                            <button type="submit" name="proses_pengembalian" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                                <i class="fas fa-check-circle mr-2"></i>Proses Pengembalian
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                <?php endif; ?>
-
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6 border-b border-gray-200">
-                        <h3 class="text-lg font-medium">Pengembalian Terbaru</h3>
+                        <h3 class="text-lg font-medium">Tabel Yang Dipinjam</h3>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full">
                             <thead>
                                 <tr class="bg-gray-50">
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Transaksi</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Buku</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul Buku</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Peminjam</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Pinjam</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batas Kembali</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Kembali</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerbit</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ISBN</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Halaman</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahun Terbit</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
-                                <?php foreach ($recent_returns as $return): ?>
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($return['id']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($return['buku_judul']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($return['anggota_nama']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($return['tanggal_pinjam']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($return['tanggal_kembali']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($return['tanggal_dikembalikan']); ?></td>
+                                <?php foreach ($borrowed_books as $book): ?>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium"><?php echo htmlspecialchars($book['id_buku']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($book['judul']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($book['penerbit']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($book['isbn']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center"><?php echo htmlspecialchars($book['jumlah_halaman']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center"><?php echo htmlspecialchars($book['tahun_terbit']); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                                            <?php echo htmlspecialchars($return['status']); ?>
-                                        </span>
+                                        <form method="post" action="" class="inline" onsubmit="return confirmReturn('<?php echo htmlspecialchars($book['judul']); ?>')">
+                                            <input type="hidden" name="id_buku" value="<?php echo htmlspecialchars($book['id_buku']); ?>">
+                                            <button type="submit" name="kembalikan_buku" class="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700 transition-colors duration-200">
+                                                <i class="fas fa-undo mr-1"></i>Kembalikan
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -277,6 +208,23 @@ $recent_returns = [
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Halaman Pengembalian Buku loaded');
         });
+
+        // Fungsi konfirmasi sebelum mengembalikan buku
+        function confirmReturn(judulBuku) {
+            return confirm('Apakah Anda yakin ingin mengembalikan buku "' + judulBuku + '"?');
+        }
+
+        // Auto hide success message after 5 seconds
+        setTimeout(function() {
+            const successMessage = document.querySelector('.bg-green-100');
+            if (successMessage) {
+                successMessage.style.transition = 'opacity 0.5s';
+                successMessage.style.opacity = '0';
+                setTimeout(function() {
+                    successMessage.style.display = 'none';
+                }, 500);
+            }
+        }, 5000);
     </script>
 </body>
 </html>
