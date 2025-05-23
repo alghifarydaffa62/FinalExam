@@ -1,38 +1,18 @@
 <?php
 session_start();
 
-// Check if admin is logged in
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: loginAdmin.php");
     exit;
 }
 
-// Handle logout
 if (isset($_GET['logout'])) {
-    // Log aktivitas logout (optional)
-    if (isset($_SESSION['admin_id'])) {
-        include '../konek.php';
-        try {
-            $log_stmt = $conn->prepare("INSERT INTO log_aktivitas (tipe_aktivitas, id_user, tipe_user, deskripsi) VALUES (?, ?, ?, ?)");
-            $tipe_aktivitas = 'logout_admin';
-            $tipe_user = 'admin';
-            $deskripsi = "Admin " . $_SESSION['admin_name'] . " berhasil logout";
-            $log_stmt->bind_param("siss", $tipe_aktivitas, $_SESSION['admin_id'], $tipe_user, $deskripsi);
-            $log_stmt->execute();
-        } catch (Exception $e) {
-            // Silent error handling for logging
-        }
-    }
-    
-    // Destroy session
     session_destroy();
     
-    // Remove remember me cookie if exists
     if (isset($_COOKIE['admin_remember'])) {
         setcookie('admin_remember', '', time() - 3600, '/');
     }
-    
-    // Redirect to login page
+
     header("Location: loginAdmin.php");
     exit;
 }
@@ -69,9 +49,9 @@ $lending_stats = [
 </head>
 <body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
-        <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
-            <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-gray-200">
-                <div class="bg-[#393E46] p-2 rounded">
+        <div class="w-64 bg-[#DFD0B8] shadow-md">
+            <div class="p-4 flex items-center space-x-3 border-b border-gray-200">
+                <div class="bg-blue-800 p-2 rounded">
                     <span class="font-bold text-white">SP</span>
                 </div>
                 <div class="text-sm leading-tight">
@@ -79,25 +59,24 @@ $lending_stats = [
                     <div class="text-xs">Sistem Perpustakaan Digital</div>
                 </div>
             </div>
-
             <nav class="mt-4">
                 <a href="dashboardAdmin.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
                     <i class="fas fa-chart-bar w-6"></i>
                     <span class="ml-2">Dashboard</span>
                 </a>
-                <a href="kelolaBuku.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
+                <a href="kelolaBuku.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Buku</span>
                 </a>
-                <a href="kelolaKeterlambatan.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
+                <a href="kelolaKeterlambatan.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-clock w-6"></i>
                     <span class="ml-2">Keterlambatan</span>
                 </a>
-                <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
+                <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
                 </a>
-                <a href="?logout=1" class="flex items-center px-3 py-3 hover:bg-[#948979] text-gray-800 hover:text-white mt-60 transition-colors" onclick="return confirm('Apakah Anda yakin ingin logout?')">
+                <a href="?logout=1" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black mt-auto">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
                 </a>
@@ -109,12 +88,6 @@ $lending_stats = [
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Dashboard</div>
                     <div class="flex items-center space-x-4">
-                        <div class="relative">
-                            <input type="text" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64" placeholder="Cari...">
-                            <button class="absolute right-2 top-2 text-gray-500">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
                         <div class="relative">
                             <button class="text-gray-500">
                                 <i class="fas fa-bell"></i>

@@ -1,16 +1,21 @@
 <?php
 session_start();
 
-// Check if admin is logged in
-// if (!isset($_SESSION['admin_id'])) {
-//     header("Location: loginAdmin.php");
-//     exit;
-// }
-
 $admin = [
     'name' => $_SESSION['admin_name'] ?? 'Admin',
     'id' => $_SESSION['admin_id'] ?? '1'
 ];
+
+if (isset($_GET['logout'])) {
+    session_destroy();
+    
+    if (isset($_COOKIE['admin_remember'])) {
+        setcookie('admin_remember', '', time() - 3600, '/');
+    }
+
+    header("Location: loginAdmin.php");
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'edit_status') {
@@ -82,10 +87,9 @@ if (!empty($search_query)) {
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
                 </a>
-                    <a href="loginAdmin.php" class="flex items-center px-3 py-3 hover:bg-[#948979] text-black mt-60">
+                <a href="?logout=1" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black mt-auto">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
-                 </a>
                 </a>
             </nav>
         </div>

@@ -1,43 +1,26 @@
 <?php
 session_start();
 
-// Check if admin is logged in
 if (!isset($_SESSION['admin_id'])) {
     header("Location: loginAdmin.php");
     exit;
 }
 
-// Initialize books array in session if not exists
 if (!isset($_SESSION['books'])) {
     $_SESSION['books'] = [
-        [
-            'id' => '1',
-            'judul' => 'Pemrograman Web dengan PHP',
-            'penulis' => 'John Doe',
-            'tahun' => '2020',
-            'isbn' => '1234567890',
-            'stok' => 5,
-            'status' => 'Tersedia'
-        ],
-        [
-            'id' => '2',
-            'judul' => 'Belajar Laravel untuk Pemula',
-            'penulis' => 'Jane Smith',
-            'tahun' => '2021',
-            'isbn' => '0987654321',
-            'stok' => 3,
-            'status' => 'Tersedia'
-        ],
-        [
-            'id' => '3',
-            'judul' => 'Pengenalan Machine Learning',
-            'penulis' => 'Robert Johnson',
-            'tahun' => '2019',
-            'isbn' => '1122334455',
-            'stok' => 0,
-            'status' => 'Dipinjam'
-        ]
+        
     ];
+}
+
+if (isset($_GET['logout'])) {
+    session_destroy();
+    
+    if (isset($_COOKIE['admin_remember'])) {
+        setcookie('admin_remember', '', time() - 3600, '/');
+    }
+
+    header("Location: loginAdmin.php");
+    exit;
 }
 
 $admin = [
@@ -45,7 +28,6 @@ $admin = [
     'id' => $_SESSION['admin_id'] ?? '1'
 ];
 
-// Calculate book statistics
 $total_books = count($_SESSION['books']);
 $books_borrowed = 0;
 $books_available = 0;
@@ -64,7 +46,6 @@ $book_stats = [
     'tersedia' => $books_available
 ];
 
-// Handle form submissions
 if (isset($_POST['add_book'])) {
     $new_book = [
         'id' => (string)(count($_SESSION['books']) + 1),
@@ -109,7 +90,6 @@ if (isset($_POST['delete_id'])) {
     exit;
 }
 
-// Handle search
 $search_query = $_GET['search'] ?? '';
 $filtered_books = $_SESSION['books'];
 if (!empty($search_query)) {
@@ -131,10 +111,9 @@ if (!empty($search_query)) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
-<body class="bg-blue-50">
+<body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
-        <!-- Sidebar -->
-        <div class="w-64 bg-white shadow-md">
+        <div class="w-64 bg-[#DFD0B8] shadow-md">
             <div class="p-4 flex items-center space-x-3 border-b border-gray-200">
                 <div class="bg-blue-800 p-2 rounded">
                     <span class="font-bold text-white">SP</span>
@@ -145,33 +124,31 @@ if (!empty($search_query)) {
                 </div>
             </div>
             <nav class="mt-4">
-                <a href="dashboardAdmin.php" class="flex items-center px-4 py-3 text-gray-600 hover:bg-blue-100 hover:text-blue-800">
+                <a href="dashboardAdmin.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-chart-bar w-6"></i>
                     <span class="ml-2">Dashboard</span>
                 </a>
-                <a href="kelolaBuku.php" class="flex items-center px-4 py-3 bg-blue-100 text-blue-800 font-medium">
+                <a href="kelolaBuku.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Buku</span>
                 </a>
-                <a href="kelolaKeterlambatan.php" class="flex items-center px-4 py-3 text-gray-600 hover:bg-blue-100 hover:text-blue-800">
+                <a href="kelolaKeterlambatan.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-clock w-6"></i>
                     <span class="ml-2">Keterlambatan</span>
                 </a>
-                <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 text-gray-600 hover:bg-blue-100 hover:text-blue-800">
+                <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
                 </a>
-                <a href="logout.php" class="flex items-center px-4 py-3 text-gray-600 hover:bg-blue-100 hover:text-blue-800 mt-auto">
+                <a href="?logout=1" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black mt-auto">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
                 </a>
             </nav>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
-            <header class="bg-white shadow-sm">
+            <header class="bg-[#DFD0B8] shadow-sm">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg text-gray-800">Kelola Buku</div>
                     <div class="flex items-center space-x-4">
@@ -199,8 +176,7 @@ if (!empty($search_query)) {
                     </div>
                 </div>
             </header>
-          
-            <!-- Main Content Area -->
+
             <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
                 <?php if (isset($_SESSION['success_message'])): ?>
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 flex justify-between items-center">
@@ -220,7 +196,6 @@ if (!empty($search_query)) {
                     </button>
                 </div>
 
-                <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-blue-500">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku</h3>
@@ -239,7 +214,6 @@ if (!empty($search_query)) {
                     </div>
                 </div>
 
-                <!-- Books Table -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="flex items-center justify-between p-4 border-b">
                         <div class="text-sm text-gray-500">
@@ -340,7 +314,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Add Book Modal -->
     <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
             <div class="flex justify-between items-center mb-4">
@@ -378,7 +351,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- View Book Modal -->
     <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
             <div class="flex justify-between items-center mb-4">
@@ -388,7 +360,7 @@ if (!empty($search_query)) {
                 </button>
             </div>
             <div id="bookDetails" class="space-y-3 text-sm">
-                <!-- Details will be inserted here by JavaScript -->
+
             </div>
             <div class="flex justify-end mt-6">
                 <button onclick="closeViewModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200">Tutup</button>
@@ -396,7 +368,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Edit Book Modal -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
             <div class="flex justify-between items-center mb-4">
@@ -435,7 +406,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 w-full max-w-sm">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Konfirmasi Hapus</h3>
@@ -585,7 +555,6 @@ if (!empty($search_query)) {
             }
         });
 
-        // Close modals when clicking outside
         window.onclick = function(event) {
             const addModal = document.getElementById('addModal');
             const viewModal = document.getElementById('viewModal');
@@ -598,7 +567,6 @@ if (!empty($search_query)) {
             if (event.target === deleteModal) closeDeleteModal();
         };
 
-        // Auto-hide success message after 5 seconds
         const successMessage = document.querySelector('.bg-green-100');
         if (successMessage) {
             setTimeout(() => {
