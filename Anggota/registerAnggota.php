@@ -1,3 +1,81 @@
+<?php
+// Database configuration
+$servername = "localhost";
+$username = "root"; // Sesuaikan dengan username database Anda
+$password = "";     // Sesuaikan dengan password database Anda
+$dbname = "perpustakaan"; // Sesuaikan dengan nama database Anda
+
+$message = "";
+$messageType = "";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Process form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $nrp = trim($_POST['nrp']);
+    $nama = trim($_POST['namaLengkap']);
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
+    $jurusan = trim($_POST['jurusan']);
+    $phoneNumber = trim($_POST['phoneNumber']);
+    
+    // Basic validation
+    if (empty($nrp) || empty($nama) || empty($email) || empty($password) || empty($jurusan) || empty($phoneNumber)) {
+        $message = "Semua field harus diisi!";
+        $messageType = "error";
+    } else {
+        // Check if NRP already exists
+        $checkStmt = $conn->prepare("SELECT NRP FROM anggota WHERE NRP = ?");
+        $checkStmt->bind_param("s", $nrp);
+        $checkStmt->execute();
+        $result = $checkStmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            $message = "NRP sudah terdaftar! Silakan gunakan NRP yang berbeda.";
+            $messageType = "error";
+        } else {
+            // Check if email already exists
+            $checkEmailStmt = $conn->prepare("SELECT Email FROM anggota WHERE Email = ?");
+            $checkEmailStmt->bind_param("s", $email);
+            $checkEmailStmt->execute();
+            $emailResult = $checkEmailStmt->get_result();
+            
+            if ($emailResult->num_rows > 0) {
+                $message = "Email sudah terdaftar! Silakan gunakan email yang berbeda.";
+                $messageType = "error";
+            } else {
+                // Hash password for security
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                
+                // Insert new member (Note: Jenis_kelamin set to default 'L' since it's not in the form)
+                $stmt = $conn->prepare("INSERT INTO anggota (NRP, Nama, Email, Pwd, Jurusan, No_Telp, Jenis_kelamin) VALUES (?, ?, ?, ?, ?, ?, 'L')");
+                $stmt->bind_param("ssssss", $nrp, $nama, $email, $hashedPassword, $jurusan, $phoneNumber);
+                
+                if ($stmt->execute()) {
+                    $message = "Pendaftaran berhasil! Selamat datang di SiPerpus.";
+                    $messageType = "success";
+                } else {
+                    $message = "Error: " . $stmt->error;
+                    $messageType = "error";
+                }
+                
+                $stmt->close();
+            }
+            $checkEmailStmt->close();
+        }
+        $checkStmt->close();
+    }
+}
+
+$conn->close();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +95,13 @@
                 <h2 class="text-xl font-bold text-gray-700 mb-1">Daftar Anggota - SiPerpus</h2>
             </div>
 
-            <form action="#" method="POST" class="space-y-4">
+            <?php if (!empty($message)): ?>
+                <div class="mb-4 p-3 rounded-md <?php echo $messageType === 'success' ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'; ?>">
+                    <?php echo htmlspecialchars($message); ?>
+                </div>
+            <?php endif; ?>
+
+            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST" class="space-y-4">
                 <div>
                     <label class="block text-xs text-gray-600 mb-1">Nama Lengkap</label>
                     <input 
@@ -25,6 +109,7 @@
                         id="namaLengkap" 
                         name="namaLengkap" 
                         placeholder="e.g. Daffa Al Ghifary"
+                        value="<?php echo isset($_POST['namaLengkap']) ? htmlspecialchars($_POST['namaLengkap']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
                 </div>
@@ -34,7 +119,7 @@
                     <div class="relative">
                         <button onclick="toggleDropdown()" type="button" id="dropdownButton" 
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent text-left">
-                            <span id="selectedOption">Pilih Jurusan</span>
+                            <span id="selectedOption"><?php echo isset($_POST['jurusan']) && !empty($_POST['jurusan']) ? htmlspecialchars($_POST['jurusan']) : 'Pilih Jurusan'; ?></span>
                         </button>
                         <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
                             <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -52,7 +137,7 @@
                                 <a href="#" onclick="selectOption('Manajemen')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Manajemen</a>
                             </div>
                         </div>
-                        <input type="hidden" id="jurusan" name="jurusan" required>
+                        <input type="hidden" id="jurusan" name="jurusan" value="<?php echo isset($_POST['jurusan']) ? htmlspecialchars($_POST['jurusan']) : ''; ?>" required>
                     </div>
                 </div>
 
@@ -65,6 +150,7 @@
                         placeholder="e.g. 3124....."
                         pattern="[0-9]{10}"
                         maxlength="10"
+                        value="<?php echo isset($_POST['nrp']) ? htmlspecialchars($_POST['nrp']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
                 </div>
@@ -76,6 +162,7 @@
                         id="email" 
                         name="email" 
                         placeholder="e.g. daffa@student.edu"
+                        value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
                 </div>
@@ -108,6 +195,7 @@
                         name="phoneNumber" 
                         placeholder="e.g. +62 812-3456-7890"
                         pattern="[\+]?[0-9\s\-\(\)]+"
+                        value="<?php echo isset($_POST['phoneNumber']) ? htmlspecialchars($_POST['phoneNumber']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
                 </div>
@@ -129,6 +217,14 @@
     </div>
 
     <script>
+        // Initialize dropdown with PHP value if exists
+        document.addEventListener('DOMContentLoaded', function() {
+            const jurusanValue = document.getElementById('jurusan').value;
+            if (jurusanValue) {
+                document.getElementById('selectedOption').textContent = jurusanValue;
+            }
+        });
+
         function toggleDropdown() {
             const menu = document.getElementById('dropdownMenu');
             menu.classList.toggle('hidden');
@@ -164,45 +260,6 @@
             
             if (!button.contains(event.target) && !dropdown.contains(event.target)) {
                 dropdown.classList.add('hidden');
-            }
-        });
-
-        document.querySelector('form').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const requiredFields = ['namaLengkap', 'nrp', 'email', 'password', 'phoneNumber'];
-            let isValid = true;
-            
-            requiredFields.forEach(field => {
-                const input = document.getElementById(field);
-                if (!input.value.trim()) {
-                    input.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    input.classList.remove('border-red-500');
-                }
-            });
-
-            const jurusan = document.getElementById('jurusan');
-            if (!jurusan.value) {
-                document.getElementById('dropdownButton').classList.add('border-red-500');
-                isValid = false;
-            } else {
-                document.getElementById('dropdownButton').classList.remove('border-red-500');
-            }
-
-            const terms = document.getElementById('terms');
-            if (terms && !terms.checked) {
-                terms.classList.add('ring-2', 'ring-red-500');
-                isValid = false;
-            } else if (terms) {
-                terms.classList.remove('ring-2', 'ring-red-500');
-            }
-            
-            if (isValid) {
-                alert('Pendaftaran berhasil! Data Anda sedang diproses.');
-            } else {
-                alert('Mohon lengkapi semua field yang diperlukan.');
             }
         });
     </script>
