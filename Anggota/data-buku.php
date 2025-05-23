@@ -165,11 +165,11 @@ $books = array_slice($books, $offset, $books_per_page);
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-blue-100">
+<body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
-        <div class="w-64 bg-white flex-shrink-0">
-            <div class="bg-white p-4 flex items-center space-x-3 text-black border-b border-gray-200">
-                <div class="bg-blue-800 p-2 rounded">
+        <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
+            <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-gray-200">
+                <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
                 </div>
                 <div class="text-sm leading-tight">
@@ -179,23 +179,23 @@ $books = array_slice($books, $offset, $books_per_page);
             </div>
 
             <nav class="mt-4">
-                <a href="dashboard.php" class="flex items-center px-4 py-3 hover:bg-blue-600 text-gray-800">
+                <a href="dashboard.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
                     <i class="fas fa-chart-bar w-6"></i>
                     <span class="ml-2">Dashboard</span>
                 </a>
-                <a href="peminjaman.php" class="flex items-center px-4 py-3 hover:bg-blue-600 text-gray-800">
+                <a href="peminjaman.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
                     <i class="fas fa-book-open w-6"></i>
                     <span class="ml-2">Peminjaman</span>
                 </a>
-                <a href="pengembalian.php" class="flex items-center px-4 py-3 hover:bg-blue-600 text-gray-800">
+                <a href="pengembalian.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
                     <i class="fas fa-history w-6"></i>
                     <span class="ml-2">Pengembalian</span>
                 </a>
-                <a href="data-buku.php" class="flex items-center px-4 py-3 bg-blue-600 text-white">
+                <a href="data-buku.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Data Buku</span>
                 </a>
-                    <a href="loginAnggota.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                    <a href="loginAnggota.php" class="flex items-center px-3 py-3 hover:bg-[#948979] text-black mt-60">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
                  </a>
@@ -203,7 +203,7 @@ $books = array_slice($books, $offset, $books_per_page);
         </div>
 
         <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white shadow-sm z-10">
+            <header class="bg-[#DFD0B8] shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Data Buku</div>
                     <div class="flex items-center space-x-4">
@@ -225,10 +225,10 @@ $books = array_slice($books, $offset, $books_per_page);
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <main class="flex-1 overflow-y-auto p-6">
                 <div class="flex justify-between items-center mb-6">
                     <div class="text-sm">
-                        <a href="dashboard.php" class="text-blue-600 hover:text-blue-800">Dashboard</a> / 
+                        <a href="dashboard.php" class="text-[#948979] hover:text-[#948979]">Dashboard</a> / 
                         <span class="text-gray-600">Data Buku</span>
                     </div>
                 </div>
@@ -238,7 +238,7 @@ $books = array_slice($books, $offset, $books_per_page);
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-medium">Filter</h3>
-                        <a href="data-buku.php" class="text-blue-600 hover:text-blue-800 text-sm">Reset Filter</a>
+                        <a href="data-buku.php" class="text-[#DFD0B8] hover:text-[#948979] text-sm">Reset Filter</a>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
                         <div>
@@ -266,7 +266,7 @@ $books = array_slice($books, $offset, $books_per_page);
                                 <span class="text-xs <?php echo $book['status'] == 'Tersedia' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'; ?> px-2 py-1 rounded-full"><?php echo htmlspecialchars($book['status']); ?></span>
                             </div>
                             <div class="flex justify-center">
-                                <button onclick="showBookDetail('<?php echo $book['id']; ?>')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                <button onclick="showBookDetail('<?php echo $book['id']; ?>')" class="text-[#948979] hover:text-[#948979] text-sm font-medium">
                                     <i class="fas fa-info-circle mr-1"></i>Detail Buku
                                 </button>
                             </div>
@@ -283,7 +283,7 @@ $books = array_slice($books, $offset, $books_per_page);
                         <?php endif; ?>
                         
                         <?php for ($i = max(1, $current_page - 2); $i <= min($total_pages, $current_page + 2); $i++): ?>
-                        <a href="?page=<?php echo $i; ?>&status=<?php echo $status_filter; ?>&search=<?php echo urlencode($search_query); ?>" class="px-4 py-2 <?php echo $i == $current_page ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?> rounded-lg border <?php echo $i == $current_page ? 'border-blue-600' : 'border-gray-300'; ?>"><?php echo $i; ?></a>
+                        <a href="?page=<?php echo $i; ?>&status=<?php echo $status_filter; ?>&search=<?php echo urlencode($search_query); ?>" class="px-4 py-2 <?php echo $i == $current_page ? 'bg-[#948979]  text-white' : 'bg-white text-gray-700 hover:bg-gray-50'; ?> rounded-lg border <?php echo $i == $current_page ? 'border-[#948979]' : 'border-[#948979]'; ?>"><?php echo $i; ?></a>
                         <?php endfor; ?>
                         
                         <?php if ($current_page < $total_pages): ?>
