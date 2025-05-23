@@ -31,78 +31,7 @@ $late_stats = [
 ];
 
 $late_returns = [
-    [
-        'id' => '1',
-        'nama_anggota' => 'Ahmad Wijaya',
-        'nim' => '12345678',
-        'judul_buku' => 'Harry Potter dan Batu Bertuah',
-        'tanggal_pinjam' => '2024-01-15',
-        'tanggal_kembali' => '2024-01-29',
-        'tanggal_dikembalikan' => '2024-02-05',
-        'hari_terlambat' => 7,
-        'denda' => 35000,
-        'status_denda' => 'Belum Bayar'
-    ],
-    [
-        'id' => '2',
-        'nama_anggota' => 'Siti Nurhaliza',
-        'nim' => '87654321',
-        'judul_buku' => 'Laskar Pelangi',
-        'tanggal_pinjam' => '2024-01-10',
-        'tanggal_kembali' => '2024-01-24',
-        'tanggal_dikembalikan' => '2024-01-28',
-        'hari_terlambat' => 4,
-        'denda' => 20000,
-        'status_denda' => 'Sudah Bayar'
-    ],
-    [
-        'id' => '3',
-        'nama_anggota' => 'Budi Santoso',
-        'nim' => '11223344',
-        'judul_buku' => 'Filosofi Teras',
-        'tanggal_pinjam' => '2024-01-20',
-        'tanggal_kembali' => '2024-02-03',
-        'tanggal_dikembalikan' => '2024-02-12',
-        'hari_terlambat' => 9,
-        'denda' => 45000,
-        'status_denda' => 'Belum Bayar'
-    ],
-    [
-        'id' => '4',
-        'nama_anggota' => 'Maria Gonzalez',
-        'nim' => '55667788',
-        'judul_buku' => 'Bumi Manusia',
-        'tanggal_pinjam' => '2024-01-25',
-        'tanggal_kembali' => '2024-02-08',
-        'tanggal_dikembalikan' => '2024-02-11',
-        'hari_terlambat' => 3,
-        'denda' => 15000,
-        'status_denda' => 'Sudah Bayar'
-    ],
-    [
-        'id' => '5',
-        'nama_anggota' => 'Rizky Pratama',
-        'nim' => '99887766',
-        'judul_buku' => 'Rich Dad Poor Dad',
-        'tanggal_pinjam' => '2024-02-01',
-        'tanggal_kembali' => '2024-02-15',
-        'tanggal_dikembalikan' => '2024-02-22',
-        'hari_terlambat' => 7,
-        'denda' => 35000,
-        'status_denda' => 'Belum Bayar'
-    ],
-    [
-        'id' => '6',
-        'nama_anggota' => 'Linda Sari',
-        'nim' => '44332211',
-        'judul_buku' => 'Atomic Habits',
-        'tanggal_pinjam' => '2024-02-05',
-        'tanggal_kembali' => '2024-02-19',
-        'tanggal_dikembalikan' => '2024-02-25',
-        'hari_terlambat' => 6,
-        'denda' => 30000,
-        'status_denda' => 'Belum Bayar'
-    ]
+    
 ];
 
 $search_query = $_GET['search'] ?? '';
@@ -204,10 +133,7 @@ if (!empty($search_query)) {
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Terlambat</h3>
                         <p class="text-3xl font-bold text-red-600"><?php echo $late_stats['total_terlambat']; ?></p>
-                        <div class="flex items-center mt-2 text-sm">
-                            <span class="text-red-500"><i class="fas fa-arrow-up mr-1"></i>8%</span>
-                            <span class="text-gray-500 ml-2">dari bulan lalu</span>
-                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Keterlambatan</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Belum Bayar Denda</h3>

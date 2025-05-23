@@ -17,54 +17,7 @@ $member_stats = [
 ];
 
 $members = [
-    [
-        'id' => '1',
-        'nrp' => '12345678',
-        'nama' => 'Ahmad Wijaya',
-        'email' => 'ahmad.wijaya@university.ac.id',
-        'jurusan' => 'Teknik Informatika',
-        'no_telp' => '081234567890'
-    ],
-    [
-        'id' => '2',
-        'nrp' => '87654321',
-        'nama' => 'Siti Nurhaliza',
-        'email' => 'siti.nurhaliza@university.ac.id',
-        'jurusan' => 'Sastra Indonesia',
-        'no_telp' => '081987654321'
-    ],
-    [
-        'id' => '3',
-        'nrp' => '11223344',
-        'nama' => 'Budi Santoso',
-        'email' => 'budi.santoso@university.ac.id',
-        'jurusan' => 'Manajemen',
-        'no_telp' => '081122334455'
-    ],
-    [
-        'id' => '4',
-        'nrp' => '55667788',
-        'nama' => 'Maria Gonzalez',
-        'email' => 'maria.gonzalez@university.ac.id',
-        'jurusan' => 'Psikologi',
-        'no_telp' => '081556677889'
-    ],
-    [
-        'id' => '5',
-        'nrp' => '99887766',
-        'nama' => 'Rizky Pratama',
-        'email' => 'rizky.pratama@university.ac.id',
-        'jurusan' => 'Ekonomi',
-        'no_telp' => '081998877665'
-    ],
-    [
-        'id' => '6',
-        'nrp' => '44332211',
-        'nama' => 'Linda Sari',
-        'email' => 'linda.sari@university.ac.id',
-        'jurusan' => 'Hukum',
-        'no_telp' => '081443322110'
-    ]
+    
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -193,10 +146,7 @@ if (!empty($search_query)) {
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition max-w-sm">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Anggota</h3>
                         <p class="text-3xl font-bold text-blue-600"><?php echo $member_stats['total_anggota']; ?></p>
-                        <div class="flex items-center mt-2 text-sm">
-                            <span class="text-green-500"><i class="fas fa-arrow-up mr-1"></i>12%</span>
-                            <span class="text-gray-500 ml-2">dari bulan lalu</span>
-                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Anggota terdaftar</p>
                     </div>
                 </div>
 
