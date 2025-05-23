@@ -1,5 +1,6 @@
 <?php
 session_start();
+include '../konek.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header("Location: loginAdmin.php");
@@ -47,15 +48,26 @@ $book_stats = [
 ];
 
 if (isset($_POST['add_book'])) {
+    // $IdBuku = trim($_POST['id_buku']);
+    // $Judul = trim($_POST['judul']);
+    // $Penulis = trim($_POST['penulis']);
+    // $Tahun = trim($_POST['tahun']);
+    // $ISBN = trim($_POST['isbn']);
+    // $Stok = trim($_POST['stok']);
+
     $new_book = [
-        'id' => (string)(count($_SESSION['books']) + 1),
+        'id' => $_POST['id_buku'],
         'judul' => $_POST['judul'],
         'penulis' => $_POST['penulis'],
         'tahun' => $_POST['tahun'],
         'isbn' => $_POST['isbn'],
+        'halaman' => $_POST['halaman'],
         'stok' => (int)$_POST['stok'],
         'status' => (int)$_POST['stok'] > 0 ? 'Tersedia' : 'Dipinjam'
     ];
+    // $stmt = $conn->prepare("INSERT INTO buku (ID, Judul, Penulis, Tahun, Jumlah_halaman, ISBN, stok) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    // $stmt->bind_param($IdBuku, $Judul, $Penulis, $Tahun, $)
+    
     $_SESSION['books'][] = $new_book;
     $_SESSION['success_message'] = "Buku berhasil ditambahkan!";
     header("Location: kelolaBuku.php");
@@ -70,6 +82,7 @@ if (isset($_POST['edit_book'])) {
             $book['penulis'] = $_POST['penulis'];
             $book['tahun'] = $_POST['tahun'];
             $book['isbn'] = $_POST['isbn'];
+            $book['halaman'] = $_POST['halaman'];
             $book['stok'] = (int)$_POST['stok'];
             $book['status'] = (int)$_POST['stok'] > 0 ? 'Tersedia' : 'Dipinjam';
             break;
@@ -230,11 +243,12 @@ if (!empty($search_query)) {
                         <table class="w-full text-sm text-left">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3">ID</th>
+                                    <th class="px-6 py-3">ID Buku</th>
                                     <th class="px-6 py-3">Judul</th>
                                     <th class="px-6 py-3">Penulis</th>
                                     <th class="px-6 py-3">Tahun</th>
                                     <th class="px-6 py-3">ISBN</th>
+                                    <th class="px-6 py-3">Jumlah Halaman</th>
                                     <th class="px-6 py-3">Stok</th>
                                     <th class="px-6 py-3">Status</th>
                                     <th class="px-6 py-3 text-right">Aksi</th>
@@ -248,6 +262,7 @@ if (!empty($search_query)) {
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['penulis']); ?></td>
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['tahun']); ?></td>
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['isbn']); ?></td>
+                                        <td class="px-6 py-4"><?php echo htmlspecialchars($book['halaman']); ?></td>
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['stok']); ?></td>
                                         <td class="px-6 py-4">
                                             <?php if ($book['status'] === 'Tersedia'): ?>
@@ -290,7 +305,6 @@ if (!empty($search_query)) {
                         </table>
                     </div>
 
-                    <!-- Pagination -->
                     <div class="flex items-center justify-between p-4 border-t">
                         <div class="text-sm text-gray-500">
                             Menampilkan <span class="font-medium">1 - <?php echo count($filtered_books); ?></span> dari <span class="font-medium"><?php echo $book_stats['total_buku']; ?></span> buku
@@ -324,6 +338,10 @@ if (!empty($search_query)) {
             </div>
             <form id="addForm" method="POST" class="space-y-4">
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Buku <span class="text-red-500">*</span></label>
+                    <input type="text" name="id_buku" id="id_buku" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Judul <span class="text-red-500">*</span></label>
                     <input type="text" name="judul" id="addJudul" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
@@ -338,6 +356,10 @@ if (!empty($search_query)) {
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">ISBN <span class="text-red-500">*</span></label>
                     <input type="text" name="isbn" id="addIsbn" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span class="text-red-500">*</span></label>
+                    <input type="text" name="halaman" id="halaman" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span class="text-red-500">*</span></label>
@@ -379,6 +401,10 @@ if (!empty($search_query)) {
             <form id="editForm" method="POST" class="space-y-4">
                 <input type="hidden" name="edit_id" id="editId">
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Buku <span class="text-red-500">*</span></label>
+                    <input type="text" name="id_buku" id="editIdBuku" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Judul <span class="text-red-500">*</span></label>
                     <input type="text" name="judul" id="editJudul" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
@@ -393,6 +419,10 @@ if (!empty($search_query)) {
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">ISBN <span class="text-red-500">*</span></label>
                     <input type="text" name="isbn" id="editIsbn" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span class="text-red-500">*</span></label>
+                    <input type="number" name="halaman" id="editHalaman" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span class="text-red-500">*</span></label>
@@ -456,6 +486,10 @@ if (!empty($search_query)) {
                     <span>${book.isbn}</span>
                 </div>
                 <div class="flex">
+                    <strong class="w-24">Jumlah halaman:</strong>
+                    <span>${book.halaman}</span>
+                </div>
+                <div class="flex">
                     <strong class="w-24">Stok:</strong>
                     <span>${book.stok}</span>
                 </div>
@@ -479,11 +513,12 @@ if (!empty($search_query)) {
             const book = books.find(b => b.id === id);
             
             if (book) {
-                document.getElementById('editId').value = book.id;
+                document.getElementById('editIdBuku').value = book.id;
                 document.getElementById('editJudul').value = book.judul;
                 document.getElementById('editPenulis').value = book.penulis;
                 document.getElementById('editTahun').value = book.tahun;
                 document.getElementById('editIsbn').value = book.isbn;
+                document.getElementById('editHalaman').value = book.halaman;
                 document.getElementById('editStok').value = book.stok;
                 
                 document.getElementById('editModal').classList.remove('hidden');
