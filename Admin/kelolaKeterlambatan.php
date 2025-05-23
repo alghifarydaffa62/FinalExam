@@ -12,10 +12,8 @@ $admin = [
     'id' => $_SESSION['admin_id'] ?? '1'
 ];
 
-// Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'edit_status') {
-        // Update payment status
         $id = $_POST['id'];
         foreach ($late_returns as &$late) {
             if ($late['id'] === $id) {
@@ -33,78 +31,7 @@ $late_stats = [
 ];
 
 $late_returns = [
-    [
-        'id' => '1',
-        'nama_anggota' => 'Ahmad Wijaya',
-        'nim' => '12345678',
-        'judul_buku' => 'Harry Potter dan Batu Bertuah',
-        'tanggal_pinjam' => '2024-01-15',
-        'tanggal_kembali' => '2024-01-29',
-        'tanggal_dikembalikan' => '2024-02-05',
-        'hari_terlambat' => 7,
-        'denda' => 35000,
-        'status_denda' => 'Belum Bayar'
-    ],
-    [
-        'id' => '2',
-        'nama_anggota' => 'Siti Nurhaliza',
-        'nim' => '87654321',
-        'judul_buku' => 'Laskar Pelangi',
-        'tanggal_pinjam' => '2024-01-10',
-        'tanggal_kembali' => '2024-01-24',
-        'tanggal_dikembalikan' => '2024-01-28',
-        'hari_terlambat' => 4,
-        'denda' => 20000,
-        'status_denda' => 'Sudah Bayar'
-    ],
-    [
-        'id' => '3',
-        'nama_anggota' => 'Budi Santoso',
-        'nim' => '11223344',
-        'judul_buku' => 'Filosofi Teras',
-        'tanggal_pinjam' => '2024-01-20',
-        'tanggal_kembali' => '2024-02-03',
-        'tanggal_dikembalikan' => '2024-02-12',
-        'hari_terlambat' => 9,
-        'denda' => 45000,
-        'status_denda' => 'Belum Bayar'
-    ],
-    [
-        'id' => '4',
-        'nama_anggota' => 'Maria Gonzalez',
-        'nim' => '55667788',
-        'judul_buku' => 'Bumi Manusia',
-        'tanggal_pinjam' => '2024-01-25',
-        'tanggal_kembali' => '2024-02-08',
-        'tanggal_dikembalikan' => '2024-02-11',
-        'hari_terlambat' => 3,
-        'denda' => 15000,
-        'status_denda' => 'Sudah Bayar'
-    ],
-    [
-        'id' => '5',
-        'nama_anggota' => 'Rizky Pratama',
-        'nim' => '99887766',
-        'judul_buku' => 'Rich Dad Poor Dad',
-        'tanggal_pinjam' => '2024-02-01',
-        'tanggal_kembali' => '2024-02-15',
-        'tanggal_dikembalikan' => '2024-02-22',
-        'hari_terlambat' => 7,
-        'denda' => 35000,
-        'status_denda' => 'Belum Bayar'
-    ],
-    [
-        'id' => '6',
-        'nama_anggota' => 'Linda Sari',
-        'nim' => '44332211',
-        'judul_buku' => 'Atomic Habits',
-        'tanggal_pinjam' => '2024-02-05',
-        'tanggal_kembali' => '2024-02-19',
-        'tanggal_dikembalikan' => '2024-02-25',
-        'hari_terlambat' => 6,
-        'denda' => 30000,
-        'status_denda' => 'Belum Bayar'
-    ]
+    
 ];
 
 $search_query = $_GET['search'] ?? '';
@@ -155,9 +82,10 @@ if (!empty($search_query)) {
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
                 </a>
-                <a href="logoutAdmin.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                    <a href="loginAdmin.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
+                 </a>
                 </a>
             </nav>
         </div>
@@ -205,10 +133,7 @@ if (!empty($search_query)) {
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Terlambat</h3>
                         <p class="text-3xl font-bold text-red-600"><?php echo $late_stats['total_terlambat']; ?></p>
-                        <div class="flex items-center mt-2 text-sm">
-                            <span class="text-red-500"><i class="fas fa-arrow-up mr-1"></i>8%</span>
-                            <span class="text-gray-500 ml-2">dari bulan lalu</span>
-                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Keterlambatan</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Belum Bayar Denda</h3>
@@ -303,7 +228,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Edit Status Modal -->
     <div id="editStatusModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
             <div class="flex justify-between items-center mb-4">
@@ -320,7 +244,7 @@ if (!empty($search_query)) {
                     <div>
                         <span class="block text-sm font-medium text-gray-700 mb-2">Detail Keterlambatan:</span>
                         <div id="editStatusDetails" class="bg-gray-50 p-3 rounded text-sm">
-                            <!-- Details will be filled by JavaScript -->
+
                         </div>
                     </div>
                     <div>
@@ -341,16 +265,13 @@ if (!empty($search_query)) {
     </div>
 
     <script>
-        // Edit Status
         function editStatus(late) {
             const modal = document.getElementById('editStatusModal');
             const details = document.getElementById('editStatusDetails');
-            
-            // Fill form with current data
+
             document.getElementById('editStatusId').value = late.id;
             document.getElementById('editStatusDenda').value = late.status_denda;
-            
-            // Fill details
+
             details.innerHTML = `
                 <div class="space-y-2">
                     <div><strong>Nama:</strong> ${late.nama_anggota}</div>
@@ -369,7 +290,6 @@ if (!empty($search_query)) {
             modal.classList.add('hidden');
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const editStatusModal = document.getElementById('editStatusModal');
             

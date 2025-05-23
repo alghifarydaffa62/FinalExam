@@ -17,61 +17,12 @@ $member_stats = [
 ];
 
 $members = [
-    [
-        'id' => '1',
-        'nrp' => '12345678',
-        'nama' => 'Ahmad Wijaya',
-        'email' => 'ahmad.wijaya@university.ac.id',
-        'jurusan' => 'Teknik Informatika',
-        'no_telp' => '081234567890'
-    ],
-    [
-        'id' => '2',
-        'nrp' => '87654321',
-        'nama' => 'Siti Nurhaliza',
-        'email' => 'siti.nurhaliza@university.ac.id',
-        'jurusan' => 'Sastra Indonesia',
-        'no_telp' => '081987654321'
-    ],
-    [
-        'id' => '3',
-        'nrp' => '11223344',
-        'nama' => 'Budi Santoso',
-        'email' => 'budi.santoso@university.ac.id',
-        'jurusan' => 'Manajemen',
-        'no_telp' => '081122334455'
-    ],
-    [
-        'id' => '4',
-        'nrp' => '55667788',
-        'nama' => 'Maria Gonzalez',
-        'email' => 'maria.gonzalez@university.ac.id',
-        'jurusan' => 'Psikologi',
-        'no_telp' => '081556677889'
-    ],
-    [
-        'id' => '5',
-        'nrp' => '99887766',
-        'nama' => 'Rizky Pratama',
-        'email' => 'rizky.pratama@university.ac.id',
-        'jurusan' => 'Ekonomi',
-        'no_telp' => '081998877665'
-    ],
-    [
-        'id' => '6',
-        'nrp' => '44332211',
-        'nama' => 'Linda Sari',
-        'email' => 'linda.sari@university.ac.id',
-        'jurusan' => 'Hukum',
-        'no_telp' => '081443322110'
-    ]
+    
 ];
 
-// Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'edit') {
-            // Update member data
             $id = $_POST['id'];
             foreach ($members as &$member) {
                 if ($member['id'] === $id) {
@@ -85,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $success_message = "Data anggota berhasil diperbarui!";
         } elseif ($_POST['action'] === 'delete') {
-            // Delete member
             $id = $_POST['id'];
             $members = array_filter($members, function($member) use ($id) {
                 return $member['id'] !== $id;
@@ -145,9 +95,10 @@ if (!empty($search_query)) {
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
                 </a>
-                <a href="logoutAdmin.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                    <a href="loginAdmin.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
+                 </a>
                 </a>
             </nav>
         </div>
@@ -195,10 +146,7 @@ if (!empty($search_query)) {
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition max-w-sm">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Anggota</h3>
                         <p class="text-3xl font-bold text-blue-600"><?php echo $member_stats['total_anggota']; ?></p>
-                        <div class="flex items-center mt-2 text-sm">
-                            <span class="text-green-500"><i class="fas fa-arrow-up mr-1"></i>12%</span>
-                            <span class="text-gray-500 ml-2">dari bulan lalu</span>
-                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Anggota terdaftar</p>
                     </div>
                 </div>
 
@@ -279,7 +227,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Detail Modal -->
     <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
             <div class="flex justify-between items-center mb-4">
@@ -289,7 +236,7 @@ if (!empty($search_query)) {
                 </button>
             </div>
             <div id="detailContent">
-                <!-- Content will be filled by JavaScript -->
+
             </div>
             <div class="flex justify-end mt-6">
                 <button onclick="closeDetailModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg">Tutup</button>
@@ -297,7 +244,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Edit Modal -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
             <div class="flex justify-between items-center mb-4">
@@ -348,7 +294,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Delete Modal -->
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-sm mx-auto">
             <h3 class="text-lg font-medium mb-4">Konfirmasi Hapus</h3>
@@ -365,7 +310,6 @@ if (!empty($search_query)) {
     </div>
 
     <script>
-        // View Member Details
         function viewMember(member) {
             const modal = document.getElementById('detailModal');
             const content = document.getElementById('detailContent');
@@ -407,11 +351,9 @@ if (!empty($search_query)) {
             modal.classList.add('hidden');
         }
 
-        // Edit Member
         function editMember(member) {
             const modal = document.getElementById('editModal');
-            
-            // Fill form with current data
+
             document.getElementById('editId').value = member.id;
             document.getElementById('editNrp').value = member.nrp;
             document.getElementById('editNama').value = member.nama;
@@ -427,7 +369,6 @@ if (!empty($search_query)) {
             modal.classList.add('hidden');
         }
 
-        // Delete Member
         function confirmDelete(id, name) {
             const modal = document.getElementById('deleteModal');
             
@@ -442,7 +383,6 @@ if (!empty($search_query)) {
             modal.classList.add('hidden');
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const detailModal = document.getElementById('detailModal');
             const editModal = document.getElementById('editModal');

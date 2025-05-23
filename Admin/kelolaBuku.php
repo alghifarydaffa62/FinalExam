@@ -19,66 +19,12 @@ $book_stats = [
 ];
 
 $books = [
-    [
-        'id' => '1',
-        'judul' => 'Harry Potter dan Batu Bertuah',
-        'penulis' => 'J.K. Rowling',
-        'tahun' => '1997',
-        'isbn' => '9786020379784',
-        'stok' => 5,
-        'status' => 'Tersedia'
-    ],
-    [
-        'id' => '2',
-        'judul' => 'Laskar Pelangi',
-        'penulis' => 'Andrea Hirata',
-        'tahun' => '2005',
-        'isbn' => '9789792248616',
-        'stok' => 3,
-        'status' => 'Tersedia'
-    ],
-    [
-        'id' => '3',
-        'judul' => 'Filosofi Teras',
-        'penulis' => 'Henry Manampiring',
-        'tahun' => '2018',
-        'isbn' => '9786024246945',
-        'stok' => 0,
-        'status' => 'Dipinjam'
-    ],
-    [
-        'id' => '4',
-        'judul' => 'Bumi Manusia',
-        'penulis' => 'Pramoedya Ananta Toer',
-        'tahun' => '1980',
-        'isbn' => '9799731234',
-        'stok' => 2,
-        'status' => 'Tersedia'
-    ],
-    [
-        'id' => '5',
-        'judul' => 'Rich Dad Poor Dad',
-        'penulis' => 'Robert T. Kiyosaki',
-        'tahun' => '1997',
-        'isbn' => '9786020333175',
-        'stok' => 1,
-        'status' => 'Tersedia'
-    ],
-    [
-        'id' => '6',
-        'judul' => 'Atomic Habits',
-        'penulis' => 'James Clear',
-        'tahun' => '2018',
-        'isbn' => '9786020633176',
-        'stok' => 0,
-        'status' => 'Dipinjam'
-    ]
+    
 ];
 
-// Handle add book action
 if (isset($_POST['add_book'])) {
     $new_book = [
-        'id' => (string)(count($books) + 1), // Simple ID generation
+        'id' => (string)(count($books) + 1), 
         'judul' => $_POST['judul'],
         'penulis' => $_POST['penulis'],
         'tahun' => $_POST['tahun'],
@@ -92,7 +38,6 @@ if (isset($_POST['add_book'])) {
     exit;
 }
 
-// Handle edit book action
 if (isset($_POST['edit_book'])) {
     $edit_id = $_POST['edit_id'];
     foreach ($books as &$book) {
@@ -111,10 +56,8 @@ if (isset($_POST['edit_book'])) {
     exit;
 }
 
-// Handle delete action
 if (isset($_POST['delete_id'])) {
     $delete_id = $_POST['delete_id'];
-    // Remove book from array (in real application, this would be a database operation)
     $books = array_filter($books, function($book) use ($delete_id) {
         return $book['id'] !== $delete_id;
     });
@@ -171,9 +114,11 @@ if (!empty($search_query)) {
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
                 </a>
-                <a href="logoutAdmin.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                    <a href="loginAdmin.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
+                 </a>
+
                 </a>
             </nav>
         </div>
@@ -224,26 +169,17 @@ if (!empty($search_query)) {
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku</h3>
                         <p class="text-3xl font-bold text-blue-600"><?php echo $book_stats['total_buku']; ?></p>
-                        <div class="flex items-center mt-2 text-sm">
-                            <span class="text-green-500"><i class="fas fa-arrow-up mr-1"></i>3%</span>
-                            <span class="text-gray-500 ml-2">dari bulan lalu</span>
-                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Buku dalam koleksi</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
-                        <h3 class="text-sm font-medium text-gray-500 mb-2">Buku Dipinjam</h3>
+                        <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku Dipinjam</h3>
                         <p class="text-3xl font-bold text-orange-600"><?php echo $book_stats['dipinjam']; ?></p>
-                        <div class="flex items-center mt-2 text-sm">
-                            <span class="text-green-500"><i class="fas fa-arrow-up mr-1"></i>5%</span>
-                            <span class="text-gray-500 ml-2">dari bulan lalu</span>
-                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Buku dipinjam anggota</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Buku Tersedia</h3>
                         <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['tersedia']; ?></p>
-                        <div class="flex items-center mt-2 text-sm">
-                            <span class="text-red-500"><i class="fas fa-arrow-down mr-1"></i>2%</span>
-                            <span class="text-gray-500 ml-2">dari bulan lalu</span>
-                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Buku belum dipinjam</p>
                     </div>
                 </div>
 
@@ -332,7 +268,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Modal Tambah Buku -->
     <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-auto max-h-96 overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
@@ -370,7 +305,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Modal Detail Buku -->
     <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-auto">
             <div class="flex justify-between items-center mb-4">
@@ -380,7 +314,7 @@ if (!empty($search_query)) {
                 </button>
             </div>
             <div id="bookDetails" class="space-y-3">
-                <!-- Book details will be populated here -->
+
             </div>
             <div class="flex justify-end mt-6">
                 <button onclick="closeViewModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg">Tutup</button>
@@ -388,7 +322,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Modal Edit Buku -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-auto max-h-96 overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
@@ -427,7 +360,6 @@ if (!empty($search_query)) {
         </div>
     </div>
 
-    <!-- Modal Hapus Buku -->
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-sm mx-auto">
             <h3 class="text-lg font-medium mb-4">Konfirmasi Hapus</h3>
@@ -477,8 +409,6 @@ if (!empty($search_query)) {
 
         function editBook(id) {
             currentEditId = id;
-            // In a real application, you would fetch book data from server
-            // For now, we'll find it in the current books array
             const books = <?php echo json_encode($books); ?>;
             const book = books.find(b => b.id === id.toString());
             
@@ -509,28 +439,24 @@ if (!empty($search_query)) {
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        // Form validation
         document.getElementById('addForm').addEventListener('submit', function(e) {
             const isbn = document.getElementById('addIsbn').value;
             const tahun = document.getElementById('addTahun').value;
             const stok = document.getElementById('addStok').value;
-            
-            // Basic ISBN validation (should be numeric and 10 or 13 digits)
+
             if (!/^\d{10}(\d{3})?$/.test(isbn.replace(/[^0-9]/g, ''))) {
                 alert('ISBN harus berupa 10 atau 13 digit angka');
                 e.preventDefault();
                 return;
             }
-            
-            // Year validation
+
             const currentYear = new Date().getFullYear();
             if (tahun < 1900 || tahun > currentYear) {
                 alert('Tahun harus antara 1900 dan ' + currentYear);
                 e.preventDefault();
                 return;
             }
-            
-            // Stock validation
+
             if (stok < 0) {
                 alert('Stok tidak boleh negatif');
                 e.preventDefault();
@@ -542,23 +468,20 @@ if (!empty($search_query)) {
             const isbn = document.getElementById('editIsbn').value;
             const tahun = document.getElementById('editTahun').value;
             const stok = document.getElementById('editStok').value;
-            
-            // Basic ISBN validation
+
             if (!/^\d{10}(\d{3})?$/.test(isbn.replace(/[^0-9]/g, ''))) {
                 alert('ISBN harus berupa 10 atau 13 digit angka');
                 e.preventDefault();
                 return;
             }
-            
-            // Year validation
+
             const currentYear = new Date().getFullYear();
             if (tahun < 1900 || tahun > currentYear) {
                 alert('Tahun harus antara 1900 dan ' + currentYear);
                 e.preventDefault();
                 return;
             }
-            
-            // Stock validation
+
             if (stok < 0) {
                 alert('Stok tidak boleh negatif');
                 e.preventDefault();
@@ -566,7 +489,6 @@ if (!empty($search_query)) {
             }
         });
 
-        // Close modals when clicking outside
         window.onclick = function(event) {
             const addModal = document.getElementById('addModal');
             const viewModal = document.getElementById('viewModal');
@@ -584,7 +506,6 @@ if (!empty($search_query)) {
             }
         };
 
-        // Auto-hide success message after 5 seconds
         const successMessage = document.querySelector('.bg-green-100');
         if (successMessage) {
             setTimeout(() => {

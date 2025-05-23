@@ -6,6 +6,9 @@ session_start();
 //     exit;
 // }
 
+// $email = $_POST['email'];
+// $password = $_POST['password'];
+
 $user = [
     'name' => $_SESSION['user_name'] ?? 'Anggota',
     'id' => $_SESSION['user_id'] ?? '1'
@@ -13,7 +16,6 @@ $user = [
 
 $stats = [
     'total_borrowed' => $_SESSION['total_borrowed'] ?? 1,
-    'total_returned' => $_SESSION['total_returned'] ?? 2,
     'total_buku' => $_SESSION['total_books'] ?? 150
 ];
 
@@ -78,6 +80,10 @@ $borrowing_history = [
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Data Buku</span>
                 </a>
+                 <a href="loginAnggota.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                    <i class="fas fa-sign-out-alt w-6"></i>
+                    <span class="ml-2">Logout</span>
+                 </a>
                 
             </nav>
         </div>
@@ -117,16 +123,11 @@ $borrowing_history = [
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Peminjaman</h3>
                         <p class="text-3xl font-bold text-blue-600"><?php echo $stats['total_borrowed']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Buku yang sedang dipinjam</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-2">Total Dikembalikan</h3>
-                        <p class="text-3xl font-bold text-green-600"><?php echo $stats['total_returned']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Buku yang sudah dikembalikan</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Buku</h3>
@@ -172,31 +173,6 @@ $borrowing_history = [
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-
-                <div class="mt-8">
-                    <h3 class="text-lg font-medium mb-4">Rekomendasi Buku</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <?php
-                        $recommendations = [
-                            ['title' => 'Filosofi Teras', 'author' => 'Henry Manampiring', 'genre' => 'Filsafat', 'id' => 1],
-                            ['title' => 'Atomic Habits', 'author' => 'James Clear', 'genre' => 'Pengembangan Diri', 'id' => 2],
-                            ['title' => 'Laut Bercerita', 'author' => 'Leila S. Chudori', 'genre' => 'Fiksi', 'id' => 3],
-                        ];
-                        foreach ($recommendations as $book): ?>
-                        <div class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition">
-                            <div class="bg-gray-200 h-32 rounded-lg mb-3 flex items-center justify-center">
-                                <i class="fas fa-book text-gray-400 text-4xl"></i>
-                            </div>
-                            <h4 class="font-medium"><?php echo htmlspecialchars($book['title']); ?></h4>
-                            <p class="text-sm text-gray-500"><?php echo htmlspecialchars($book['author']); ?></p>
-                            <div class="mt-3 flex justify-between items-center">
-                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full"><?php echo htmlspecialchars($book['genre']); ?></span>
-                                <a href="detail-buku.php?id=<?php echo $book['id']; ?>" class="text-blue-600 hover:text-blue-800 text-sm">Detail</a>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
                     </div>
                 </div>
             </main>

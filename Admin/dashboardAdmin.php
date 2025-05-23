@@ -2,10 +2,40 @@
 session_start();
 
 // Check if admin is logged in
-// if (!isset($_SESSION['admin_id'])) {
-//     header("Location: loginAdmin.php");
-//     exit;
-// }
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header("Location: loginAdmin.php");
+    exit;
+}
+
+// Handle logout
+if (isset($_GET['logout'])) {
+    // Log aktivitas logout (optional)
+    if (isset($_SESSION['admin_id'])) {
+        include '../konek.php';
+        try {
+            $log_stmt = $conn->prepare("INSERT INTO log_aktivitas (tipe_aktivitas, id_user, tipe_user, deskripsi) VALUES (?, ?, ?, ?)");
+            $tipe_aktivitas = 'logout_admin';
+            $tipe_user = 'admin';
+            $deskripsi = "Admin " . $_SESSION['admin_name'] . " berhasil logout";
+            $log_stmt->bind_param("siss", $tipe_aktivitas, $_SESSION['admin_id'], $tipe_user, $deskripsi);
+            $log_stmt->execute();
+        } catch (Exception $e) {
+            // Silent error handling for logging
+        }
+    }
+    
+    // Destroy session
+    session_destroy();
+    
+    // Remove remember me cookie if exists
+    if (isset($_COOKIE['admin_remember'])) {
+        setcookie('admin_remember', '', time() - 3600, '/');
+    }
+    
+    // Redirect to login page
+    header("Location: loginAdmin.php");
+    exit;
+}
 
 $admin = [
     'name' => $_SESSION['admin_name'] ?? 'Admin',
@@ -67,7 +97,7 @@ $lending_stats = [
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
                 </a>
-                <a href="logoutAdmin.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                <a href="?logout=1" class="flex items-center px-3 py-3 hover:bg-red-600 hover:text-white text-black mt-60 transition-colors" onclick="return confirm('Apakah Anda yakin ingin logout?')">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
                 </a>
@@ -93,6 +123,10 @@ $lending_stats = [
                         <div class="flex items-center space-x-2">
                             <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                                 <i class="fas fa-user text-gray-500"></i>
+                            </div>
+                            <div class="text-sm">
+                                <div class="font-medium"><?php echo htmlspecialchars($admin['name']); ?></div>
+                                <div class="text-gray-500 text-xs">Admin</div>
                             </div>
                         </div>
                     </div>
