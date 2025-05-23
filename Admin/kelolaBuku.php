@@ -85,11 +85,11 @@ if (!empty($search_query)) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-blue-100">
+<body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
-        <div class="w-64 bg-white flex-shrink-0">
-            <div class="bg-white p-4 flex items-center space-x-3 text-black border-b border-gray-200">
-                <div class="bg-blue-800 p-2 rounded">
+        <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
+            <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-gray-200">
+                <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
                 </div>
                 <div class="text-sm leading-tight">
@@ -98,23 +98,23 @@ if (!empty($search_query)) {
                 </div>
             </div>
             <nav class="mt-4">
-                <a href="dashboardAdmin.php" class="flex items-center px-4 py-3 hover:bg-blue-700 text-black">
+                <a href="dashboardAdmin.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-chart-bar w-6"></i>
                     <span class="ml-2">Dashboard</span>
                 </a>
-                <a href="kelolaBuku.php" class="flex items-center px-4 py-3 bg-blue-700 text-white">
+                <a href="kelolaBuku.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Buku</span>
                 </a>
-                <a href="kelolaKeterlambatan.php" class="flex items-center px-4 py-3 hover:bg-blue-700 text-black">
+                <a href="kelolaKeterlambatan.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-clock w-6"></i>
                     <span class="ml-2">Keterlambatan</span>
                 </a>
-                <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-blue-700 text-black">
+                <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
                 </a>
-                    <a href="loginAdmin.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                    <a href="loginAdmin.php" class="flex items-center px-3 py-3 hover:bg-[#948979] text-black mt-60">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
                  </a>
@@ -124,7 +124,7 @@ if (!empty($search_query)) {
         </div>
 
         <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white shadow-sm z-10">
+            <header class="bg-[#DFD0B8] shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Kelola Buku</div>
                     <div class="flex items-center space-x-4">
@@ -151,7 +151,7 @@ if (!empty($search_query)) {
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <main class="flex-1 overflow-y-auto p-6 bg-[#FFFAEC]">
                 <?php if (isset($_SESSION['success_message'])): ?>
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                         <?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?>
@@ -160,7 +160,7 @@ if (!empty($search_query)) {
 
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-medium">Daftar Buku Perpustakaan</h2>
-                    <button onclick="addBook()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+                    <button onclick="addBook()" class="bg-[#393E46] text-white px-4 py-2 rounded-lg hover:bg-[#948979] flex items-center">
                         <i class="fas fa-plus mr-2"></i> Tambah Buku
                     </button>
                 </div>
@@ -368,7 +368,7 @@ if (!empty($search_query)) {
                 <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg">Batal</button>
                 <form id="deleteForm" method="POST" style="display: inline;">
                     <input type="hidden" name="delete_id" id="deleteId">
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg">Hapus</button>
+                    <button type="submit" class="px-4 py-2 bg-red-700 text-white rounded-lg">Hapus</button>
                 </form>
             </div>
         </div>
