@@ -80,11 +80,11 @@ $borrowed_books = [
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-blue-100">
+<body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
-        <div class="w-64 bg-white flex-shrink-0">
-            <div class="bg-white p-4 flex items-center space-x-3 text-black border-b border-gray-200">
-                <div class="bg-blue-800 p-2 rounded">
+        <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
+            <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-gray-200">
+                <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
                 </div>
                 <div class="text-sm leading-tight">
@@ -93,22 +93,22 @@ $borrowed_books = [
                 </div>
             </div>
              <nav class="mt-4">
-                <a href="dashboard.php" class="flex items-center px-4 py-3 hover:bg-blue-600 text-gray-800">
+                <a href="dashboard.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
                     <i class="fas fa-chart-bar w-6"></i>
                     <span class="ml-2">Dashboard</span>
                 </a>
-                <a href="peminjaman.php" class="flex items-center px-4 py-3 hover:bg-blue-600 text-gray-800">
+                <a href="peminjaman.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
                     <i class="fas fa-book-open w-6"></i>
                     <span class="ml-2">Peminjaman</span>
                 </a>
-                <a href="pengembalian.php" class="flex items-center px-4 py-3 bg-blue-600 text-white">
+                <a href="pengembalian.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
                     <i class="fas fa-history w-6"></i>
                     <span class="ml-2">Pengembalian</span>
                 </a>
-                <a href="data-buku.php" class="flex items-center px-4 py-3 hover:bg-blue-600 text-gray-800">
+                <a href="data-buku.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Data Buku</span>
-                    <a href="loginAnggota.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                    <a href="loginAnggota.php" class="flex items-center px-3 py-3 hover:bg-[#948979] text-black mt-60">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
                  </a>
@@ -118,7 +118,7 @@ $borrowed_books = [
         </div>
 
         <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white shadow-sm z-10">
+            <header class="bg-[#DFD0B8] shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Pengembalian Buku</div>
                     <div class="flex items-center space-x-4">
@@ -138,10 +138,10 @@ $borrowed_books = [
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <main class="flex-1 overflow-y-auto p-6 ">
                 <div class="flex justify-between items-center mb-6">
                     <div class="text-sm">
-                        <a href="dashboard.php" class="text-blue-600 hover:text-blue-800">Dashboard</a> / 
+                        <a href="dashboard.php" class="text-[#948979] hover:text-[#948979]">Dashboard</a> / 
                         <span class="text-gray-600">Pengembalian</span>
                     </div>
                 </div>
