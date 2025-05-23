@@ -14,10 +14,10 @@
             <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2">
               <img src="../images/Group 1.png" alt="User Icon" class="w-5 h-5" />
               <input 
-                type="text" 
-                id="username" 
-                name="username" 
-                placeholder="Username"
+                type="email" 
+                id="email" 
+                name="email" 
+                placeholder="Email"
                 class="w-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none border-none bg-transparent" />
             </div>
 
