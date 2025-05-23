@@ -130,6 +130,7 @@ if (!empty($search_query)) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body class="bg-blue-50">
     <div class="flex h-screen">
         <!-- Sidebar -->
@@ -198,7 +199,7 @@ if (!empty($search_query)) {
                     </div>
                 </div>
             </header>
-
+          
             <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
                 <?php if (isset($_SESSION['success_message'])): ?>
@@ -214,6 +215,7 @@ if (!empty($search_query)) {
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-semibold text-gray-800">Daftar Buku Perpustakaan</h2>
                     <button onclick="addBook()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition duration-200">
+
                         <i class="fas fa-plus mr-2"></i> Tambah Buku
                     </button>
                 </div>
