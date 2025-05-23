@@ -19,60 +19,7 @@ $book_stats = [
 ];
 
 $books = [
-    [
-        'id' => '1',
-        'judul' => 'Harry Potter dan Batu Bertuah',
-        'penulis' => 'J.K. Rowling',
-        'tahun' => '1997',
-        'isbn' => '9786020379784',
-        'stok' => 5,
-        'status' => 'Tersedia'
-    ],
-    [
-        'id' => '2',
-        'judul' => 'Laskar Pelangi',
-        'penulis' => 'Andrea Hirata',
-        'tahun' => '2005',
-        'isbn' => '9789792248616',
-        'stok' => 3,
-        'status' => 'Tersedia'
-    ],
-    [
-        'id' => '3',
-        'judul' => 'Filosofi Teras',
-        'penulis' => 'Henry Manampiring',
-        'tahun' => '2018',
-        'isbn' => '9786024246945',
-        'stok' => 0,
-        'status' => 'Dipinjam'
-    ],
-    [
-        'id' => '4',
-        'judul' => 'Bumi Manusia',
-        'penulis' => 'Pramoedya Ananta Toer',
-        'tahun' => '1980',
-        'isbn' => '9799731234',
-        'stok' => 2,
-        'status' => 'Tersedia'
-    ],
-    [
-        'id' => '5',
-        'judul' => 'Rich Dad Poor Dad',
-        'penulis' => 'Robert T. Kiyosaki',
-        'tahun' => '1997',
-        'isbn' => '9786020333175',
-        'stok' => 1,
-        'status' => 'Tersedia'
-    ],
-    [
-        'id' => '6',
-        'judul' => 'Atomic Habits',
-        'penulis' => 'James Clear',
-        'tahun' => '2018',
-        'isbn' => '9786020633176',
-        'stok' => 0,
-        'status' => 'Dipinjam'
-    ]
+    
 ];
 
 if (isset($_POST['add_book'])) {
@@ -222,14 +169,17 @@ if (!empty($search_query)) {
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku</h3>
                         <p class="text-3xl font-bold text-blue-600"><?php echo $book_stats['total_buku']; ?></p>
+                        <p class="text-sm text-gray-500 mt-1">Buku dalam koleksi</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
-                        <h3 class="text-sm font-medium text-gray-500 mb-2">Buku Dipinjam</h3>
+                        <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku Dipinjam</h3>
                         <p class="text-3xl font-bold text-orange-600"><?php echo $book_stats['dipinjam']; ?></p>
+                        <p class="text-sm text-gray-500 mt-1">Buku dipinjam anggota</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Buku Tersedia</h3>
                         <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['tersedia']; ?></p>
+                        <p class="text-sm text-gray-500 mt-1">Buku belum dipinjam</p>
                     </div>
                 </div>
 

@@ -7,119 +7,125 @@
     <title>Register Anggota Perpustakaan</title>
 </head>
 <body class="flex justify-center items-center min-h-screen p-6 bg-[#948979]">
-    <div class="bg-[#DFD0B8] p-6 rounded-lg shadow-lg w-full max-w-sm">
-        <div class="text-center mb-6">
-            <h2 class="text-xl font-bold text-gray-700 mb-1">Daftar Anggota - SiPerpus</h2>
-        </div>
+    <div class="w-full max-w-sm">
+        <a href="../home.php" class="bg-[#393E46] text-white py-2 px-6 rounded-md inline-block">
+            Kembali ke home
+        </a>
 
-        <form action="#" method="POST" class="space-y-4">
-            <div>
-                <label class="block text-xs text-gray-600 mb-1">Nama Lengkap</label>
-                <input 
-                    type="text" 
-                    id="namaLengkap" 
-                    name="namaLengkap" 
-                    placeholder="e.g. Daffa Al Ghifary"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
-                    required />
+        <div class="bg-[#DFD0B8] p-6 rounded-lg shadow-lg w-full max-w-sm mt-6">
+            <div class="text-center mb-6">
+                <h2 class="text-xl font-bold text-gray-700 mb-1">Daftar Anggota - SiPerpus</h2>
             </div>
 
-            <div>
-                <label class="block text-xs text-gray-600 mb-1">Jurusan</label>
-                <div class="relative">
-                    <button onclick="toggleDropdown()" type="button" id="dropdownButton" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent text-left">
-                        <span id="selectedOption">Pilih Jurusan</span>
-                    </button>
-                    <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                        <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-
-                    <div id="dropdownMenu" class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg hidden">
-                        <div class="py-1 max-h-48 overflow-y-auto">
-                            <a href="#" onclick="selectOption('Teknik Informatika')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Teknik Informatika</a>
-                            <a href="#" onclick="selectOption('Sains Data')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Sains Data</a>
-                            <a href="#" onclick="selectOption('Teknik Komputer')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Teknik Komputer</a>
-                            <a href="#" onclick="selectOption('Teknik Elektro')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Teknik Elektro</a>
-                            <a href="#" onclick="selectOption('Akuntansi')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Akuntansi</a>
-                            <a href="#" onclick="selectOption('Manajemen')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Manajemen</a>
-                        </div>
-                    </div>
-                    <input type="hidden" id="jurusan" name="jurusan" required>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs text-gray-600 mb-1">NRP</label>
-                <input 
-                    type="text" 
-                    id="nrp" 
-                    name="nrp" 
-                    placeholder="e.g. 3124....."
-                    pattern="[0-9]{10}"
-                    maxlength="10"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
-                    required />
-            </div>
-
-            <div>
-                <label class="block text-xs text-gray-600 mb-1">Email</label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    name="email" 
-                    placeholder="e.g. daffa@student.edu"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
-                    required />
-            </div>
-
-            <div>
-                <label class="block text-xs text-gray-600 mb-1">Password</label>
-                <div class="relative">
+            <form action="#" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">Nama Lengkap</label>
                     <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder="Minimal 8 karakter"
-                        minlength="8"
-                        class="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
+                        type="text" 
+                        id="namaLengkap" 
+                        name="namaLengkap" 
+                        placeholder="e.g. Daffa Al Ghifary"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
-                    <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-2 flex items-center">
-                        <svg id="eyeIcon" class="h-3 w-3 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
-                    </button>
                 </div>
-            </div>
 
-            <div>
-                <label class="block text-xs text-gray-600 mb-1">Nomor Telepon</label>
-                <input 
-                    type="tel" 
-                    id="phoneNumber" 
-                    name="phoneNumber" 
-                    placeholder="e.g. +62 812-3456-7890"
-                    pattern="[\+]?[0-9\s\-\(\)]+"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
-                    required />
-            </div>
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">Jurusan</label>
+                    <div class="relative">
+                        <button onclick="toggleDropdown()" type="button" id="dropdownButton" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent text-left">
+                            <span id="selectedOption">Pilih Jurusan</span>
+                        </button>
+                        <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+                            <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
 
-            <button 
-                type="submit" 
-                class="w-full bg-[#393E46] text-white py-2 px-4 rounded-md hover:bg-[#2f3238] focus:outline-none focus:ring-1 focus:ring-[#393E46] font-medium text-sm">
-                Daftar Sekarang
-            </button>
+                        <div id="dropdownMenu" class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg hidden">
+                            <div class="py-1 max-h-48 overflow-y-auto">
+                                <a href="#" onclick="selectOption('Teknik Informatika')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Teknik Informatika</a>
+                                <a href="#" onclick="selectOption('Sains Data')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Sains Data</a>
+                                <a href="#" onclick="selectOption('Teknik Komputer')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Teknik Komputer</a>
+                                <a href="#" onclick="selectOption('Teknik Elektro')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Teknik Elektro</a>
+                                <a href="#" onclick="selectOption('Akuntansi')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Akuntansi</a>
+                                <a href="#" onclick="selectOption('Manajemen')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Manajemen</a>
+                            </div>
+                        </div>
+                        <input type="hidden" id="jurusan" name="jurusan" required>
+                    </div>
+                </div>
 
-            <div class="text-center mt-4">
-                <p class="text-md text-gray-600">
-                    Sudah punya akun? 
-                    <a href="../choose.php" class="text-[#948979] hover:underline font-medium">Masuk di sini</a>
-                </p>
-            </div>
-        </form>
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">NRP</label>
+                    <input 
+                        type="text" 
+                        id="nrp" 
+                        name="nrp" 
+                        placeholder="e.g. 3124....."
+                        pattern="[0-9]{10}"
+                        maxlength="10"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
+                        required />
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="e.g. daffa@student.edu"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
+                        required />
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">Password</label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="Minimal 8 karakter"
+                            minlength="8"
+                            class="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
+                            required />
+                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-2 flex items-center">
+                            <svg id="eyeIcon" class="h-3 w-3 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">Nomor Telepon</label>
+                    <input 
+                        type="tel" 
+                        id="phoneNumber" 
+                        name="phoneNumber" 
+                        placeholder="e.g. +62 812-3456-7890"
+                        pattern="[\+]?[0-9\s\-\(\)]+"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
+                        required />
+                </div>
+
+                <button 
+                    type="submit" 
+                    class="w-full bg-[#393E46] text-white py-2 px-4 rounded-md hover:bg-[#2f3238] focus:outline-none focus:ring-1 focus:ring-[#393E46] font-medium text-sm">
+                    Daftar Sekarang
+                </button>
+
+                <div class="text-center mt-4">
+                    <p class="text-md text-gray-600">
+                        Sudah punya akun? 
+                        <a href="../choose.php" class="text-[#948979] hover:underline font-medium">Masuk di sini</a>
+                    </p>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
