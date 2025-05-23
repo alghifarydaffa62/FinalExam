@@ -89,6 +89,7 @@ $conn->close();
 
           <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST" class="space-y-5">
               <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2">
+                
                 <img src="../images/Group 1.png" alt="User Icon" class="w-5 h-5" />
                 <input 
                   type="email" 

@@ -2,10 +2,40 @@
 session_start();
 
 // Check if admin is logged in
-// if (!isset($_SESSION['admin_id'])) {
-//     header("Location: loginAdmin.php");
-//     exit;
-// }
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header("Location: loginAdmin.php");
+    exit;
+}
+
+// Handle logout
+if (isset($_GET['logout'])) {
+    // Log aktivitas logout (optional)
+    if (isset($_SESSION['admin_id'])) {
+        include '../konek.php';
+        try {
+            $log_stmt = $conn->prepare("INSERT INTO log_aktivitas (tipe_aktivitas, id_user, tipe_user, deskripsi) VALUES (?, ?, ?, ?)");
+            $tipe_aktivitas = 'logout_admin';
+            $tipe_user = 'admin';
+            $deskripsi = "Admin " . $_SESSION['admin_name'] . " berhasil logout";
+            $log_stmt->bind_param("siss", $tipe_aktivitas, $_SESSION['admin_id'], $tipe_user, $deskripsi);
+            $log_stmt->execute();
+        } catch (Exception $e) {
+            // Silent error handling for logging
+        }
+    }
+    
+    // Destroy session
+    session_destroy();
+    
+    // Remove remember me cookie if exists
+    if (isset($_COOKIE['admin_remember'])) {
+        setcookie('admin_remember', '', time() - 3600, '/');
+    }
+    
+    // Redirect to login page
+    header("Location: loginAdmin.php");
+    exit;
+}
 
 $admin = [
     'name' => $_SESSION['admin_name'] ?? 'Admin',
@@ -37,11 +67,11 @@ $lending_stats = [
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
-<body class="bg-blue-100">
+<body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
-        <div class="w-64 bg-white flex-shrink-0">
-            <div class="bg-white p-4 flex items-center space-x-3 text-black border-b border-gray-200">
-                <div class="bg-blue-800 p-2 rounded">
+        <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
+            <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-gray-200">
+                <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
                 </div>
                 <div class="text-sm leading-tight">
@@ -51,32 +81,31 @@ $lending_stats = [
             </div>
 
             <nav class="mt-4">
-                <a href="dashboardAdmin.php" class="flex items-center px-4 py-3 bg-blue-700 text-white">
+                <a href="dashboardAdmin.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
                     <i class="fas fa-chart-bar w-6"></i>
                     <span class="ml-2">Dashboard</span>
                 </a>
-                <a href="kelolaBuku.php" class="flex items-center px-4 py-3 hover:bg-blue-700 text-black">
+                <a href="kelolaBuku.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Buku</span>
                 </a>
-                <a href="kelolaKeterlambatan.php" class="flex items-center px-4 py-3 hover:bg-blue-700 text-black">
+                <a href="kelolaKeterlambatan.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
                     <i class="fas fa-clock w-6"></i>
                     <span class="ml-2">Keterlambatan</span>
                 </a>
-                <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-blue-700 text-black">
+                <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
                 </a>
-                <a href="loginAdmin.php" class="flex items-center px-3 py-3 hover:bg-blue-700 text-black mt-60">
+                <a href="?logout=1" class="flex items-center px-3 py-3 hover:bg-[#948979] text-gray-800 hover:text-white mt-60 transition-colors" onclick="return confirm('Apakah Anda yakin ingin logout?')">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
-                 </a>
-
+                </a>
             </nav>
         </div>
 
         <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white shadow-sm z-10">
+            <header class="bg-[#DFD0B8] shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Dashboard</div>
                     <div class="flex items-center space-x-4">
@@ -95,22 +124,26 @@ $lending_stats = [
                             <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                                 <i class="fas fa-user text-gray-500"></i>
                             </div>
+                            <div class="text-sm">
+                                <div class="font-medium"><?php echo htmlspecialchars($admin['name']); ?></div>
+                                <div class="text-gray-500 text-xs">Admin</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <main class="flex-1 overflow-y-auto p-6 bg-[#FFFAEC]">
                 <h2 class="text-lg font-medium mb-6">Selamat datang, <?php echo htmlspecialchars($admin['name']); ?>!</h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-4">Tambah Buku</h3>
-                        <a href="kelolaBuku.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Tambah Buku</a>
+                        <a href="kelolaBuku.php" class="bg-[#393E46] text-white px-4 py-2 rounded-lg hover:bg-[#948979]">Tambah Buku</a>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-4">Tambah Anggota</h3>
-                        <a href="kelolaAnggota.php" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Tambah Anggota</a>
+                        <a href="kelolaAnggota.php" class="bg-[#393E46] text-white px-4 py-2 rounded-lg ">Tambah Anggota</a>
                     </div>
                 </div>
 
@@ -142,7 +175,7 @@ $lending_stats = [
                     <div class="bg-white p-6 rounded-lg shadow-sm">
                         <div class="flex justify-end space-x-4 mb-4">
                             <button class="text-xs bg-gray-200 text-gray-800 px-3 py-1 rounded-full">6 bulan</button>
-                            <button class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full">3 bulan</button>
+                            <button class="text-xs bg-blue-100 text-[#393E46] px-3 py-1 rounded-full">3 bulan</button>
                             <button class="text-xs bg-gray-200 text-gray-800 px-3 py-1 rounded-full">1 bulan</button>
                         </div>
                         <div style="height: 250px;">
