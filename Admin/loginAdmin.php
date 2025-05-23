@@ -1,60 +1,205 @@
+<?php
+session_start();
+include '../konek.php'; // Sesuaikan path ke file koneksi Anda
+
+$error_message = '';
+$success_message = '';
+
+// Cek jika admin sudah login, redirect ke dashboard
+if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
+    header("Location: dashboardAdmin.php");
+    exit();
+}
+
+// Proses login ketika form disubmit
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
+    $remember = isset($_POST['remember']) ? true : false;
+    
+    // Validasi input
+    if (empty($email) || empty($password)) {
+        $error_message = "Email dan password tidak boleh kosong!";
+    } else {
+        try {
+            // Query untuk mencari admin berdasarkan email
+            $stmt = $conn->prepare("SELECT NRP, Nama, Email, Pwd FROM admin WHERE Email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $admin = $result->fetch_assoc();
+                
+                // Verifikasi password (gunakan password_verify jika password di-hash)
+                // Untuk sementara menggunakan perbandingan langsung
+                if ($password === $admin['Pwd']) {
+                    // Login berhasil
+                    $_SESSION['admin_logged_in'] = true;
+                    $_SESSION['admin_id'] = $admin['NRP'];
+                    $_SESSION['admin_name'] = $admin['Nama'];
+                    $_SESSION['admin_email'] = $admin['Email'];
+                    
+                    // Jika remember me dicentang, buat cookie
+                    if ($remember) {
+                        $cookie_value = base64_encode($admin['NRP'] . ':' . $admin['Email']);
+                        setcookie('admin_remember', $cookie_value, time() + (30 * 24 * 60 * 60), '/'); // 30 hari
+                    }
+                    
+                    // Log aktivitas login
+                    $log_stmt = $conn->prepare("INSERT INTO log_aktivitas (tipe_aktivitas, id_user, tipe_user, deskripsi) VALUES (?, ?, ?, ?)");
+                    $tipe_aktivitas = 'login_admin';
+                    $tipe_user = 'admin';
+                    $deskripsi = "Admin " . $admin['Nama'] . " berhasil login";
+                    $log_stmt->bind_param("siss", $tipe_aktivitas, $admin['NRP'], $tipe_user, $deskripsi);
+                    $log_stmt->execute();
+                    
+                    $success_message = "Login berhasil! Mengalihkan ke dashboard...";
+                    
+                    // Redirect ke dashboard setelah 2 detik
+                    header("refresh:2;url=dashboardAdmin.php");
+                } else {
+                    $error_message = "Password salah!";
+                }
+            } else {
+                $error_message = "Email tidak ditemukan!";
+            }
+            
+            $stmt->close();
+        } catch (Exception $e) {
+            $error_message = "Terjadi kesalahan: " . $e->getMessage();
+        }
+    }
+}
+
+// Cek cookie remember me
+if (!isset($_SESSION['admin_logged_in']) && isset($_COOKIE['admin_remember'])) {
+    $cookie_data = base64_decode($_COOKIE['admin_remember']);
+    $cookie_parts = explode(':', $cookie_data);
+    
+    if (count($cookie_parts) === 2) {
+        $nrp = $cookie_parts[0];
+        $email = $cookie_parts[1];
+        
+        try {
+            $stmt = $conn->prepare("SELECT NRP, Nama, Email FROM admin WHERE NRP = ? AND Email = ?");
+            $stmt->bind_param("ss", $nrp, $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $admin = $result->fetch_assoc();
+                $_SESSION['admin_logged_in'] = true;
+                $_SESSION['admin_id'] = $admin['NRP'];
+                $_SESSION['admin_name'] = $admin['Nama'];
+                $_SESSION['admin_email'] = $admin['Email'];
+                
+                header("Location: dashboardAdmin.php");
+                exit();
+            }
+        } catch (Exception $e) {
+            // Hapus cookie jika ada error
+            setcookie('admin_remember', '', time() - 3600, '/');
+        }
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="../src/output.css" rel="stylesheet">
-    <title>Login Anggota</title>
+    <title>Login Admin Page</title>
+    <style>
+        .alert {
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+    </style>
 </head>
-<body class="flex justify-center items-center min-h-screen m-6 bg-[#948979]">
+<body class="flex justify-center items-center min-h-screen bg-[#948979]">
     <div class="w-full max-w-sm">
-      <a href="../home.php" class="bg-[#393E46] text-white py-2 px-6 rounded-md inline-block">
-        Kembali ke home
-      </a>
+        <a href="../home.php" class="bg-[#393E46] text-white py-2 px-6 rounded-md inline-block">
+            Kembali ke home
+        </a>
 
-      <div class="bg-[#DFD0B8] p-8 rounded-lg shadow-md w-full max-w-sm mt-6">
-          <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Sign In Member - SiPerpus</h2>
-      
-          <form action="#" method="POST" class="space-y-5">
-              <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2">
-                <img src="../images/Group 1.png" alt="User Icon" class="w-5 h-5" />
-                <input 
-                  type="email" 
-                  id="email" 
-                  name="email" 
-                  placeholder="Email"
-                  class="w-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none border-none bg-transparent" />
-              </div>
-
-              <div class="flex items-center border rounded-md px-3 py-2 w-full gap-2">
-                <img src="../images/Group 3 (1).png" alt="User Icon" />
-                <input 
-                    type="password" 
-                    id="password" 
-                    name="password" 
-                    placeholder="Password"
-                    class="w-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none" />
-              </div>
-
-             
-
-              <a href="dashboard.php" class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-6 rounded-md hover:bg-[#2f3238] transition-colors">
-              Login
-              </a>
-
-              <div class="flex flex-col gap-2 pt-4 border-t">
-                <div class="flex justify-center items-center">
-                  <p class="text-center text-sm text-gray-700">Login Anggota ?</p>
-                  <a href="../Anggota/loginAnggota.php" class="text-blue-500 text-sm hover:underline ml-1">Klik disini</a>
+        <div class="bg-[#DFD0B8] p-8 rounded-lg shadow-md mt-6">
+            <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Sign In Admin - SiPerpus</h2>
+            
+            <?php if (!empty($error_message)): ?>
+                <div class="alert alert-danger">
+                    <?php echo htmlspecialchars($error_message); ?>
                 </div>
-                
-                <div class="flex justify-center items-center">
-                    <p class="text-center text-sm text-gray-700">Belum punya akun ?</p>
-                    <a href="register.html" class="text-blue-500 text-sm hover:underline ml-1">Register</a>
+            <?php endif; ?>
+            
+            <?php if (!empty($success_message)): ?>
+                <div class="alert alert-success">
+                    <?php echo htmlspecialchars($success_message); ?>
                 </div>
-              </div>
-          </form>
+            <?php endif; ?>
+
+            <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST" class="space-y-5">
+                <div>
+                    <input type="email" id="email" name="email" placeholder="Email" required
+                        value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
+                        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+
+                <div>
+                    <input type="password" id="password" name="password" placeholder="Password" required
+                        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+
+                <div class="mt-1">
+                    <div class="flex items-center justify-between space-x-2">
+                        <div>
+                            <input type="checkbox" id="remember" name="remember" />
+                            <label for="remember" class="text-sm text-gray-600">Remember me</label>
+                        </div>
+
+                        <a href="forgotPassword.php" class="text-sm text-blue-600 hover:underline">Forgot password?</a>
+                    </div>
+
+                    <button type="submit"
+                        class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-6 rounded-md hover:bg-[#2f3238] transition-colors mt-4">
+                        Login
+                    </button>
+
+                    <div class="flex justify-center items-center mt-4 border-t pt-4">
+                        <p class="text-center text-sm text-gray-700">
+                            Login Anggota ?
+                            <a href="../Anggota/loginAnggota.php" class="text-blue-500 font-medium hover:underline ml-1">Klik disini</a>
+                        </p>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
+
+    <script>
+        // Auto hide success message
+        <?php if (!empty($success_message)): ?>
+        setTimeout(function() {
+            const successAlert = document.querySelector('.alert-success');
+            if (successAlert) {
+                successAlert.style.display = 'none';
+            }
+        }, 3000);
+        <?php endif; ?>
+    </script>
 </body>
 </html>
