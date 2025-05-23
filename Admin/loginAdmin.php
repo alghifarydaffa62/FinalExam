@@ -1,28 +1,24 @@
 <?php
 session_start();
-include '../konek.php'; // Sesuaikan path ke file koneksi Anda
+include '../konek.php'; 
 
 $error_message = '';
 $success_message = '';
 
-// Cek jika admin sudah login, redirect ke dashboard
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
     header("Location: dashboardAdmin.php");
     exit();
 }
 
-// Proses login ketika form disubmit
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
     $remember = isset($_POST['remember']) ? true : false;
-    
-    // Validasi input
+
     if (empty($email) || empty($password)) {
         $error_message = "Email dan password tidak boleh kosong!";
     } else {
         try {
-            // Query untuk mencari admin berdasarkan email
             $stmt = $conn->prepare("SELECT NRP, Nama, Email, Pwd FROM admin WHERE Email = ?");
             $stmt->bind_param("s", $email);
             $stmt->execute();
@@ -31,32 +27,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if ($result->num_rows > 0) {
                 $admin = $result->fetch_assoc();
                 
-                // Verifikasi password (gunakan password_verify jika password di-hash)
-                // Untuk sementara menggunakan perbandingan langsung
                 if ($password === $admin['Pwd']) {
-                    // Login berhasil
                     $_SESSION['admin_logged_in'] = true;
                     $_SESSION['admin_id'] = $admin['NRP'];
                     $_SESSION['admin_name'] = $admin['Nama'];
                     $_SESSION['admin_email'] = $admin['Email'];
-                    
-                    // Jika remember me dicentang, buat cookie
+
                     if ($remember) {
                         $cookie_value = base64_encode($admin['NRP'] . ':' . $admin['Email']);
                         setcookie('admin_remember', $cookie_value, time() + (30 * 24 * 60 * 60), '/'); // 30 hari
                     }
                     
-                    // Log aktivitas login
-                    $log_stmt = $conn->prepare("INSERT INTO log_aktivitas (tipe_aktivitas, id_user, tipe_user, deskripsi) VALUES (?, ?, ?, ?)");
-                    $tipe_aktivitas = 'login_admin';
-                    $tipe_user = 'admin';
-                    $deskripsi = "Admin " . $admin['Nama'] . " berhasil login";
-                    $log_stmt->bind_param("siss", $tipe_aktivitas, $admin['NRP'], $tipe_user, $deskripsi);
-                    $log_stmt->execute();
-                    
                     $success_message = "Login berhasil! Mengalihkan ke dashboard...";
                     
-                    // Redirect ke dashboard setelah 2 detik
                     header("refresh:2;url=dashboardAdmin.php");
                 } else {
                     $error_message = "Password salah!";
@@ -72,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Cek cookie remember me
 if (!isset($_SESSION['admin_logged_in']) && isset($_COOKIE['admin_remember'])) {
     $cookie_data = base64_decode($_COOKIE['admin_remember']);
     $cookie_parts = explode(':', $cookie_data);
@@ -98,7 +80,6 @@ if (!isset($_SESSION['admin_logged_in']) && isset($_COOKIE['admin_remember'])) {
                 exit();
             }
         } catch (Exception $e) {
-            // Hapus cookie jika ada error
             setcookie('admin_remember', '', time() - 3600, '/');
         }
     }
@@ -191,7 +172,6 @@ if (!isset($_SESSION['admin_logged_in']) && isset($_COOKIE['admin_remember'])) {
     </div>
 
     <script>
-        // Auto hide success message
         <?php if (!empty($success_message)): ?>
         setTimeout(function() {
             const successAlert = document.querySelector('.alert-success');

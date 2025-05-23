@@ -50,12 +50,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "Email sudah terdaftar! Silakan gunakan email yang berbeda.";
                 $messageType = "error";
             } else {
-                // Hash password for security
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                
-                // Insert new member (Note: Jenis_kelamin set to default 'L' since it's not in the form)
                 $stmt = $conn->prepare("INSERT INTO anggota (NRP, Nama, Email, Pwd, Jurusan, No_Telp, Jenis_kelamin) VALUES (?, ?, ?, ?, ?, ?, 'L')");
-                $stmt->bind_param("ssssss", $nrp, $nama, $email, $hashedPassword, $jurusan, $phoneNumber);
+                $stmt->bind_param("ssssss", $nrp, $nama, $email, $password, $jurusan, $phoneNumber);
                 
                 if ($stmt->execute()) {
                     $message = "Pendaftaran berhasil! Selamat datang di SiPerpus.";

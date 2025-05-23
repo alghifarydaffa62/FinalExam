@@ -1,6 +1,17 @@
 <?php
 session_start();
 
+if (isset($_GET['logout'])) {
+    session_destroy();
+    
+    if (isset($_COOKIE['admin_remember'])) {
+        setcookie('admin_remember', '', time() - 3600, '/');
+    }
+
+    header("Location: loginAnggota.php");
+    exit;
+}
+
 $user = [
     'name' => $_SESSION['user_name'] ?? 'Anggota',
     'id' => $_SESSION['user_id'] ?? '1'
@@ -179,15 +190,15 @@ $books = array_slice($books, $offset, $books_per_page);
             </div>
 
             <nav class="mt-4">
-                <a href="dashboard.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
+                <a href="dashboard.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-chart-bar w-6"></i>
                     <span class="ml-2">Dashboard</span>
                 </a>
-                <a href="peminjaman.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
+                <a href="peminjaman.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-book-open w-6"></i>
-                    <span class="ml-2">Peminjaman</span>
+                    <span class="ml-2">Peminjamann</span>
                 </a>
-                <a href="pengembalian.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-gray-800">
+                <a href="pengembalian.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-history w-6"></i>
                     <span class="ml-2">Pengembalian</span>
                 </a>
@@ -195,10 +206,10 @@ $books = array_slice($books, $offset, $books_per_page);
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Data Buku</span>
                 </a>
-                    <a href="loginAnggota.php" class="flex items-center px-3 py-3 hover:bg-[#948979] text-black mt-60">
+                <a href="?logout=1" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black mt-auto">
                     <i class="fas fa-sign-out-alt w-6"></i>
                     <span class="ml-2">Logout</span>
-                 </a>
+                </a>
             </nav>
         </div>
 
