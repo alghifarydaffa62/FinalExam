@@ -6,6 +6,9 @@ session_start();
 //     exit;
 // }
 
+// $email = $_POST['email'];
+// $password = $_POST['password'];
+
 $user = [
     'name' => $_SESSION['user_name'] ?? 'Anggota',
     'id' => $_SESSION['user_id'] ?? '1'

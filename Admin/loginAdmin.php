@@ -12,7 +12,7 @@
     
         <form action="#" method="POST" class="space-y-5">
           <div>
-            <input type="text" id="username" name="username" placeholder="Username"
+            <input type="email" id="username" name="email" placeholder="Email"
                 class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"/>
           </div>
 
