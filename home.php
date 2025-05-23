@@ -6,30 +6,33 @@
     <title>Document</title>
     <link rel="stylesheet" href="./src/output.css">
 </head>
-<body class="bg-violet-200">
-    <nav class="flex justify-around items-center py-4 bg-white shadow-sm">
+<body class="bg-[#DFD0B8]">
+    <nav class="flex justify-around items-center py-4 bg-[#948979] shadow-sm">
         <div class="flex items-center gap-2">
-            <img src="./images/Logo.png" alt="" class="w-11 h-11">
+          
+         <div class="bg-[#393E46] p-2 rounded">
+                    <span class="font-bold text-white">SP</span>
+                </div><!-- <img src="./images/Logo.png"     alt="" class="w-11 h-11"> -->
             <div>
                 <h1 class="text-2xl font-bold">SiPerpus</h1>
                 <p class="text-sm">Sistem Perpustakaan Digital</p>
             </div>
         </div>
 
-        <ul class="flex list-style-none gap-6 text-lg">
+        <ul class="flex list-style-none gap-6    text-lg">
             <li>
-                <a href="home.php">Home</a>
+                <a href="home.php" class="text-white font-semibold">Home</a>
             </li>
             <li>
-                <a href="choose.php" class="px-6 py-2 bg-violet-300 rounded-md text-violet-700 font-semibold">Login</a>
+                <a href="choose.php" class="px-6 py-2 bg-[#4d5159] rounded-md text-white font-semibold">Login</a>
             </li>
             <li>
-                <a href="./Anggota/registerAnggota.php" class="px-6 py-2 bg-violet-600 rounded-md text-white font-semibold">Register</a>
+                <a href="./Anggota/registerAnggota.php" class="px-6 py-2 bg-[#393E46] rounded-md text-white font-semibold">Register</a>
             </li>
         </ul>
     </nav>
 
-    <section class="h-[80vh] flex items-center justify-center">
+    <section class="h-[80vh] flex items-center justify-center ">
         <div class="text-center">
             <h1 class="text-6xl font-bold">
             Kelola Perpustakaan Anda<br />
@@ -42,7 +45,7 @@
             <div class="mt-8">
             <a
                 href="./Anggota/registerAnggota.php"
-                class="bg-sky-800 p-4 rounded-lg text-white font-semibold"
+                class="bg-[#393E46] p-4 rounded-lg text-white font-semibold"
                 >Daftar anggota</a
             >
             </div>
