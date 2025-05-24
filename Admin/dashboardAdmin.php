@@ -35,6 +35,11 @@ function getBookStats($conn) {
     if ($result) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
+
+    $result = $conn->query("SELECT COUNT(*) as totalAnggota FROM anggota");
+    if($result) {
+        $stats['total_anggota'] = $result->fetch_assoc()['totalAnggota'];
+    }
     
     return $stats;
 }
@@ -145,7 +150,7 @@ $lending_stats = [
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Anggota</h3>
-                        <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['anggota']; ?></p>
+                        <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['total_anggota']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Anggota terdaftar</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
