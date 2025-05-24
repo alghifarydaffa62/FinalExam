@@ -1,5 +1,6 @@
 <?php
 session_start();
+include '../konek.php';
 
 if (isset($_GET['logout'])) {
     session_destroy();
@@ -17,10 +18,21 @@ $user = [
     'id' => $_SESSION['member_id'] ?? '1'
 ];
 
-$stats = [
-    'total_borrowed' => $_SESSION['total_borrowed'] ?? 1,
-    'total_buku' => $_SESSION['total_books'] ?? 150
-];
+function getBookStats($conn) {
+    $stats = [
+        'total_buku' => 0,
+        'total_borrowed' => 0
+    ];
+
+    $result = $conn->query("SELECT COUNT(*) as total FROM buku");
+    if ($result) {
+        $stats['total_buku'] = $result->fetch_assoc()['total'];
+    }
+    
+    return $stats;
+}
+
+$book_stats = getBookStats($conn);
 
 $borrowing_history = [
     [
@@ -73,7 +85,7 @@ $borrowing_history = [
                 </a>
                 <a href="peminjaman.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-book-open w-6"></i>
-                    <span class="ml-2">Peminjamann</span>
+                    <span class="ml-2">Peminjaman</span>
                 </a>
                 <a href="pengembalian.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-history w-6"></i>
@@ -95,12 +107,6 @@ $borrowing_history = [
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Dashboard Anggota</div>
                     <div class="flex items-center space-x-4">
-                        <div class="relative">
-                            <input type="text" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64" placeholder="Cari buku...">
-                            <button class="absolute right-2 top-2 text-gray-500">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
                         <div class="flex items-center space-x-2">
                             <span><?php echo htmlspecialchars($user['name']); ?></span>
                             <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
@@ -128,12 +134,12 @@ $borrowing_history = [
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Peminjaman</h3>
-                        <p class="text-3xl font-bold text-[#948979]"><?php echo $stats['total_borrowed']; ?></p>
+                        <p class="text-3xl font-bold text-[#948979]"><?php echo $book_stats['total_borrowed']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Buku yang sedang dipinjam</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Buku</h3>
-                        <p class="text-3xl font-bold text-[#948979]"><?php echo $stats['total_buku']; ?></p>
+                        <p class="text-3xl font-bold text-[#948979]"><?php echo $book_stats['total_buku']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Buku yang tersedia di perpustakaan</p>
                     </div>
                 </div>

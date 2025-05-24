@@ -1,5 +1,6 @@
 <?php
 session_start();
+include '../konek.php';
 
 if (isset($_GET['logout'])) {
     session_destroy();
@@ -22,149 +23,74 @@ $statuses = ['Semua', 'Tersedia', 'Dipinjam'];
 $status_filter = $_GET['status'] ?? 'Semua';
 $search_query = $_GET['search'] ?? '';
 
-$books = [
-    [
-        'id' => 'BK-1001',
-        'title' => 'Harry Potter dan Batu Bertuah',
-        'author' => 'J.K. Rowling',
-        'publisher' => 'Gramedia',
-        'year' => '2001',
-        'status' => 'Tersedia',
-        'location' => 'Rak A-12',
-        'description' => 'Buku pertama dari seri Harry Potter yang menceritakan awal petualangan Harry di Sekolah Sihir Hogwarts.',
-        'isbn' => '978-602-123-456-7',
-        'pages' => '320'
-    ],
-    [
-        'id' => 'BK-1002',
-        'title' => 'Laskar Pelangi',
-        'author' => 'Andrea Hirata',
-        'publisher' => 'Bentang Pustaka',
-        'year' => '2005',
-        'status' => 'Dipinjam',
-        'location' => 'Rak B-05',
-        'description' => 'Novel yang menceritakan kehidupan 10 anak dari keluarga miskin yang bersekolah di sebuah sekolah Muhammadiyah di Belitung.',
-        'isbn' => '978-602-789-123-4',
-        'pages' => '529'
-    ],
-    [
-        'id' => 'BK-1003',
-        'title' => 'Bumi Manusia',
-        'author' => 'Pramoedya Ananta Toer',
-        'publisher' => 'Lentera Dipantara',
-        'year' => '1980',
-        'status' => 'Tersedia',
-        'location' => 'Rak B-06',
-        'description' => 'Novel pertama dari Tetralogi Buru yang menceritakan perjuangan Minke pada masa kolonial Belanda.',
-        'isbn' => '978-602-456-789-0',
-        'pages' => '535'
-    ],
-    [
-        'id' => 'BK-1004',
-        'title' => 'Filosofi Teras',
-        'author' => 'Henry Manampiring',
-        'publisher' => 'Kompas',
-        'year' => '2018',
-        'status' => 'Tersedia',
-        'location' => 'Rak C-09',
-        'description' => 'Buku yang membahas filsafat Stoa dan bagaimana menerapkannya dalam kehidupan sehari-hari.',
-        'isbn' => '978-602-234-567-8',
-        'pages' => '296'
-    ],
-    [
-        'id' => 'BK-1005',
-        'title' => 'Atomic Habits',
-        'author' => 'James Clear',
-        'publisher' => 'Penguin Random House',
-        'year' => '2018',
-        'status' => 'Dipinjam',
-        'location' => 'Rak D-02',
-        'description' => 'Buku yang membahas tentang bagaimana membangun kebiasaan baik dan menghilangkan kebiasaan buruk.',
-        'isbn' => '978-602-345-678-9',
-        'pages' => '320'
-    ],
-    [
-        'id' => 'BK-1006',
-        'title' => 'Laut Bercerita',
-        'author' => 'Leila S. Chudori',
-        'publisher' => 'Kepustakaan Populer Gramedia',
-        'year' => '2017',
-        'status' => 'Dipinjam',
-        'location' => 'Rak B-07',
-        'description' => 'Novel yang mengisahkan tentang aktivis mahasiswa yang hilang di masa Orde Baru.',
-        'isbn' => '978-602-567-890-1',
-        'pages' => '394'
-    ],
-    [
-        'id' => 'BK-1007',
-        'title' => 'Sapiens: Riwayat Singkat Umat Manusia',
-        'author' => 'Yuval Noah Harari',
-        'publisher' => 'Gramedia',
-        'year' => '2017',
-        'status' => 'Tersedia',
-        'location' => 'Rak E-03',
-        'description' => 'Buku yang membahas sejarah manusia dari munculnya spesies Homo sapiens hingga revolusi kognitif, pertanian, dan teknologi.',
-        'isbn' => '978-602-678-901-2',
-        'pages' => '512'
-    ],
-    [
-        'id' => 'BK-1008',
-        'title' => 'Matematika Diskrit',
-        'author' => 'Rinaldi Munir',
-        'publisher' => 'Informatika',
-        'year' => '2016',
-        'status' => 'Tersedia',
-        'location' => 'Rak F-01',
-        'description' => 'Buku yang membahas konsep-konsep dasar matematika diskrit untuk mahasiswa ilmu komputer.',
-        'isbn' => '978-602-789-012-3',
-        'pages' => '448'
-    ],
-    [
-        'id' => 'BK-1009',
-        'title' => 'Python Crash Course',
-        'author' => 'Eric Matthes',
-        'publisher' => 'No Starch Press',
-        'year' => '2019',
-        'status' => 'Tersedia',
-        'location' => 'Rak G-04',
-        'description' => 'Buku panduan pemrograman Python untuk pemula yang ingin mempelajari dasar-dasar pemrograman.',
-        'isbn' => '978-602-890-123-4',
-        'pages' => '544'
-    ],
-    [
-        'id' => 'BK-1010',
-        'title' => 'Rich Dad Poor Dad',
-        'author' => 'Robert T. Kiyosaki',
-        'publisher' => 'Gramedia',
-        'year' => '2016',
-        'status' => 'Dipinjam',
-        'location' => 'Rak D-05',
-        'description' => 'Buku yang membahas cara berpikir orang kaya dan orang miskin tentang uang dan investasi.',
-        'isbn' => '978-602-901-234-5',
-        'pages' => '336'
-    ]
-];
+function getBookData($conn, $status_filter = 'Semua', $search_query = '') {
+    $books = [];
 
-if ($status_filter != 'Semua') {
-    $books = array_filter($books, function($book) use ($status_filter) {
-        return $book['status'] == $status_filter;
-    });
+    $sql = "SELECT ID, Judul, Penulis, Tahun, Jumlah_halaman, ISBN, Stok FROM buku WHERE 1=1";
+    $params = [];
+    $types = "";
+
+    if (!empty($search_query)) {
+        $sql .= " AND (Judul LIKE ? OR Penulis LIKE ? OR ID LIKE ?)";
+        $search_param = "%$search_query%";
+        $params[] = $search_param;
+        $params[] = $search_param;
+        $params[] = $search_param;
+        $types .= "sss";
+    }
+
+    if ($status_filter == 'Tersedia') {
+        $sql .= " AND Stok > 0";
+    } elseif ($status_filter == 'Dipinjam') {
+        $sql .= " AND Stok = 0";
+    }
+    
+    $sql .= " ORDER BY Judul ASC";
+    
+    if (!empty($params)) {
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    } else {
+        $result = $conn->query($sql);
+    }
+    
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $status = ($row['Stok'] > 0) ? 'Tersedia' : 'Dipinjam';
+            
+            $books[] = [
+                'id' => $row['ID'],
+                'ID' => $row['ID'],
+                'title' => $row['Judul'],
+                'Judul' => $row['Judul'],
+                'author' => $row['Penulis'],
+                'Penulis' => $row['Penulis'],
+                'year' => $row['Tahun'],
+                'Tahun' => $row['Tahun'],
+                'pages' => $row['Jumlah_halaman'],
+                'halaman' => $row['Jumlah_halaman'],
+                'isbn' => $row['ISBN'],
+                'ISBN' => $row['ISBN'],
+                'stock' => $row['Stok'],
+                'Stok' => $row['Stok'],
+                'status' => $status
+            ];
+        }
+    }
+    
+    return $books;
 }
 
-if (!empty($search_query)) {
-    $books = array_filter($books, function($book) use ($search_query) {
-        return (stripos($book['title'], $search_query) !== false || 
-                stripos($book['author'], $search_query) !== false ||
-                stripos($book['id'], $search_query) !== false);
-    });
-}
+$books = getBookData($conn, $status_filter, $search_query);
 
 $books_per_page = 8;
 $total_books = count($books);
 $total_pages = ceil($total_books / $books_per_page);
 $current_page = isset($_GET['page']) ? max(1, min($total_pages, intval($_GET['page']))) : 1;
 $offset = ($current_page - 1) * $books_per_page;
-$books = array_slice($books, $offset, $books_per_page);
+$current_page_books = array_slice($books, $offset, $books_per_page);
 ?>
 
 <!DOCTYPE html>
@@ -196,7 +122,7 @@ $books = array_slice($books, $offset, $books_per_page);
                 </a>
                 <a href="peminjaman.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-book-open w-6"></i>
-                    <span class="ml-2">Peminjamann</span>
+                    <span class="ml-2">Peminjaman</span>
                 </a>
                 <a href="pengembalian.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-history w-6"></i>
@@ -220,6 +146,7 @@ $books = array_slice($books, $offset, $books_per_page);
                     <div class="flex items-center space-x-4">
                         <div class="relative">
                             <form action="" method="get">
+                                <input type="hidden" name="status" value="<?php echo htmlspecialchars($status_filter); ?>">
                                 <input type="text" name="search" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64" placeholder="Cari buku..." value="<?php echo htmlspecialchars($search_query); ?>">
                                 <button type="submit" class="absolute right-2 top-2 text-gray-500">
                                     <i class="fas fa-search"></i>
@@ -263,8 +190,15 @@ $books = array_slice($books, $offset, $books_per_page);
                     </div>
                 </div>
 
+                <?php if (empty($current_page_books)): ?>
+                <div class="bg-white rounded-lg shadow-sm p-8 text-center">
+                    <i class="fas fa-book text-gray-300 text-6xl mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-600 mb-2">Tidak ada buku ditemukan</h3>
+                    <p class="text-gray-500">Coba ubah filter atau kata kunci pencarian Anda.</p>
+                </div>
+                <?php else: ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    <?php foreach ($books as $book): ?>
+                    <?php foreach ($current_page_books as $book): ?>
                     <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition">
                         <div class="bg-gray-200 h-48 flex items-center justify-center">
                             <i class="fas fa-book text-gray-400 text-4xl"></i>
@@ -285,6 +219,7 @@ $books = array_slice($books, $offset, $books_per_page);
                     </div>
                     <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
 
                 <?php if ($total_pages > 1): ?>
                 <div class="flex justify-center mt-6">
@@ -301,6 +236,12 @@ $books = array_slice($books, $offset, $books_per_page);
                         <a href="?page=<?php echo $current_page + 1; ?>&status=<?php echo $status_filter; ?>&search=<?php echo urlencode($search_query); ?>" class="px-4 py-2 bg-white rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Selanjutnya</a>
                         <?php endif; ?>
                     </div>
+                </div>
+                <?php endif; ?>
+
+                <?php if (!empty($books)): ?>
+                <div class="mt-4 text-sm text-gray-600">
+                    Menampilkan <?php echo count($current_page_books); ?> dari <?php echo $total_books; ?> buku
                 </div>
                 <?php endif; ?>
             </main>
@@ -342,10 +283,6 @@ $books = array_slice($books, $offset, $books_per_page);
                                         <p id="modal-isbn" class="text-gray-800"></p>
                                     </div>
                                     <div>
-                                        <span class="text-sm font-medium text-gray-500">Penerbit</span>
-                                        <p id="modal-publisher" class="text-gray-800"></p>
-                                    </div>
-                                    <div>
                                         <span class="text-sm font-medium text-gray-500">Tahun Terbit</span>
                                         <p id="modal-year" class="text-gray-800"></p>
                                     </div>
@@ -354,8 +291,8 @@ $books = array_slice($books, $offset, $books_per_page);
                                         <p id="modal-pages" class="text-gray-800"></p>
                                     </div>
                                     <div>
-                                        <span class="text-sm font-medium text-gray-500">Lokasi</span>
-                                        <p id="modal-location" class="text-gray-800"></p>
+                                        <span class="text-sm font-medium text-gray-500">Stok</span>
+                                        <p id="modal-stok" class="text-gray-800"></p>
                                     </div>
                                 </div>
                                 
@@ -365,11 +302,6 @@ $books = array_slice($books, $offset, $books_per_page);
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <span class="text-sm font-medium text-gray-500">Deskripsi</span>
-                        <p id="modal-description" class="text-gray-700 mt-2 leading-relaxed"></p>
                     </div>
                     
                     <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
@@ -383,21 +315,19 @@ $books = array_slice($books, $offset, $books_per_page);
     </div>
 
     <script>
-        const booksData = <?php echo json_encode(array_merge($books, array_slice($books, -count($books)))); ?>;
+        const booksData = <?php echo json_encode($books); ?>;
         
         function showBookDetail(bookId) {
-            const book = <?php echo json_encode($books); ?>.find(b => b.id === bookId);
+            const book = booksData.find(b => b.id === bookId);
             
             if (book) {
                 document.getElementById('modal-title').textContent = book.title;
                 document.getElementById('modal-author').textContent = book.author;
                 document.getElementById('modal-id').textContent = book.id;
                 document.getElementById('modal-isbn').textContent = book.isbn;
-                document.getElementById('modal-publisher').textContent = book.publisher;
                 document.getElementById('modal-year').textContent = book.year;
                 document.getElementById('modal-pages').textContent = book.pages + ' halaman';
-                document.getElementById('modal-location').textContent = book.location;
-                document.getElementById('modal-description').textContent = book.description;
+                document.getElementById('modal-stok').textContent = book.stock;
                 
                 const statusElement = document.getElementById('modal-status');
                 statusElement.textContent = book.status;
@@ -416,7 +346,7 @@ $books = array_slice($books, $offset, $books_per_page);
         }
         
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Halaman Data Buku loaded');
+            console.log('Halaman Data Buku loaded - Total buku:', booksData.length);
             
             document.getElementById('bookDetailModal').addEventListener('click', function(e) {
                 if (e.target === this) {
