@@ -7,12 +7,6 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-if (!isset($_SESSION['books'])) {
-    $_SESSION['books'] = [
-        
-    ];
-}
-
 if (isset($_GET['logout'])) {
     session_destroy();
     
@@ -29,89 +23,142 @@ $admin = [
     'id' => $_SESSION['admin_id'] ?? '1'
 ];
 
-$total_books = count($_SESSION['books']);
-$books_borrowed = 0;
-$books_available = 0;
-
-foreach ($_SESSION['books'] as $book) {
-    if ($book['status'] === 'Dipinjam') {
-        $books_borrowed += $book['stok'];
-    } else {
-        $books_available += $book['stok'];
-    }
-}
-
-$book_stats = [
-    'total_buku' => $total_books,
-    'dipinjam' => $books_borrowed,
-    'tersedia' => $books_available
-];
-
-if (isset($_POST['add_book'])) {
-    // $IdBuku = trim($_POST['id_buku']);
-    // $Judul = trim($_POST['judul']);
-    // $Penulis = trim($_POST['penulis']);
-    // $Tahun = trim($_POST['tahun']);
-    // $ISBN = trim($_POST['isbn']);
-    // $Stok = trim($_POST['stok']);
-
-    $new_book = [
-        'id' => $_POST['id_buku'],
-        'judul' => $_POST['judul'],
-        'penulis' => $_POST['penulis'],
-        'tahun' => $_POST['tahun'],
-        'isbn' => $_POST['isbn'],
-        'halaman' => $_POST['halaman'],
-        'stok' => (int)$_POST['stok'],
-        'status' => (int)$_POST['stok'] > 0 ? 'Tersedia' : 'Dipinjam'
+function getBookStats($conn) {
+    $stats = [
+        'total_buku' => 0,
+        'dipinjam' => 0,
+        'tersedia' => 0
     ];
-    // $stmt = $conn->prepare("INSERT INTO buku (ID, Judul, Penulis, Tahun, Jumlah_halaman, ISBN, stok) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    // $stmt->bind_param($IdBuku, $Judul, $Penulis, $Tahun, $)
-    
-    $_SESSION['books'][] = $new_book;
-    $_SESSION['success_message'] = "Buku berhasil ditambahkan!";
-    header("Location: kelolaBuku.php");
-    exit;
-}
 
-if (isset($_POST['edit_book'])) {
-    $edit_id = $_POST['edit_id'];
-    foreach ($_SESSION['books'] as &$book) {
-        if ($book['id'] === $edit_id) {
-            $book['judul'] = $_POST['judul'];
-            $book['penulis'] = $_POST['penulis'];
-            $book['tahun'] = $_POST['tahun'];
-            $book['isbn'] = $_POST['isbn'];
-            $book['halaman'] = $_POST['halaman'];
-            $book['stok'] = (int)$_POST['stok'];
-            $book['status'] = (int)$_POST['stok'] > 0 ? 'Tersedia' : 'Dipinjam';
-            break;
-        }
+    $result = $conn->query("SELECT COUNT(*) as total FROM buku");
+    if ($result) {
+        $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
-    $_SESSION['success_message'] = "Buku berhasil diperbarui!";
-    header("Location: kelolaBuku.php");
-    exit;
+
+    $result = $conn->query("SELECT SUM(stok) as tersedia FROM buku WHERE stok > 0");
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $stats['tersedia'] = $row['tersedia'] ?? 0;
+    }
+
+    $stats['dipinjam'] = 0;
+    
+    return $stats;
 }
 
-if (isset($_POST['delete_id'])) {
-    $delete_id = $_POST['delete_id'];
-    $_SESSION['books'] = array_filter($_SESSION['books'], function($book) use ($delete_id) {
-        return $book['id'] !== $delete_id;
-    });
-    $_SESSION['success_message'] = "Buku berhasil dihapus!";
-    header("Location: kelolaBuku.php");
-    exit;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['add_book'])) {
+        $id_buku = trim($_POST['id_buku']);
+        $judul = trim($_POST['judul']);
+        $penulis = trim($_POST['penulis']);
+        $tahun = (int)$_POST['tahun'];
+        $isbn = trim($_POST['isbn']);
+        $halaman = (int)$_POST['halaman'];
+        $stok = (int)$_POST['stok'];
+
+        $check_stmt = $conn->prepare("SELECT ID FROM buku WHERE ID = ?");
+        $check_stmt->bind_param("s", $id_buku);
+        $check_stmt->execute();
+        $result = $check_stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            $_SESSION['error_message'] = "ID Buku sudah ada! Gunakan ID yang berbeda.";
+        } else {
+            $stmt = $conn->prepare("INSERT INTO buku (ID, Judul, Penulis, Tahun, Jumlah_halaman, ISBN, stok) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssisis", $id_buku, $judul, $penulis, $tahun, $halaman, $isbn, $stok);
+            
+            if ($stmt->execute()) {
+                $_SESSION['success_message'] = "Buku berhasil ditambahkan!";
+            } else {
+                $_SESSION['error_message'] = "Gagal menambahkan buku: " . $conn->error;
+            }
+            $stmt->close();
+        }
+        $check_stmt->close();
+        
+        header("Location: kelolaBuku.php");
+        exit;
+    }
+    
+    if (isset($_POST['edit_book'])) {
+        $edit_id = $_POST['edit_id'];
+        $judul = trim($_POST['judul']);
+        $penulis = trim($_POST['penulis']);
+        $tahun = (int)$_POST['tahun'];
+        $isbn = trim($_POST['isbn']);
+        $halaman = (int)$_POST['halaman'];
+        $stok = (int)$_POST['stok'];
+        
+        $stmt = $conn->prepare("UPDATE buku SET Judul = ?, Penulis = ?, Tahun = ?, Jumlah_halaman = ?, ISBN = ?, stok = ? WHERE ID = ?");
+        $stmt->bind_param("ssiisis", $judul, $penulis, $tahun, $halaman, $isbn, $stok, $edit_id);
+        
+        if ($stmt->execute()) {
+            $_SESSION['success_message'] = "Buku berhasil diperbarui!";
+        } else {
+            $_SESSION['error_message'] = "Gagal memperbarui buku: " . $conn->error;
+        }
+        $stmt->close();
+        
+        header("Location: kelolaBuku.php");
+        exit;
+    }
+    
+    if (isset($_POST['delete_id'])) {
+        $delete_id = $_POST['delete_id'];
+        
+        $stmt = $conn->prepare("DELETE FROM buku WHERE ID = ?");
+        $stmt->bind_param("s", $delete_id);
+        
+        if ($stmt->execute()) {
+            $_SESSION['success_message'] = "Buku berhasil dihapus!";
+        } else {
+            $_SESSION['error_message'] = "Gagal menghapus buku: " . $conn->error;
+        }
+        $stmt->close();
+        
+        header("Location: kelolaBuku.php");
+        exit;
+    }
 }
+
+$book_stats = getBookStats($conn);
 
 $search_query = $_GET['search'] ?? '';
-$filtered_books = $_SESSION['books'];
+$where_clause = "";
+$params = [];
+$types = "";
+
 if (!empty($search_query)) {
-    $filtered_books = array_filter($_SESSION['books'], function($book) use ($search_query) {
-        return stripos($book['judul'], $search_query) !== false ||
-               stripos($book['penulis'], $search_query) !== false ||
-               stripos($book['isbn'], $search_query) !== false;
-    });
+    $where_clause = "WHERE Judul LIKE ? OR Penulis LIKE ? OR ISBN LIKE ?";
+    $search_param = "%" . $search_query . "%";
+    $params = [$search_param, $search_param, $search_param];
+    $types = "sss";
 }
+
+$sql = "SELECT * FROM buku $where_clause ORDER BY Judul ASC";
+$stmt = $conn->prepare($sql);
+
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
+$books = [];
+
+while ($row = $result->fetch_assoc()) {
+    $books[] = [
+        'id' => $row['ID'],
+        'judul' => $row['Judul'],
+        'penulis' => $row['Penulis'],
+        'tahun' => $row['Tahun'],
+        'isbn' => $row['ISBN'],
+        'halaman' => $row['Jumlah_halaman'],
+        'stok' => $row['Stok'],
+        'status' => $row['Stok'] > 0 ? 'Tersedia' : 'Habis'
+    ];
+}
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -201,10 +248,19 @@ if (!empty($search_query)) {
                     <?php unset($_SESSION['success_message']); ?>
                 <?php endif; ?>
 
+                <?php if (isset($_SESSION['error_message'])): ?>
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex justify-between items-center">
+                        <span><?php echo $_SESSION['error_message']; ?></span>
+                        <button onclick="this.parentElement.remove()" class="text-red-700 hover:text-red-900">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <?php unset($_SESSION['error_message']); ?>
+                <?php endif; ?>
+
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-semibold text-gray-800">Daftar Buku Perpustakaan</h2>
                     <button onclick="addBook()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition duration-200">
-
                         <i class="fas fa-plus mr-2"></i> Tambah Buku
                     </button>
                 </div>
@@ -230,7 +286,7 @@ if (!empty($search_query)) {
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="flex items-center justify-between p-4 border-b">
                         <div class="text-sm text-gray-500">
-                            Menampilkan <span class="font-medium">1 - <?php echo count($filtered_books); ?></span> dari <span class="font-medium"><?php echo $book_stats['total_buku']; ?></span> buku
+                            Menampilkan <span class="font-medium">1 - <?php echo count($books); ?></span> dari <span class="font-medium"><?php echo $book_stats['total_buku']; ?></span> buku
                         </div>
                         <select class="bg-gray-100 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="10">10 per halaman</option>
@@ -255,7 +311,7 @@ if (!empty($search_query)) {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
-                                <?php foreach ($filtered_books as $book): ?>
+                                <?php foreach ($books as $book): ?>
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['id']); ?></td>
                                         <td class="px-6 py-4 font-medium text-gray-900"><?php echo htmlspecialchars($book['judul']); ?></td>
@@ -270,8 +326,8 @@ if (!empty($search_query)) {
                                                     Tersedia
                                                 </span>
                                             <?php else: ?>
-                                                <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
-                                                    Dipinjam
+                                                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                                                    Habis
                                                 </span>
                                             <?php endif; ?>
                                         </td>
@@ -296,9 +352,9 @@ if (!empty($search_query)) {
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
-                                <?php if (empty($filtered_books)): ?>
+                                <?php if (empty($books)): ?>
                                     <tr>
-                                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">Tidak ada buku ditemukan</td>
+                                        <td colspan="9" class="px-6 py-4 text-center text-gray-500">Tidak ada buku ditemukan</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -307,7 +363,7 @@ if (!empty($search_query)) {
 
                     <div class="flex items-center justify-between p-4 border-t">
                         <div class="text-sm text-gray-500">
-                            Menampilkan <span class="font-medium">1 - <?php echo count($filtered_books); ?></span> dari <span class="font-medium"><?php echo $book_stats['total_buku']; ?></span> buku
+                            Menampilkan <span class="font-medium">1 - <?php echo count($books); ?></span> dari <span class="font-medium"><?php echo $book_stats['total_buku']; ?></span> buku
                         </div>
                         <div class="flex items-center space-x-2">
                             <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 disabled:opacity-50" disabled>
@@ -359,7 +415,7 @@ if (!empty($search_query)) {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span class="text-red-500">*</span></label>
-                    <input type="text" name="halaman" id="halaman" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <input type="number" name="halaman" id="halaman" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span class="text-red-500">*</span></label>
@@ -382,7 +438,6 @@ if (!empty($search_query)) {
                 </button>
             </div>
             <div id="bookDetails" class="space-y-3 text-sm">
-
             </div>
             <div class="flex justify-end mt-6">
                 <button onclick="closeViewModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200">Tutup</button>
@@ -402,7 +457,7 @@ if (!empty($search_query)) {
                 <input type="hidden" name="edit_id" id="editId">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">ID Buku <span class="text-red-500">*</span></label>
-                    <input type="text" name="id_buku" id="editIdBuku" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <input type="text" id="editIdBuku" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Judul <span class="text-red-500">*</span></label>
@@ -422,7 +477,7 @@ if (!empty($search_query)) {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span class="text-red-500">*</span></label>
-                    <input type="number" name="halaman" id="editHalaman" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <input type="number" name="halaman" id="editHalaman" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span class="text-red-500">*</span></label>
@@ -451,6 +506,8 @@ if (!empty($search_query)) {
     </div>
 
     <script>
+        const booksData = <?php echo json_encode($books); ?>;
+
         function addBook() {
             document.getElementById('addForm').reset();
             document.getElementById('addModal').classList.remove('hidden');
@@ -486,7 +543,7 @@ if (!empty($search_query)) {
                     <span>${book.isbn}</span>
                 </div>
                 <div class="flex">
-                    <strong class="w-24">Jumlah halaman:</strong>
+                    <strong class="w-24">Halaman:</strong>
                     <span>${book.halaman}</span>
                 </div>
                 <div class="flex">
@@ -495,7 +552,7 @@ if (!empty($search_query)) {
                 </div>
                 <div class="flex">
                     <strong class="w-24">Status:</strong>
-                    <span class="px-2 py-1 rounded-full text-xs ${book.status === 'Tersedia' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}">
+                    <span class="px-2 py-1 rounded-full text-xs ${book.status === 'Tersedia' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                         ${book.status}
                     </span>
                 </div>
@@ -509,10 +566,10 @@ if (!empty($search_query)) {
         }
 
         function editBook(id) {
-            const books = <?php echo json_encode($_SESSION['books']); ?>;
-            const book = books.find(b => b.id === id);
+            const book = booksData.find(b => b.id === id);
             
             if (book) {
+                document.getElementById('editId').value = book.id;
                 document.getElementById('editIdBuku').value = book.id;
                 document.getElementById('editJudul').value = book.judul;
                 document.getElementById('editPenulis').value = book.penulis;
@@ -539,13 +596,12 @@ if (!empty($search_query)) {
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        // Form validation
         document.getElementById('addForm').addEventListener('submit', function(e) {
             const isbn = document.getElementById('addIsbn').value;
             const tahun = document.getElementById('addTahun').value;
             const stok = document.getElementById('addStok').value;
 
-            if (!/^\d{10}(\d{3})?$/.test(isbn.replace(/[^0-9]/g, ''))) {
+            if (isbn && !/^\d{10}(\d{3})?$/.test(isbn.replace(/[^0-9]/g, ''))) {
                 alert('ISBN harus berupa 10 atau 13 digit angka');
                 e.preventDefault();
                 return;
@@ -565,12 +621,12 @@ if (!empty($search_query)) {
             }
         });
 
-        document.getElementById('editForm').addEventListener('submit', function(e) {
+        document.getElementById('editForm')?.addEventListener('submit', function(e) {
             const isbn = document.getElementById('editIsbn').value;
             const tahun = document.getElementById('editTahun').value;
             const stok = document.getElementById('editStok').value;
 
-            if (!/^\d{10}(\d{3})?$/.test(isbn.replace(/[^0-9]/g, ''))) {
+            if (isbn && !/^\d{10}(\d{3})?$/.test(isbn.replace(/[^0-9]/g, ''))) {
                 alert('ISBN harus berupa 10 atau 13 digit angka');
                 e.preventDefault();
                 return;
@@ -611,6 +667,87 @@ if (!empty($search_query)) {
                 }, 300);
             }, 5000);
         }
+
+        const errorMessage = document.querySelector('.bg-red-100');
+        if (errorMessage) {
+            setTimeout(() => {
+                errorMessage.style.opacity = '0';
+                setTimeout(() => {
+                    errorMessage.remove();
+                }, 300);
+            }, 5000);
+        }
+
+        function closeAlert(element) {
+            element.style.opacity = '0';
+            setTimeout(() => {
+                element.remove();
+            }, 300);
+        }
+
+        function generateBookId() {
+            const prefix = 'BK';
+            const timestamp = Date.now().toString().slice(-6);
+            const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+            return prefix + timestamp + random;
+        }
+
+        document.getElementById('id_buku').addEventListener('focus', function() {
+            if (!this.value) {
+                this.value = generateBookId();
+            }
+        });
+
+        let searchTimeout;
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    this.form.submit();
+                }, 500);
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                addBook();
+            }
+
+            if (e.key === 'Escape') {
+                closeAddModal();
+                closeViewModal();
+                closeEditModal();
+                closeDeleteModal();
+            }
+        });
+
+        let formChanged = false;
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('input', () => {
+                formChanged = true;
+            });
+            
+            form.addEventListener('submit', () => {
+                formChanged = false;
+            });
+        });
+
+        window.addEventListener('beforeunload', function(e) {
+            if (formChanged) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        document.querySelectorAll('[title]').forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                this.setAttribute('data-tooltip', this.getAttribute('title'));
+                this.removeAttribute('title');
+            });
+        });
     </script>
 </body>
 </html>
