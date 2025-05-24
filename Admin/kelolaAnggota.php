@@ -1,5 +1,6 @@
 <?php
 session_start();
+include '../konek.php'; 
 
 if (isset($_GET['logout'])) {
     session_destroy();
@@ -17,48 +18,91 @@ $admin = [
     'id' => $_SESSION['admin_id'] ?? '1'
 ];
 
+// Mengambil total anggota dari database
+$total_query = "SELECT COUNT(*) as total FROM anggota";
+$total_result = mysqli_query($conn, $total_query);
+$total_row = mysqli_fetch_assoc($total_result);
 $member_stats = [
-    'total_anggota' => 89
+    'total_anggota' => $total_row['total']
 ];
 
-$members = [
-    
-];
+$success_message = '';
+$error_message = '';
 
+// Handle POST requests (Edit dan Delete)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'edit') {
-            $id = $_POST['id'];
-            foreach ($members as &$member) {
-                if ($member['id'] === $id) {
-                    $member['nrp'] = $_POST['nrp'];
-                    $member['nama'] = $_POST['nama'];
-                    $member['email'] = $_POST['email'];
-                    $member['jurusan'] = $_POST['jurusan'];
-                    $member['no_telp'] = $_POST['no_telp'];
-                    break;
-                }
+            $id = mysqli_real_escape_string($conn, $_POST['id']);
+            $nrp = mysqli_real_escape_string($conn, $_POST['nrp']);
+            $nama = mysqli_real_escape_string($conn, $_POST['nama']);
+            $email = mysqli_real_escape_string($conn, $_POST['email']);
+            $jurusan = mysqli_real_escape_string($conn, $_POST['jurusan']);
+            $no_telp = mysqli_real_escape_string($conn, $_POST['no_telp']);
+            $jenis_kelamin = mysqli_real_escape_string($conn, $_POST['jenis_kelamin']);
+            
+            $update_query = "UPDATE anggota SET 
+                            NRP = '$nrp', 
+                            Nama = '$nama', 
+                            Email = '$email', 
+                            Jurusan = '$jurusan', 
+                            No_Telp = '$no_telp',
+                            Jenis_kelamin = '$jenis_kelamin'
+                            WHERE NRP = '$id'";
+            
+            if (mysqli_query($conn, $update_query)) {
+                $success_message = "Data anggota berhasil diperbarui!";
+            } else {
+                $error_message = "Gagal memperbarui data anggota: " . mysqli_error($conn);
             }
-            $success_message = "Data anggota berhasil diperbarui!";
         } elseif ($_POST['action'] === 'delete') {
-            $id = $_POST['id'];
-            $members = array_filter($members, function($member) use ($id) {
-                return $member['id'] !== $id;
-            });
-            $member_stats['total_anggota']--;
-            $success_message = "Anggota berhasil dihapus!";
+            $id = mysqli_real_escape_string($conn, $_POST['id']);
+            
+            $delete_query = "DELETE FROM anggota WHERE NRP = '$id'";
+            
+            if (mysqli_query($conn, $delete_query)) {
+                $success_message = "Anggota berhasil dihapus!";
+            } else {
+                $error_message = "Gagal menghapus anggota: " . mysqli_error($conn);
+            }
         }
     }
 }
 
+// Handle search
 $search_query = $_GET['search'] ?? '';
+$where_clause = '';
 if (!empty($search_query)) {
-    $members = array_filter($members, function($member) use ($search_query) {
-        return stripos($member['nama'], $search_query) !== false || 
-               stripos($member['nrp'], $search_query) !== false ||
-               stripos($member['email'], $search_query) !== false ||
-               stripos($member['jurusan'], $search_query) !== false;
-    });
+    $search_escaped = mysqli_real_escape_string($conn, $search_query);
+    $where_clause = "WHERE Nama LIKE '%$search_escaped%' OR 
+                    NRP LIKE '%$search_escaped%' OR 
+                    Email LIKE '%$search_escaped%' OR 
+                    Jurusan LIKE '%$search_escaped%'";
+}
+
+// Pagination
+$per_page = $_GET['per_page'] ?? 10;
+$page = $_GET['page'] ?? 1;
+$offset = ($page - 1) * $per_page;
+
+// Mengambil data anggota dari database
+$query = "SELECT NRP, Nama, Email, Jurusan, No_Telp, Jenis_kelamin FROM anggota $where_clause 
+          ORDER BY Nama ASC 
+          LIMIT $offset, $per_page";
+$result = mysqli_query($conn, $query);
+
+// Count total records for pagination
+$count_query = "SELECT COUNT(*) as total FROM anggota $where_clause";
+$count_result = mysqli_query($conn, $count_query);
+$count_row = mysqli_fetch_assoc($count_result);
+$total_records = $count_row['total'];
+$total_pages = ceil($total_records / $per_page);
+
+$members = [];
+if ($result) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        $members[] = $row;
+    }
 }
 ?>
 
@@ -73,6 +117,7 @@ if (!empty($search_query)) {
 </head>
 <body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
+        <!-- Sidebar -->
         <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
             <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-gray-200">
                 <div class="bg-[#393E46] p-2 rounded">
@@ -107,7 +152,9 @@ if (!empty($search_query)) {
             </nav>
         </div>
 
+        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
             <header class="bg-[#DFD0B8] shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Kelola Anggota</div>
@@ -135,10 +182,18 @@ if (!empty($search_query)) {
                 </div>
             </header>
 
+            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6 bg-[#FFFAEC]">
-                <?php if (isset($success_message)): ?>
+                <!-- Success/Error Messages -->
+                <?php if (!empty($success_message)): ?>
                     <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
                         <?php echo $success_message; ?>
+                    </div>
+                <?php endif; ?>
+                
+                <?php if (!empty($error_message)): ?>
+                    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        <?php echo $error_message; ?>
                     </div>
                 <?php endif; ?>
                 
@@ -146,6 +201,7 @@ if (!empty($search_query)) {
                     <h2 class="text-lg font-medium">Daftar Anggota Perpustakaan</h2>
                 </div>
 
+                <!-- Stats Card -->
                 <div class="mb-8">
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition max-w-sm">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Anggota</h3>
@@ -154,83 +210,108 @@ if (!empty($search_query)) {
                     </div>
                 </div>
 
+                <!-- Table -->
                 <div class="bg-white rounded-lg shadow-sm p-6">
-                    <div class="flex items-center justify-end mb-6">
-                        <select class="bg-white text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                        <option class="bg-white text-gray-700 hover:bg-[#393E46]" value="10">10 per halaman</option>
-                        <option class="bg-white text-gray-700" value="25">25 per halaman</option>
-                        <option class="bg-white text-gray-700" value="50">50 per halaman</option>
-                        </select>
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="text-sm text-gray-500">
+                            Menampilkan <?php echo $offset + 1; ?> - <?php echo min($offset + $per_page, $total_records); ?> dari <?php echo $total_records; ?> anggota
+                        </div>
+                        <form action="kelolaAnggota.php" method="GET" class="flex items-center">
+                            <?php if (!empty($search_query)): ?>
+                                <input type="hidden" name="search" value="<?php echo htmlspecialchars($search_query); ?>">
+                            <?php endif; ?>
+                            <select name="per_page" onchange="this.form.submit()" class="bg-white text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                <option value="10" <?php echo $per_page == 10 ? 'selected' : ''; ?>>10 per halaman</option>
+                                <option value="25" <?php echo $per_page == 25 ? 'selected' : ''; ?>>25 per halaman</option>
+                                <option value="50" <?php echo $per_page == 50 ? 'selected' : ''; ?>>50 per halaman</option>
+                            </select>
+                        </form>
                     </div>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-100">
                                 <tr>
-                                    <th class="px-4 py-3 rounded-tl-lg">ID</th>
                                     <th class="px-4 py-3">NRP</th>
                                     <th class="px-4 py-3">Nama</th>
                                     <th class="px-4 py-3">Email</th>
                                     <th class="px-4 py-3">Jurusan</th>
                                     <th class="px-4 py-3">No. Telp</th>
+                                    <th class="px-4 py-3">Jenis Kelamin</th>
                                     <th class="px-4 py-3 rounded-tr-lg">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($members as $index => $member): ?>
-                                    <tr class="border-b hover:bg-gray-50">
-                                        <td class="px-4 py-3"><?php echo htmlspecialchars($member['id']); ?></td>
-                                        <td class="px-4 py-3 font-medium"><?php echo htmlspecialchars($member['nrp']); ?></td>
-                                        <td class="px-4 py-3"><?php echo htmlspecialchars($member['nama']); ?></td>
-                                        <td class="px-4 py-3"><?php echo htmlspecialchars($member['email']); ?></td>
-                                        <td class="px-4 py-3">
-                                            <span class="bg-blue-100 text-[#393E46] text-xs px-2 py-1 rounded-full">
-                                                <?php echo htmlspecialchars($member['jurusan']); ?>
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-3"><?php echo htmlspecialchars($member['no_telp']); ?></td>
-                                        <td class="px-4 py-3">
-                                            <div class="flex space-x-2">
-                                                <button onclick="viewMember(<?php echo htmlspecialchars(json_encode($member)); ?>)" class="text-blue-600 hover:text-blue-900" title="Detail">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                <button onclick="editMember(<?php echo htmlspecialchars(json_encode($member)); ?>)" class="text-yellow-600 hover:text-yellow-900" title="Edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button onclick="confirmDelete(<?php echo $member['id']; ?>, '<?php echo htmlspecialchars($member['nama']); ?>')" class="text-red-600 hover:text-red-900" title="Hapus">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
+                                <?php if (count($members) > 0): ?>
+                                    <?php foreach ($members as $member): ?>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="px-4 py-3 font-medium"><?php echo htmlspecialchars($member['NRP']); ?></td>
+                                            <td class="px-4 py-3"><?php echo htmlspecialchars($member['Nama']); ?></td>
+                                            <td class="px-4 py-3"><?php echo htmlspecialchars($member['Email']); ?></td>
+                                            <td class="px-4 py-3">
+                                                <span class="bg-blue-100 text-[#393E46] text-xs px-2 py-1 rounded-full">
+                                                    <?php echo htmlspecialchars($member['Jurusan']); ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3"><?php echo htmlspecialchars($member['No_Telp'] ?? '-'); ?></td>
+                                            <td class="px-4 py-3"><?php echo htmlspecialchars($member['Jenis_kelamin'] ?? '-'); ?></td>
+                                            <td class="px-4 py-3">
+                                                <div class="flex space-x-2">
+                                                    <button onclick="viewMember(<?php echo htmlspecialchars(json_encode($member)); ?>)" class="text-blue-600 hover:text-blue-900" title="Detail">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button onclick="editMember(<?php echo htmlspecialchars(json_encode($member)); ?>)" class="text-yellow-600 hover:text-yellow-900" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button onclick="confirmDelete('<?php echo $member['NRP']; ?>', '<?php echo htmlspecialchars($member['Nama']); ?>')" class="text-red-600 hover:text-red-900" title="Hapus">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                            <?php echo !empty($search_query) ? 'Tidak ada anggota yang ditemukan dengan kata kunci "' . htmlspecialchars($search_query) . '"' : 'Belum ada data anggota'; ?>
                                         </td>
                                     </tr>
-                                <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
 
-                    <div class="flex items-center justify-between mt-6">
-                        <div class="text-sm text-gray-500">
-                            Menampilkan 1 - 6 dari 89 anggota
+                    <!-- Pagination -->
+                    <?php if ($total_pages > 1): ?>
+                        <div class="flex items-center justify-center mt-6">
+                            <div class="flex items-center space-x-2">
+                                <?php if ($page > 1): ?>
+                                    <a href="?page=<?php echo $page - 1; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>&per_page=<?php echo $per_page; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
+                                        <i class="fas fa-chevron-left text-xs"></i>
+                                    </a>
+                                <?php endif; ?>
+                                
+                                <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
+                                    <a href="?page=<?php echo $i; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>&per_page=<?php echo $per_page; ?>" 
+                                       class="<?php echo $i == $page ? 'bg-[#393E46] text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'; ?> px-3 py-1 rounded-md">
+                                        <?php echo $i; ?>
+                                    </a>
+                                <?php endfor; ?>
+                                
+                                <?php if ($page < $total_pages): ?>
+                                    <a href="?page=<?php echo $page + 1; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>&per_page=<?php echo $per_page; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
+                                        <i class="fas fa-chevron-right text-xs"></i>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <a href="#" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
-                                <i class="fas fa-chevron-left text-xs"></i>
-                            </a>
-                            <a href="#" class="bg-[#393E46] text-white px-3 py-1 rounded-md">1</a>
-                            <a href="#" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">2</a>
-                            <a href="#" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">3</a>
-                            <span class="text-gray-500">...</span>
-                            <a href="#" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">15</a>
-                            <a href="#" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
-                                <i class="fas fa-chevron-right text-xs"></i>
-                            </a>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </main>
         </div>
     </div>
 
+    <!-- Detail Modal -->
     <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
             <div class="flex justify-between items-center mb-4">
@@ -239,15 +320,14 @@ if (!empty($search_query)) {
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div id="detailContent">
-
-            </div>
+            <div id="detailContent"></div>
             <div class="flex justify-end mt-6">
                 <button onclick="closeDetailModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg">Tutup</button>
             </div>
         </div>
     </div>
 
+    <!-- Edit Modal -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
             <div class="flex justify-between items-center mb-4">
@@ -286,7 +366,14 @@ if (!empty($search_query)) {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">No. Telepon</label>
-                        <input type="text" name="no_telp" id="editNoTelp" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" name="no_telp" id="editNoTelp" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                        <select name="jenis_kelamin" id="editJenisKelamin" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
                     </div>
                 </div>
                 
@@ -298,6 +385,7 @@ if (!empty($search_query)) {
         </div>
     </div>
 
+    <!-- Delete Modal -->
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-sm mx-auto">
             <h3 class="text-lg font-medium mb-4">Konfirmasi Hapus</h3>
@@ -321,28 +409,28 @@ if (!empty($search_query)) {
             content.innerHTML = `
                 <div class="space-y-3">
                     <div>
-                        <span class="font-medium text-gray-700">ID:</span>
-                        <span class="ml-2">${member.id}</span>
-                    </div>
-                    <div>
                         <span class="font-medium text-gray-700">NRP:</span>
-                        <span class="ml-2">${member.nrp}</span>
+                        <span class="ml-2">${member.NRP}</span>
                     </div>
                     <div>
                         <span class="font-medium text-gray-700">Nama:</span>
-                        <span class="ml-2">${member.nama}</span>
+                        <span class="ml-2">${member.Nama}</span>
                     </div>
                     <div>
                         <span class="font-medium text-gray-700">Email:</span>
-                        <span class="ml-2">${member.email}</span>
+                        <span class="ml-2">${member.Email}</span>
                     </div>
                     <div>
                         <span class="font-medium text-gray-700">Jurusan:</span>
-                        <span class="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${member.jurusan}</span>
+                        <span class="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${member.Jurusan}</span>
                     </div>
                     <div>
                         <span class="font-medium text-gray-700">No. Telepon:</span>
-                        <span class="ml-2">${member.no_telp}</span>
+                        <span class="ml-2">${member.No_Telp || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-700">Jenis Kelamin:</span>
+                        <span class="ml-2">${member.Jenis_kelamin || '-'}</span>
                     </div>
                 </div>
             `;
@@ -358,12 +446,13 @@ if (!empty($search_query)) {
         function editMember(member) {
             const modal = document.getElementById('editModal');
 
-            document.getElementById('editId').value = member.id;
-            document.getElementById('editNrp').value = member.nrp;
-            document.getElementById('editNama').value = member.nama;
-            document.getElementById('editEmail').value = member.email;
-            document.getElementById('editJurusan').value = member.jurusan;
-            document.getElementById('editNoTelp').value = member.no_telp;
+            document.getElementById('editId').value = member.NRP;
+            document.getElementById('editNrp').value = member.NRP;
+            document.getElementById('editNama').value = member.Nama;
+            document.getElementById('editEmail').value = member.Email;
+            document.getElementById('editJurusan').value = member.Jurusan;
+            document.getElementById('editNoTelp').value = member.No_Telp || '';
+            document.getElementById('editJenisKelamin').value = member.Jenis_kelamin || 'Laki-laki';
             
             modal.classList.remove('hidden');
         }
@@ -373,10 +462,10 @@ if (!empty($search_query)) {
             modal.classList.add('hidden');
         }
 
-        function confirmDelete(id, name) {
+        function confirmDelete(nrp, name) {
             const modal = document.getElementById('deleteModal');
             
-            document.getElementById('deleteId').value = id;
+            document.getElementById('deleteId').value = nrp;
             document.getElementById('deleteMemberName').textContent = name;
             
             modal.classList.remove('hidden');
