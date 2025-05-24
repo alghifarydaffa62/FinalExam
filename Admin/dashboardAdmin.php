@@ -1,5 +1,6 @@
 <?php
 session_start();
+include '../konek.php';
 
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: loginAdmin.php");
@@ -22,12 +23,23 @@ $admin = [
     'id' => $_SESSION['admin_id'] ?? '1'
 ];
 
-$stats = [
-    'total_buku' => $_SESSION['total_books'] ?? 150,
-    'total_pinjam' => $_SESSION['total_borrowed'] ?? 45,
-    'total_anggota' => $_SESSION['total_members'] ?? 89,
-    'keterlambatan' => $_SESSION['late_returns'] ?? 12
-];
+function getBookStats($conn) {
+    $stats = [
+        'total_buku' => 0,
+        'dipinjam' => 0,
+        'anggota' => 0,
+        'keterlambatan' => 0
+    ];
+
+    $result = $conn->query("SELECT COUNT(*) as total FROM buku");
+    if ($result) {
+        $stats['total_buku'] = $result->fetch_assoc()['total'];
+    }
+    
+    return $stats;
+}
+
+$book_stats = getBookStats($conn);
 
 $lending_stats = [
     'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
@@ -123,22 +135,22 @@ $lending_stats = [
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Buku</h3>
-                        <p class="text-3xl font-bold text-blue-600"><?php echo $stats['total_buku']; ?></p>
+                        <p class="text-3xl font-bold text-blue-600"><?php echo $book_stats['total_buku']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Buku dalam koleksi</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Pinjam</h3>
-                        <p class="text-3xl font-bold text-orange-600"><?php echo $stats['total_pinjam']; ?></p>
+                        <p class="text-3xl font-bold text-orange-600"><?php echo $book_stats['dipinjam']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Buku sedang dipinjam</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Anggota</h3>
-                        <p class="text-3xl font-bold text-green-600"><?php echo $stats['total_anggota']; ?></p>
+                        <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['anggota']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Anggota terdaftar</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Keterlambatan</h3>
-                        <p class="text-3xl font-bold text-red-600"><?php echo $stats['keterlambatan']; ?></p>
+                        <p class="text-3xl font-bold text-red-600"><?php echo $book_stats['keterlambatan']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Pengembalian terlambat</p>
                     </div>
                 </div>
