@@ -1,22 +1,19 @@
 <?php
-// Database configuration
+
 $servername = "localhost";
-$username = "root"; // Sesuaikan dengan username database Anda
-$password = "";     // Sesuaikan dengan password database Anda
-$dbname = "perpustakaan"; // Sesuaikan dengan nama database Anda
+$username = "root"; 
+$password = "";     
+$dbname = "perpustakaan"; 
 
 $message = "";
 $messageType = "";
 
-// Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
 
-// Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Process form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nrp = trim($_POST['nrp']);
     $nama = trim($_POST['namaLengkap']);
@@ -24,13 +21,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = trim($_POST['password']);
     $jurusan = trim($_POST['jurusan']);
     $phoneNumber = trim($_POST['phoneNumber']);
-    
-    // Basic validation
+
     if (empty($nrp) || empty($nama) || empty($email) || empty($password) || empty($jurusan) || empty($phoneNumber)) {
         $message = "Semua field harus diisi!";
         $messageType = "error";
     } else {
-        // Check if NRP already exists
         $checkStmt = $conn->prepare("SELECT NRP FROM anggota WHERE NRP = ?");
         $checkStmt->bind_param("s", $nrp);
         $checkStmt->execute();
@@ -40,7 +35,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $message = "NRP sudah terdaftar! Silakan gunakan NRP yang berbeda.";
             $messageType = "error";
         } else {
-            // Check if email already exists
             $checkEmailStmt = $conn->prepare("SELECT Email FROM anggota WHERE Email = ?");
             $checkEmailStmt->bind_param("s", $email);
             $checkEmailStmt->execute();
@@ -213,7 +207,6 @@ $conn->close();
     </div>
 
     <script>
-        // Initialize dropdown with PHP value if exists
         document.addEventListener('DOMContentLoaded', function() {
             const jurusanValue = document.getElementById('jurusan').value;
             if (jurusanValue) {

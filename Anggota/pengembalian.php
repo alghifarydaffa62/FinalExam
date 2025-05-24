@@ -110,7 +110,7 @@ $borrowed_books = [
                 </a>
                 <a href="peminjaman.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-book-open w-6"></i>
-                    <span class="ml-2">Peminjamann</span>
+                    <span class="ml-2">Peminjaman</span>
                 </a>
                 <a href="pengembalian.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
                     <i class="fas fa-history w-6"></i>
