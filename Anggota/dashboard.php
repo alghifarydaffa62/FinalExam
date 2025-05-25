@@ -13,47 +13,129 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
+// Ambil NRP user berdasarkan nama yang tersimpan di session
+$user_nrp = null;
 $user = [
     'name' => $_SESSION['member_name'] ?? 'Anggota',
     'id' => $_SESSION['member_id'] ?? '1'
 ];
 
-function getBookStats($conn) {
+// Query untuk mendapatkan NRP berdasarkan nama user
+if (!empty($user['name'])) {
+    try {
+        $get_nrp = $conn->prepare("SELECT NRP FROM anggota WHERE Nama = ?");
+        $get_nrp->bind_param("s", $user['name']);
+        $get_nrp->execute();
+        $nrp_result = $get_nrp->get_result();
+        
+        if ($nrp_result->num_rows > 0) {
+            $user_data = $nrp_result->fetch_assoc();
+            $user_nrp = $user_data['NRP'];
+        }
+    } catch (Exception $e) {
+        error_log("Error getting user NRP: " . $e->getMessage());
+    }
+}
+
+// Jika tidak bisa mendapatkan NRP, redirect ke login
+if (!$user_nrp) {
+    session_destroy();
+    header("Location: loginAnggota.php");
+    exit;
+}
+
+function getBookStats($conn, $user_nrp) {
     $stats = [
         'total_buku' => 0,
-        'total_borrowed' => 0
+        'totalPeminjaman' => 0
     ];
 
+    // Query total buku
     $result = $conn->query("SELECT COUNT(*) as total FROM buku");
     if ($result) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
-    
+
+    // Query total peminjaman user berdasarkan NRP
+    try {
+        $stmt = $conn->prepare("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE NRP = ?");
+        $stmt->bind_param("s", $user_nrp);
+        $stmt->execute();
+        $peminjaman_result = $stmt->get_result();
+        
+        if ($peminjaman_result && $peminjaman_result->num_rows > 0) {
+            $peminjaman_data = $peminjaman_result->fetch_assoc();
+            $stats['totalPeminjaman'] = $peminjaman_data['totalPeminjaman'];
+        }
+        $stmt->close();
+    } catch (Exception $e) {
+        error_log("Error getting total peminjaman: " . $e->getMessage());
+        $stats['totalPeminjaman'] = 0;
+    }
+
     return $stats;
 }
 
-$book_stats = getBookStats($conn);
+// Panggil fungsi dengan parameter user_nrp
+$book_stats = getBookStats($conn, $user_nrp);
 
-$borrowing_history = [
-    [
-        'title' => 'Harry Potter dan Batu Bertuah',
-        'borrow_date' => '15/05/2025',
-        'due_date' => '22/05/2025',
-        'status' => 'Dipinjam'
-    ],
-    [
-        'title' => 'Laskar Pelangi',
-        'borrow_date' => '10/05/2025',
-        'due_date' => '17/05/2025',
-        'status' => 'Dikembalikan'
-    ],
-    [
-        'title' => 'Bumi Manusia',
-        'borrow_date' => '05/05/2025',
-        'due_date' => '12/05/2025',
-        'status' => 'Dikembalikan'
-    ]
-];
+// Query untuk mendapatkan data peminjaman aktual dari database
+$borrowing_history = [];
+try {
+    $stmt = $conn->prepare("
+        SELECT b.Judul as title, 
+               p.Tanggal_Pinjam as borrow_date, 
+               p.Tanggal_Kembali as due_date,
+               CASE 
+                   WHEN p.Status = 'dipinjam' THEN 'Dipinjam'
+                   WHEN p.Status = 'dikembalikan' THEN 'Dikembalikan'
+                   ELSE 'Dipinjam'
+               END as status,
+               p.ID_Peminjaman as id
+        FROM peminjaman p 
+        JOIN buku b ON p.ID_Buku = b.ID_Buku 
+        WHERE p.NRP = ? 
+        ORDER BY p.Tanggal_Pinjam DESC 
+        LIMIT 10
+    ");
+    $stmt->bind_param("s", $user_nrp);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        // Format tanggal dari database ke format yang diinginkan
+        $borrow_date = date('d/m/Y', strtotime($row['borrow_date']));
+        $due_date = date('d/m/Y', strtotime($row['due_date']));
+        
+        $borrowing_history[] = [
+            'id' => $row['id'],
+            'title' => $row['title'],
+            'borrow_date' => $borrow_date,
+            'due_date' => $due_date,
+            'status' => $row['status']
+        ];
+    }
+    $stmt->close();
+} catch (Exception $e) {
+    error_log("Error getting borrowing history: " . $e->getMessage());
+    // Fallback ke data dummy jika query gagal
+    $borrowing_history = [
+        [
+            'id' => 0,
+            'title' => 'Harry Potter dan Batu Bertuah',
+            'borrow_date' => '15/05/2025',
+            'due_date' => '22/05/2025',
+            'status' => 'Dipinjam'
+        ],
+        [
+            'id' => 1,
+            'title' => 'Laskar Pelangi',
+            'borrow_date' => '10/05/2025',
+            'due_date' => '17/05/2025',
+            'status' => 'Dikembalikan'
+        ]
+    ];
+}
 ?>
 
 <!DOCTYPE html>
@@ -79,7 +161,7 @@ $borrowing_history = [
             </div>
 
             <nav class="mt-4">
-                <a href="dashboardAdmin.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
+                <a href="dashboard.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
                     <i class="fas fa-chart-bar w-6"></i>
                     <span class="ml-2">Dashboard</span>
                 </a>
@@ -112,7 +194,7 @@ $borrowing_history = [
                             </div>
                             <div class="text-sm">
                                 <div class="font-medium"><?php echo htmlspecialchars($user['name']); ?></div>
-                                <div class="text-gray-500 text-xs">Anggota</div>
+                                <div class="text-gray-500 text-xs">NRP: <?php echo htmlspecialchars($user_nrp); ?></div>
                             </div>
                     </div>
                 </div>
@@ -124,19 +206,19 @@ $borrowing_history = [
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-4">Pinjam</h3>
-                        <a href="pinjam-buku.php" class="bg-[#393E46] text-white px-4 py-2 rounded-lg hover:bg-[#948979]">Pinjam Buku</a>
+                        <a href="peminjaman.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-[#948979]">Pinjam Buku</a>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-4">Kembali</h3>
-                        <a href="kembalikan-buku.php" class="bg-[#393E46] text-white px-4 py-2 rounded-lg hover:bg-[#948979]">Kembalikan Buku</a>
+                        <a href="pengembalian.php" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-[#948979]">Kembalikan Buku</a>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Peminjaman</h3>
-                        <p class="text-3xl font-bold text-[#948979]"><?php echo $book_stats['total_borrowed']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Buku yang sedang dipinjam</p>
+                        <p class="text-3xl font-bold text-[#948979]"><?php echo $book_stats['totalPeminjaman']; ?></p>
+                        <p class="text-sm text-gray-500 mt-1">Total buku yang pernah dipinjam</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Buku</h3>
@@ -145,45 +227,6 @@ $borrowing_history = [
                     </div>
                 </div>
 
-                <div class="mt-8">
-                    <h3 class="text-lg font-medium mb-4">Buku yang Dipinjam</h3>
-                    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                        <table class="min-w-full">
-                            <thead>
-                                <tr class="bg-gray-50">
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul Buku</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Pinjam</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Kembali</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <?php foreach ($borrowing_history as $index => $book): ?>
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($book['title']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($book['borrow_date']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($book['due_date']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php if ($book['status'] == 'Dipinjam'): ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Dipinjam</span>
-                                        <?php else: ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Dikembalikan</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php if ($book['status'] == 'Dipinjam'): ?>
-                                            <a href="kembalikan-buku.php?id=<?php echo $index; ?>" class="text-blue-600 hover:text-blue-800">Kembalikan</a>
-                                        <?php else: ?>
-                                            <span class="text-gray-400">-</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </main>
         </div>
     </div>
@@ -191,6 +234,8 @@ $borrowing_history = [
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard Anggota loaded');
+            console.log('User NRP: <?php echo $user_nrp; ?>');
+            console.log('Total Peminjaman: <?php echo $book_stats['totalPeminjaman']; ?>');
         });
     </script>
 </body>

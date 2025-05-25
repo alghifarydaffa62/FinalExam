@@ -13,41 +13,71 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
+// Ambil NRP user berdasarkan nama yang tersimpan di session
+$user_nrp = null;
 $user = [
     'name' => $_SESSION['member_name'] ?? 'Anggota',
-    'id' => $_SESSION['member_id'] ?? '1',
-    'nrp' => $_SESSION['member_nrp'] ?? '001' 
+    'id' => $_SESSION['member_id'] ?? '1'
 ];
+
+// Query untuk mendapatkan NRP berdasarkan nama user
+if (!empty($user['name'])) {
+    try {
+        $get_nrp = $conn->prepare("SELECT NRP FROM anggota WHERE Nama = ?");
+        $get_nrp->bind_param("s", $user['name']);
+        $get_nrp->execute();
+        $nrp_result = $get_nrp->get_result();
+        
+        if ($nrp_result->num_rows > 0) {
+            $user_data = $nrp_result->fetch_assoc();
+            $user_nrp = $user_data['NRP'];
+        }
+    } catch (Exception $e) {
+        error_log("Error getting user NRP: " . $e->getMessage());
+    }
+}
+
+// Jika tidak bisa mendapatkan NRP, redirect ke login
+if (!$user_nrp) {
+    session_destroy();
+    header("Location: loginAnggota.php");
+    exit;
+}
 
 $books = [];
 $error_message = '';
 $success_message = '';
 
-$selected_status = $_GET['status'] ?? 'all';
+// Hapus filter status karena hanya tampilkan yang dipinjam
+// $selected_status = $_GET['status'] ?? 'all';
 
 if (isset($_POST['pinjam_buku'])) {
-    $id_buku = trim($_POST['id_buku'] ?? '');
-    $isbn_buku = trim($_POST['isbn_buku'] ?? '');
-    $nrp_anggota = $user['nrp'];
+    // Untuk peminjaman buku, gunakan NRP user yang sedang login
+    $nrp_input = $user_nrp; // Gunakan NRP user yang login
+    $judul_buku = trim($_POST['judul_buku'] ?? '');
     
-    if (!empty($id_buku) && !empty($isbn_buku)) {
+    if (!empty($judul_buku)) {
         try {
-            $check_book = $conn->prepare("SELECT * FROM buku WHERE ID = ? AND ISBN = ? AND Stok > 0");
-            $check_book->bind_param("ss", $id_buku, $isbn_buku);
+            // Cari buku berdasarkan judul dan pastikan stok tersedia
+            $check_book = $conn->prepare("SELECT * FROM buku WHERE Judul LIKE ? AND Stok > 0");
+            $judul_search = "%{$judul_buku}%";
+            $check_book->bind_param("s", $judul_search);
             $check_book->execute();
             $book_result = $check_book->get_result();
             
             if ($book_result->num_rows > 0) {
                 $book_data = $book_result->fetch_assoc();
                 
+                // Cek apakah user sudah meminjam buku yang sama dan belum dikembalikan
                 $check_existing = $conn->prepare("SELECT * FROM peminjaman WHERE NRP = ? AND ID_Buku = ? AND Tanggal_kembali IS NULL");
-                $check_existing->bind_param("ss", $nrp_anggota, $id_buku);
+                $check_existing->bind_param("ss", $nrp_input, $book_data['ID']);
                 $check_existing->execute();
                 $existing_result = $check_existing->get_result();
                 
                 if ($existing_result->num_rows > 0) {
-                    $error_message = "Anda sudah meminjam buku ini dan belum mengembalikannya.";
+                    $error_message = "Anda sudah meminjam buku '{$book_data['Judul']}' dan belum mengembalikannya.";
                 } else {
+                    // Generate ID peminjaman baru
                     $get_last_id = $conn->query("SELECT Id_Peminjaman FROM peminjaman ORDER BY Id_Peminjaman DESC LIMIT 1");
                     $last_id_result = $get_last_id->fetch_assoc();
                     
@@ -63,12 +93,14 @@ if (isset($_POST['pinjam_buku'])) {
                     $batas_waktu = date('Y-m-d', strtotime('+7 days'));
                     $status_peminjaman = 'Dipinjam';
                     
+                    // Insert data peminjaman
                     $insert_peminjaman = $conn->prepare("INSERT INTO peminjaman (Id_Peminjaman, NRP, ID_Buku, Judul, Tanggal_Pinjam, Batas_waktu, status_peminjaman) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                    $insert_peminjaman->bind_param("sssssss", $id_peminjaman, $nrp_anggota, $id_buku, $book_data['Judul'], $tanggal_pinjam, $batas_waktu, $status_peminjaman);
+                    $insert_peminjaman->bind_param("sssssss", $id_peminjaman, $nrp_input, $book_data['ID'], $book_data['Judul'], $tanggal_pinjam, $batas_waktu, $status_peminjaman);
                     
                     if ($insert_peminjaman->execute()) {
+                        // Update stok buku
                         $update_stok = $conn->prepare("UPDATE buku SET Stok = Stok - 1 WHERE ID = ?");
-                        $update_stok->bind_param("s", $id_buku);
+                        $update_stok->bind_param("s", $book_data['ID']);
                         $update_stok->execute();
                         
                         $_SESSION['success_message'] = "Buku '{$book_data['Judul']}' berhasil dipinjam! ID Peminjaman: {$id_peminjaman}";
@@ -79,35 +111,28 @@ if (isset($_POST['pinjam_buku'])) {
                     }
                 }
             } else {
-                $error_message = "Buku dengan ID '{$id_buku}' dan ISBN '{$isbn_buku}' tidak ditemukan atau stok habis.";
+                $error_message = "Buku dengan judul '{$judul_buku}' tidak ditemukan atau stok habis.";
             }
         } catch (Exception $e) {
             $error_message = "Terjadi kesalahan: " . $e->getMessage();
         }
     } else {
-        $error_message = "Mohon lengkapi ID Buku dan ISBN yang akan dipinjam.";
+        $error_message = "Mohon masukkan judul buku yang akan dipinjam.";
     }
 }
 
 try {
-    $where_clause = "WHERE p.NRP = ?";
-    $params = [$user['nrp']];
+    // Query hanya untuk menampilkan peminjaman user yang sedang login DAN BELUM DIKEMBALIKAN
+    $where_clause = "WHERE p.NRP = ? AND p.Tanggal_kembali IS NULL";
+    $params = [$user_nrp];
     $param_types = "s";
     
-    if ($selected_status !== 'all') {
-        if ($selected_status === 'dipinjam') {
-            $where_clause .= " AND p.Tanggal_kembali IS NULL AND p.Batas_waktu >= CURDATE()";
-        } elseif ($selected_status === 'terlambat') {
-            $where_clause .= " AND p.Tanggal_kembali IS NULL AND p.Batas_waktu < CURDATE()";
-        } elseif ($selected_status === 'dikembalikan') {
-            $where_clause .= " AND p.Tanggal_kembali IS NOT NULL";
-        }
-    }
-    
     $query = "SELECT p.Id_Peminjaman, p.NRP, p.ID_Buku, p.Judul, p.Tanggal_Pinjam, p.Batas_waktu, p.Tanggal_kembali, p.status_peminjaman,
-                     b.Penulis, b.ISBN, b.Stok 
+                     b.Penulis, b.ISBN, b.Stok,
+                     a.Nama as nama_anggota
               FROM peminjaman p 
               LEFT JOIN buku b ON p.ID_Buku = b.ID 
+              LEFT JOIN anggota a ON p.NRP = a.NRP
               {$where_clause} 
               ORDER BY p.Tanggal_Pinjam DESC";
     
@@ -117,9 +142,8 @@ try {
     $result = $stmt->get_result();
     
     while ($row = $result->fetch_assoc()) {
-        if ($row['Tanggal_kembali'] !== null) {
-            $status = 'Dikembalikan';
-        } elseif (date('Y-m-d') > $row['Batas_waktu']) {
+        // Hanya akan ada status "Dipinjam" atau "Terlambat" karena yang dikembalikan sudah difilter
+        if (date('Y-m-d') > $row['Batas_waktu']) {
             $status = 'Terlambat';
         } else {
             $status = 'Dipinjam';
@@ -152,7 +176,7 @@ if (isset($_SESSION['success_message'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Koleksi Buku - SiPerpus</title>
+    <title>Peminjaman Buku Saya - SiPerpus</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -195,7 +219,7 @@ if (isset($_SESSION['success_message'])) {
         <div class="flex-1 flex flex-col overflow-hidden">
             <header class="bg-[#DFD0B8] shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
-                    <div class="font-bold text-lg">Peminjaman Buku</div>
+                    <div class="font-bold text-lg">Peminjaman Buku Saya</div>
                     <div class="flex items-center space-x-4">
                         <div class="relative">
                             <input type="text" id="searchInput" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64" placeholder="Cari buku...">
@@ -209,7 +233,7 @@ if (isset($_SESSION['success_message'])) {
                             </div>
                             <div class="text-sm">
                                 <div class="font-medium"><?php echo htmlspecialchars($user['name']); ?></div>
-                                <div class="text-gray-500 text-xs">Anggota</div>
+                                <div class="text-gray-500 text-xs">NRP: <?php echo htmlspecialchars($user_nrp); ?></div>
                             </div>
                         </div>
                     </div>
@@ -239,25 +263,22 @@ if (isset($_SESSION['success_message'])) {
                 <?php endif; ?>
 
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-medium">Manajemen Koleksi Buku</h2>
-                    <button onclick="openPinjamModal()" class="bg-[#DFD0B8] text-black px-4 py-2 rounded-md flex items-center text-sm hover:bg-[#948979]">
-                        <i class="fas fa-plus mr-2"></i> Pinjam Buku Baru
+                    <h2 class="text-xl font-medium">Buku yang Sedang Saya Pinjam</h2>
+                    <button onclick="openPinjamModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center text-sm hover:bg-[#948979]">
+                        <i class="fas fa-plus mr-2 text-white"></i> Pinjam Buku Baru
                     </button>
                 </div>
 
                 <div class="bg-white rounded-lg shadow-sm mb-6">
                     <div class="p-4 border-b border-gray-200">
-                        <h3 class="font-medium">Daftar Buku Dipinjam</h3>
-                    </div>
+                        <h3 class="font-medium">Daftar Buku yang Sedang Dipinjam</h3>
+                    </div> 
 
                     <div class="p-4 flex flex-wrap items-center justify-between gap-2 border-b border-gray-200">
                         <div class="flex flex-wrap gap-2">
-                            <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="filterByStatus(this.value)">
-                                <option value="all" <?php echo $selected_status == 'all' ? 'selected' : ''; ?>>Semua Status</option>
-                                <option value="dipinjam" <?php echo $selected_status == 'dipinjam' ? 'selected' : ''; ?>>Dipinjam</option>
-                                <option value="terlambat" <?php echo $selected_status == 'terlambat' ? 'selected' : ''; ?>>Terlambat</option>
-                                <option value="dikembalikan" <?php echo $selected_status == 'dikembalikan' ? 'selected' : ''; ?>>Dikembalikan</option>
-                            </select>
+                            <div class="text-sm text-gray-600">
+                                Menampilkan buku yang sedang dipinjam (belum dikembalikan)
+                            </div>
                         </div>
                         <div class="text-sm text-gray-600">
                             Total: <?php echo count($books); ?> buku
@@ -281,11 +302,11 @@ if (isset($_SESSION['success_message'])) {
                             <tbody class="divide-y divide-gray-200" id="bookTableBody">
                                 <?php if (empty($books)): ?>
                                 <tr>
-                                    <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                                         <i class="fas fa-book-open text-4xl mb-2"></i>
-                                        <div>Belum ada buku yang dipinjam</div>
+                                        <div>Anda tidak memiliki buku yang sedang dipinjam</div>
                                         <button onclick="openPinjamModal()" class="mt-4 text-blue-600 hover:text-blue-800 underline">
-                                            Pinjam buku pertama Anda
+                                            Pinjam buku sekarang
                                         </button>
                                     </td>
                                 </tr>
@@ -302,10 +323,8 @@ if (isset($_SESSION['success_message'])) {
                                         <td class="px-6 py-4">
                                             <?php if ($book['status'] == 'Dipinjam'): ?>
                                                 <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Dipinjam</span>
-                                            <?php elseif ($book['status'] == 'Terlambat'): ?>
-                                                <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Terlambat</span>
                                             <?php else: ?>
-                                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Dikembalikan</span>
+                                                <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Terlambat</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -319,6 +338,7 @@ if (isset($_SESSION['success_message'])) {
         </div>
     </div>
 
+    <!-- Modal Pinjam Buku -->
     <div id="pinjamModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg w-full max-w-md">
@@ -331,16 +351,10 @@ if (isset($_SESSION['success_message'])) {
                     </div>
                     
                     <form method="POST" action="">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">ID Buku</label>
-                            <input type="text" name="id_buku" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contoh: BF-001" required>
-                            <p class="text-xs text-gray-500 mt-1">Masukkan ID Buku (contoh: BF-001)</p>
-                        </div>
-                        
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">ISBN</label>
-                            <input type="text" name="isbn_buku" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contoh: 9780123456789" required>
-                            <p class="text-xs text-gray-500 mt-1">Masukkan ISBN Buku</p>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Judul Buku</label>
+                            <input type="text" name="judul_buku" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan judul buku yang ingin dipinjam" required>
+                            <p class="text-xs text-gray-500 mt-1">Sistem akan mencari buku berdasarkan judul</p>
                         </div>
                         
                         <div class="flex justify-end space-x-2">
@@ -353,29 +367,6 @@ if (isset($_SESSION['success_message'])) {
         </div>
     </div>
 
-    <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg w-full max-w-md">
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium">Detail Peminjaman</h3>
-                        <button onclick="closeDetailModal()" class="text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    
-                    <div id="detailContent" class="space-y-3">
-                        <!-- Detail akan diisi melalui JavaScript -->
-                    </div>
-                    
-                    <div class="flex justify-end mt-6">
-                        <button onclick="closeDetailModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Tutup</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         function openPinjamModal() {
             document.getElementById('pinjamModal').classList.remove('hidden');
@@ -383,73 +374,6 @@ if (isset($_SESSION['success_message'])) {
         
         function closePinjamModal() {
             document.getElementById('pinjamModal').classList.add('hidden');
-        }
-        
-        function showBookDetail(idPeminjaman, title, idBuku, isbn, author, tanggalPinjam, batasWaktu, status, tanggalKembali) {
-            const detailContent = document.getElementById('detailContent');
-            detailContent.innerHTML = `
-                <div class="grid grid-cols-1 gap-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">ID Peminjaman</label>
-                        <p class="text-sm text-gray-900 font-mono">${idPeminjaman}</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Judul Buku</label>
-                        <p class="text-sm text-gray-900">${title}</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">ID Buku</label>
-                        <p class="text-sm text-gray-900">${idBuku}</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">ISBN</label>
-                        <p class="text-sm text-gray-900">${isbn}</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Penulis</label>
-                        <p class="text-sm text-gray-900">${author}</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Tanggal Pinjam</label>
-                        <p class="text-sm text-gray-900">${tanggalPinjam}</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Batas Waktu</label>
-                        <p class="text-sm text-gray-900">${batasWaktu}</p>
-                    </div>
-                    ${tanggalKembali !== '-' ? `
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Tanggal Kembali</label>
-                        <p class="text-sm text-gray-900">${tanggalKembali}</p>
-                    </div>
-                    ` : ''}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Status</label>
-                        <p class="text-sm">
-                            <span class="px-2 py-1 text-xs rounded-full ${
-                                status === 'Dipinjam' ? 'bg-blue-100 text-blue-800' : 
-                                status === 'Terlambat' ? 'bg-red-100 text-red-800' : 
-                                'bg-green-100 text-green-800'
-                            }">${status}</span>
-                        </p>
-                    </div>
-                </div>
-            `;
-            document.getElementById('detailModal').classList.remove('hidden');
-        }
-        
-        function closeDetailModal() {
-            document.getElementById('detailModal').classList.add('hidden');
-        }
-        
-        function filterByStatus(status) {
-            const url = new URL(window.location);
-            if (status === 'all') {
-                url.searchParams.delete('status');
-            } else {
-                url.searchParams.set('status', status);
-            }
-            window.location.href = url.toString();
         }
 
         document.getElementById('searchInput').addEventListener('input', function() {
@@ -472,12 +396,6 @@ if (isset($_SESSION['success_message'])) {
             document.getElementById('pinjamModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closePinjamModal();
-                }
-            });
-            
-            document.getElementById('detailModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeDetailModal();
                 }
             });
         });

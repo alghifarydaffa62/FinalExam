@@ -194,7 +194,7 @@ $lending_stats = [
                 labels: <?php echo json_encode($lending_stats['labels']); ?>,
                 datasets: [
                     {
-                        label: 'Total Peminjaman',
+                        label: 'Jumlah Buku',
                         data: <?php echo json_encode($lending_stats['peminjaman']); ?>,
                         borderColor: 'rgb(239, 68, 68)',
                         backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -203,7 +203,7 @@ $lending_stats = [
                         pointBackgroundColor: 'rgb(239, 68, 68)'
                     },
                     {
-                        label: 'Pengembalian Tepat Waktu',
+                        label: 'Total Peminjaman',
                         data: <?php echo json_encode($lending_stats['pengembalian_tepat']); ?>,
                         borderColor: 'rgb(59, 130, 246)',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -212,7 +212,7 @@ $lending_stats = [
                         pointBackgroundColor: 'rgb(59, 130, 246)'
                     },
                     {
-                        label: 'Pengembalian Terlambat',
+                        label: 'Total  Pengembalian',
                         data: <?php echo json_encode($lending_stats['pengembalian_terlambat']); ?>,
                         borderColor: 'rgb(139, 92, 246)',
                         backgroundColor: 'rgba(139, 92, 246, 0.1)',
