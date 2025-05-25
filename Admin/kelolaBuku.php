@@ -179,8 +179,8 @@ $stmt->close();
 <body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
         <div class="w-64 bg-[#DFD0B8] shadow-md">
-            <div class="p-4 flex items-center space-x-3 border-b border-gray-200">
-                <div class="bg-blue-800 p-2 rounded">
+            <div class="p-4 flex items-center space-x-3 border-b border-[#FFFAEC]">
+                <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
                 </div>
                 <div class="text-sm leading-tight">
@@ -204,6 +204,10 @@ $stmt->close();
                 <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
+                </a>
+                <a href="daftarPeminjaman.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
+                    <i class="fas fa-book w-6"></i>
+                    <span class="ml-2">Daftar Peminjaman</span>
                 </a>
                 <a href="?logout=1" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black mt-auto">
                     <i class="fas fa-sign-out-alt w-6"></i>
@@ -244,7 +248,7 @@ $stmt->close();
                     </div>
                 </div>
             </header>
-
+          
             <main class="flex-1 overflow-y-auto p-6">
                 <?php if (isset($_SESSION['success_message'])): ?>
                     <div
@@ -270,8 +274,7 @@ $stmt->close();
 
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-semibold text-gray-800">Daftar Buku Perpustakaan</h2>
-                    <button onclick="addBook()"
-                        class="bg-[#393E46] hover:bg-[#948979] text-white px-4 py-2 rounded-lg flex items-center transition duration-200">
+                    <button onclick="addBook()" class="bg-[#393E46] hover:bg-[#4a4f57] text-white px-4 py-2 rounded-lg flex items-center transition duration-200">
                         <i class="fas fa-plus mr-2"></i> Tambah Buku
                     </button>
                 </div>
@@ -392,7 +395,7 @@ $stmt->close();
                                 disabled>
                                 <i class="fas fa-chevron-left text-xs"></i>
                             </button>
-                            <button class="bg-blue-600 text-white px-3 py-1 rounded-md">1</button>
+                            <button class="bg-[#393E46] text-white px-3 py-1 rounded-md">1</button>
                             <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">2</button>
                             <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">3</button>
                             <span class="text-gray-500">...</span>
@@ -756,15 +759,8 @@ $stmt->close();
                 element.remove();
             }, 300);
         }
-
-        function generateBookId() {
-            const prefix = 'BK';
-            const timestamp = Date.now().toString().slice(-6);
-            const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-            return prefix + timestamp + random;
-        }
-
-        document.getElementById('id_buku').addEventListener('focus', function () {
+      
+        document.getElementById('id_buku').addEventListener('focus', function() {
             if (!this.value) {
                 this.value = generateBookId();
             }
@@ -772,14 +768,6 @@ $stmt->close();
 
         let searchTimeout;
         const searchInput = document.querySelector('input[name="search"]');
-        if (searchInput) {
-            searchInput.addEventListener('input', function () {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    this.form.submit();
-                }, 500);
-            });
-        }
 
         document.addEventListener('keydown', function (e) {
             if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
