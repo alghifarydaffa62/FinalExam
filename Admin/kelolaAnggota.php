@@ -111,7 +111,6 @@ if ($result) {
 </head>
 <body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
             <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-[#FFFAEC]">
                 <div class="bg-[#393E46] p-2 rounded">
@@ -150,9 +149,7 @@ if ($result) {
             </nav>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
             <header class="bg-[#DFD0B8] shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Kelola Anggota</div>
@@ -184,9 +181,7 @@ if ($result) {
                 </div>
             </header>
 
-            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6 bg-[#FFFAEC]">
-                <!-- Success/Error Messages -->
                 <?php if (!empty($success_message)): ?>
                     <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
                         <?php echo $success_message; ?>
@@ -203,7 +198,6 @@ if ($result) {
                     <h2 class="text-lg font-medium">Daftar Anggota Perpustakaan</h2>
                 </div>
 
-                <!-- Stats Card -->
                 <div class="mb-8">
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition max-w-sm">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Anggota</h3>
@@ -212,7 +206,6 @@ if ($result) {
                     </div>
                 </div>
 
-                <!-- Table -->
                 <div class="bg-white rounded-lg shadow-sm p-6">
                     <div class="flex items-center justify-between mb-6">
                         <div class="text-sm text-gray-500">
@@ -283,7 +276,6 @@ if ($result) {
                         </table>
                     </div>
 
-                    <!-- Pagination -->
                     <?php if ($total_pages > 1): ?>
                         <div class="flex items-center justify-center mt-6">
                             <div class="flex items-center space-x-2">
@@ -313,7 +305,6 @@ if ($result) {
         </div>
     </div>
 
-    <!-- Detail Modal -->
     <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
             <div class="flex justify-between items-center mb-4">
@@ -329,7 +320,6 @@ if ($result) {
         </div>
     </div>
 
-    <!-- Edit Modal -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
             <div class="flex justify-between items-center mb-4">
@@ -387,7 +377,6 @@ if ($result) {
         </div>
     </div>
 
-    <!-- Delete Modal -->
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 max-w-sm mx-auto">
             <h3 class="text-lg font-medium mb-4">Konfirmasi Hapus</h3>

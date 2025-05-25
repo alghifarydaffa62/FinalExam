@@ -366,6 +366,26 @@ if (isset($_SESSION['success_message'])) {
             </div>
         </div>
     </div>
+  
+    <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg w-full max-w-md">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium">Detail Peminjaman</h3>
+                        <button onclick="closeDetailModal()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="detailContent" class="space-y-3"></div>
+                    <div class="flex justify-end mt-6">
+                        <button onclick="closeDetailModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         function openPinjamModal() {

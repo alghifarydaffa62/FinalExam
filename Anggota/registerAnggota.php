@@ -55,8 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 } else {
                     $message = "Error: " . $stmt->error;
                     $messageType = "error";
-                }
-                
+                }            
                 $stmt->close();
             }
             $checkEmailStmt->close();

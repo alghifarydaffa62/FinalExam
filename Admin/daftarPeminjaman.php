@@ -19,7 +19,7 @@ $admin = [
 $books = [
     [
         'id' => 1,
-        'title' => 'Belajar PHP untuk Pemula',
+        'title' => 'Mahakarya',
         'isbn' => '978-602-123-456-7',
         'author' => 'John Doe',
         'tanggal_pinjam' => '2024-05-15',
