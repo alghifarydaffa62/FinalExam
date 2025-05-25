@@ -31,32 +31,86 @@ function getBookStats($conn) {
         'keterlambatan' => 0
     ];
 
+    // Query untuk menghitung total buku
     $result = $conn->query("SELECT COUNT(*) as total FROM buku");
     if ($result) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
 
+    // Query untuk menghitung total anggota
     $anggota = $conn->query("SELECT COUNT(*) as totalAnggota FROM anggota");
     if($anggota) {
         $stats['total_anggota'] = $anggota->fetch_assoc()['totalAnggota'];
     }
 
-    $peminjaman = $conn->query("SELECT COUNT(*) as totalPeminjaman FROM peminjaman");
+    // Query untuk menghitung total peminjaman berdasarkan status_peminjaman = "dipinjam"
+    $peminjaman = $conn->query("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE status_peminjaman = 'dipinjam'");
     if($peminjaman) {
         $stats['totalPeminjaman'] = $peminjaman->fetch_assoc()['totalPeminjaman'];
+    }
+
+    // Query untuk menghitung jumlah buku yang terlambat dikembalikan dengan status "dipinjam"
+    $terlambat_query = $conn->query("SELECT COUNT(*) as totalTerlambat FROM peminjaman WHERE status_peminjaman = 'dipinjam' AND Batas_waktu < CURDATE()");
+    if ($terlambat_query) {
+        $stats['keterlambatan'] = $terlambat_query->fetch_assoc()['totalTerlambat'];
+    }
+
+    return $stats;
+}
+
+function getLendingStats($conn) {
+    // Array untuk menyimpan data 6 bulan terakhir
+    $stats = [
+        'labels' => [],
+        'total_buku' => [],
+        'total_peminjaman' => [],
+        'total_pengembalian' => []
+    ];
+    
+    // Cek apakah kolom created_at ada di tabel buku
+    $check_column = $conn->query("SHOW COLUMNS FROM buku LIKE 'created_at'");
+    $has_created_at = $check_column && $check_column->num_rows > 0;
+    
+    // Ambil total buku saat ini
+    $total_buku_result = $conn->query("SELECT COUNT(*) as total FROM buku");
+    $total_buku_current = $total_buku_result ? $total_buku_result->fetch_assoc()['total'] : 0;
+    
+    // Loop untuk 6 bulan terakhir
+    for ($i = 5; $i >= 0; $i--) {
+        $date = date('Y-m', strtotime("-$i months"));
+        $month_name = date('M', strtotime("-$i months"));
+        $year = date('Y', strtotime("-$i months"));
+        $month = date('m', strtotime("-$i months"));
+        
+        // Label bulan
+        $stats['labels'][] = $month_name;
+        
+        // Total buku - jika ada created_at gunakan, jika tidak gunakan total saat ini
+        if ($has_created_at) {
+            $buku_query = $conn->query("SELECT COUNT(*) as total FROM buku WHERE DATE_FORMAT(created_at, '%Y-%m') <= '$date'");
+            $total_buku = $buku_query ? $buku_query->fetch_assoc()['total'] : 0;
+        } else {
+            // Jika tidak ada created_at, gunakan total buku saat ini untuk semua bulan
+            $total_buku = $total_buku_current;
+        }
+        $stats['total_buku'][] = $total_buku;
+        
+        // Total peminjaman pada bulan tersebut
+        $peminjaman_query = $conn->query("SELECT COUNT(*) as total FROM peminjaman WHERE YEAR(tanggal_pinjam) = $year AND MONTH(tanggal_pinjam) = $month");
+        $total_peminjaman = $peminjaman_query ? $peminjaman_query->fetch_assoc()['total'] : 0;
+        $stats['total_peminjaman'][] = $total_peminjaman;
+        
+        // Total pengembalian pada bulan tersebut
+        $pengembalian_query = $conn->query("SELECT COUNT(*) as total FROM peminjaman WHERE YEAR(tanggal_kembali) = $year AND MONTH(tanggal_kembali) = $month AND status_peminjaman = 'dikembalikan'");
+        $total_pengembalian = $pengembalian_query ? $pengembalian_query->fetch_assoc()['total'] : 0;
+        $stats['total_pengembalian'][] = $total_pengembalian;
     }
     
     return $stats;
 }
 
 $book_stats = getBookStats($conn);
-
-$lending_stats = [
-    'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    'peminjaman' => [45, 52, 48, 55, 59, 54],
-    'pengembalian_tepat' => [40, 45, 42, 48, 50, 47],
-    'pengembalian_terlambat' => [5, 7, 6, 7, 9, 7]
-];
+$lending_stats = getLendingStats($conn);
 ?>
 
 <!DOCTYPE html>
@@ -173,9 +227,9 @@ $lending_stats = [
                     <h3 class="text-lg font-medium mb-4">Statistik Peminjaman</h3>
                     <div class="bg-white p-6 rounded-lg shadow-sm">
                         <div class="flex justify-end space-x-4 mb-4">
-                            <button class="text-xs bg-gray-200 text-gray-800 px-3 py-1 rounded-full">6 bulan</button>
-                            <button class="text-xs bg-blue-100 text-[#393E46] px-3 py-1 rounded-full">3 bulan</button>
-                            <button class="text-xs bg-gray-200 text-gray-800 px-3 py-1 rounded-full">1 bulan</button>
+                            <button id="btn6bulan" class="text-xs bg-blue-100 text-[#393E46] px-3 py-1 rounded-full">6 bulan</button>
+                            <button id="btn3bulan" class="text-xs bg-gray-200 text-gray-800 px-3 py-1 rounded-full">3 bulan</button>
+                            <button id="btn1bulan" class="text-xs bg-gray-200 text-gray-800 px-3 py-1 rounded-full">1 bulan</button>
                         </div>
                         <div style="height: 250px;">
                             <canvas id="lendingStatsChart"></canvas>
@@ -187,45 +241,46 @@ $lending_stats = [
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        let chart;
+        const fullData = {
+            labels: <?php echo json_encode($lending_stats['labels']); ?>,
+            datasets: [
+                {
+                    label: 'Jumlah Buku',
+                    data: <?php echo json_encode($lending_stats['total_buku']); ?>,
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgb(239, 68, 68)'
+                },
+                {
+                    label: 'Total Peminjaman',
+                    data: <?php echo json_encode($lending_stats['total_peminjaman']); ?>,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgb(59, 130, 246)'
+                },
+                {
+                    label: 'Total Pengembalian',
+                    data: <?php echo json_encode($lending_stats['total_pengembalian']); ?>,
+                    borderColor: 'rgb(139, 92, 246)',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgb(139, 92, 246)'
+                }
+            ]
+        };
+
+        function initChart() {
             const ctx = document.getElementById('lendingStatsChart').getContext('2d');
-            
-            const chartData = {
-                labels: <?php echo json_encode($lending_stats['labels']); ?>,
-                datasets: [
-                    {
-                        label: 'Jumlah Buku',
-                        data: <?php echo json_encode($lending_stats['peminjaman']); ?>,
-                        borderColor: 'rgb(239, 68, 68)',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: 'rgb(239, 68, 68)'
-                    },
-                    {
-                        label: 'Total Peminjaman',
-                        data: <?php echo json_encode($lending_stats['pengembalian_tepat']); ?>,
-                        borderColor: 'rgb(59, 130, 246)',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: 'rgb(59, 130, 246)'
-                    },
-                    {
-                        label: 'Total  Pengembalian',
-                        data: <?php echo json_encode($lending_stats['pengembalian_terlambat']); ?>,
-                        borderColor: 'rgb(139, 92, 246)',
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: 'rgb(139, 92, 246)'
-                    }
-                ]
-            };
             
             const config = {
                 type: 'line',
-                data: chartData,
+                data: fullData,
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -242,7 +297,7 @@ $lending_stats = [
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                stepSize: 25
+                                stepSize: 1
                             },
                             grid: {
                                 drawBorder: false
@@ -258,7 +313,47 @@ $lending_stats = [
                 }
             };
             
-            new Chart(ctx, config);
+            chart = new Chart(ctx, config);
+        }
+
+        function updateChart(months) {
+            const startIndex = 6 - months;
+            const filteredData = {
+                labels: fullData.labels.slice(startIndex),
+                datasets: fullData.datasets.map(dataset => ({
+                    ...dataset,
+                    data: dataset.data.slice(startIndex)
+                }))
+            };
+            
+            chart.data = filteredData;
+            chart.update();
+        }
+
+        function setActiveButton(activeBtn) {
+            document.querySelectorAll('#btn6bulan, #btn3bulan, #btn1bulan').forEach(btn => {
+                btn.className = 'text-xs bg-gray-200 text-gray-800 px-3 py-1 rounded-full';
+            });
+            activeBtn.className = 'text-xs bg-blue-100 text-[#393E46] px-3 py-1 rounded-full';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initChart();
+
+            document.getElementById('btn6bulan').addEventListener('click', function() {
+                updateChart(6);
+                setActiveButton(this);
+            });
+
+            document.getElementById('btn3bulan').addEventListener('click', function() {
+                updateChart(3);
+                setActiveButton(this);
+            });
+
+            document.getElementById('btn1bulan').addEventListener('click', function() {
+                updateChart(1);
+                setActiveButton(this);
+            });
         });
     </script>
 </body>
