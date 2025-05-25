@@ -106,13 +106,14 @@ $borrowing_history = [
             <header class="bg-[#DFD0B8] shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Dashboard Anggota</div>
-                    <div class="flex items-center space-x-4">
-                        <div class="flex items-center space-x-2">
-                            <span><?php echo htmlspecialchars($user['name']); ?></span>
+                    <div class="flex items-center space-x-2">
                             <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                                 <i class="fas fa-user text-gray-500"></i>
                             </div>
-                        </div>
+                            <div class="text-sm">
+                                <div class="font-medium"><?php echo htmlspecialchars($user['name']); ?></div>
+                                <div class="text-gray-500 text-xs">Anggota</div>
+                            </div>
                     </div>
                 </div>
             </header>

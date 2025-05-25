@@ -1,18 +1,10 @@
 <?php
 
-$servername = "localhost";
-$username = "root"; 
-$password = "";     
-$dbname = "perpustakaan"; 
+include '../konek.php';
 
 $message = "";
 $messageType = "";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+$formData = array(); 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nrp = trim($_POST['nrp']);
@@ -21,6 +13,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = trim($_POST['password']);
     $jurusan = trim($_POST['jurusan']);
     $phoneNumber = trim($_POST['phoneNumber']);
+
+    $formData = array(
+        'nrp' => $nrp,
+        'namaLengkap' => $nama,
+        'email' => $email,
+        'jurusan' => $jurusan,
+        'phoneNumber' => $phoneNumber
+    );
 
     if (empty($nrp) || empty($nama) || empty($email) || empty($password) || empty($jurusan) || empty($phoneNumber)) {
         $message = "Semua field harus diisi!";
@@ -44,12 +44,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "Email sudah terdaftar! Silakan gunakan email yang berbeda.";
                 $messageType = "error";
             } else {
+                
                 $stmt = $conn->prepare("INSERT INTO anggota (NRP, Nama, Email, Pwd, Jurusan, No_Telp, Jenis_kelamin) VALUES (?, ?, ?, ?, ?, ?, 'L')");
                 $stmt->bind_param("ssssss", $nrp, $nama, $email, $password, $jurusan, $phoneNumber);
                 
                 if ($stmt->execute()) {
                     $message = "Pendaftaran berhasil! Selamat datang di SiPerpus.";
                     $messageType = "success";
+                    $formData = array();
                 } else {
                     $message = "Error: " . $stmt->error;
                     $messageType = "error";
@@ -99,7 +101,7 @@ $conn->close();
                         id="namaLengkap" 
                         name="namaLengkap" 
                         placeholder="e.g. Daffa Al Ghifary"
-                        value="<?php echo isset($_POST['namaLengkap']) ? htmlspecialchars($_POST['namaLengkap']) : ''; ?>"
+                        value="<?php echo isset($formData['namaLengkap']) ? htmlspecialchars($formData['namaLengkap']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
                 </div>
@@ -109,7 +111,7 @@ $conn->close();
                     <div class="relative">
                         <button onclick="toggleDropdown()" type="button" id="dropdownButton" 
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent text-left">
-                            <span id="selectedOption"><?php echo isset($_POST['jurusan']) && !empty($_POST['jurusan']) ? htmlspecialchars($_POST['jurusan']) : 'Pilih Jurusan'; ?></span>
+                            <span id="selectedOption"><?php echo isset($formData['jurusan']) && !empty($formData['jurusan']) ? htmlspecialchars($formData['jurusan']) : 'Pilih Jurusan'; ?></span>
                         </button>
                         <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
                             <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -127,7 +129,7 @@ $conn->close();
                                 <a href="#" onclick="selectOption('Manajemen')" class="block px-3 py-2 text-sm text-gray-700 hover:bg-[#DFD0B8] hover:text-gray-900">Manajemen</a>
                             </div>
                         </div>
-                        <input type="hidden" id="jurusan" name="jurusan" value="<?php echo isset($_POST['jurusan']) ? htmlspecialchars($_POST['jurusan']) : ''; ?>" required>
+                        <input type="hidden" id="jurusan" name="jurusan" value="<?php echo isset($formData['jurusan']) ? htmlspecialchars($formData['jurusan']) : ''; ?>" required>
                     </div>
                 </div>
 
@@ -140,7 +142,7 @@ $conn->close();
                         placeholder="e.g. 3124....."
                         pattern="[0-9]{10}"
                         maxlength="10"
-                        value="<?php echo isset($_POST['nrp']) ? htmlspecialchars($_POST['nrp']) : ''; ?>"
+                        value="<?php echo isset($formData['nrp']) ? htmlspecialchars($formData['nrp']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
                 </div>
@@ -152,7 +154,7 @@ $conn->close();
                         id="email" 
                         name="email" 
                         placeholder="e.g. daffa@student.edu"
-                        value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
+                        value="<?php echo isset($formData['email']) ? htmlspecialchars($formData['email']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
                 </div>
@@ -185,7 +187,7 @@ $conn->close();
                         name="phoneNumber" 
                         placeholder="e.g. +62 812-3456-7890"
                         pattern="[\+]?[0-9\s\-\(\)]+"
-                        value="<?php echo isset($_POST['phoneNumber']) ? htmlspecialchars($_POST['phoneNumber']) : ''; ?>"
+                        value="<?php echo isset($formData['phoneNumber']) ? htmlspecialchars($formData['phoneNumber']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
                 </div>

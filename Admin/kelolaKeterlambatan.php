@@ -117,6 +117,10 @@ if (!empty($search_query)) {
                             <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                                 <i class="fas fa-user text-gray-500"></i>
                             </div>
+                            <div class="text-sm">
+                                <div class="font-medium"><?php echo htmlspecialchars($admin['name']); ?></div>
+                                <div class="text-gray-500 text-xs">Admin</div>
+                            </div>
                         </div>
                     </div>
                 </div>
