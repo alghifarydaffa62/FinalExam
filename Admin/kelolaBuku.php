@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_id'])) {
 
 if (isset($_GET['logout'])) {
     session_destroy();
-    
+
     if (isset($_COOKIE['admin_remember'])) {
         setcookie('admin_remember', '', time() - 3600, '/');
     }
@@ -23,7 +23,8 @@ $admin = [
     'id' => $_SESSION['admin_id'] ?? '1'
 ];
 
-function getBookStats($conn) {
+function getBookStats($conn)
+{
     $stats = [
         'total_buku' => 0,
         'dipinjam' => 0,
@@ -35,17 +36,17 @@ function getBookStats($conn) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
 
-    $result = $conn->query("SELECT SUM(stok) as tersedia FROM buku WHERE stok > 0");
+    $result = $conn->query("SELECT SUM(Stok) as tersedia FROM buku WHERE Stok > 0");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['tersedia'] = $row['tersedia'] ?? 0;
     }
 
     $peminjaman = $conn->query("SELECT COUNT(*) as totalPeminjaman FROM peminjaman");
-    if($peminjaman) {
+    if ($peminjaman) {
         $stats['totalPeminjaman'] = $peminjaman->fetch_assoc()['totalPeminjaman'];
     }
-    
+
     return $stats;
 }
 
@@ -54,22 +55,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id_buku = trim($_POST['id_buku']);
         $judul = trim($_POST['judul']);
         $penulis = trim($_POST['penulis']);
-        $tahun = (int)$_POST['tahun'];
+        $tahun = (int) $_POST['tahun'];
         $isbn = trim($_POST['isbn']);
-        $halaman = (int)$_POST['halaman'];
-        $stok = (int)$_POST['stok'];
+        $halaman = (int) $_POST['halaman'];
+        $stok = (int) $_POST['stok'];
 
         $check_stmt = $conn->prepare("SELECT ID FROM buku WHERE ID = ?");
         $check_stmt->bind_param("s", $id_buku);
         $check_stmt->execute();
         $result = $check_stmt->get_result();
-        
+
         if ($result->num_rows > 0) {
             $_SESSION['error_message'] = "ID Buku sudah ada! Gunakan ID yang berbeda.";
         } else {
-            $stmt = $conn->prepare("INSERT INTO buku (ID, Judul, Penulis, Tahun, Jumlah_halaman, ISBN, stok) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO buku (ID, Judul, Penulis, Tahun, Jumlah_halaman, ISBN, Stok) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param("sssisis", $id_buku, $judul, $penulis, $tahun, $halaman, $isbn, $stok);
-            
+
             if ($stmt->execute()) {
                 $_SESSION['success_message'] = "Buku berhasil ditambahkan!";
             } else {
@@ -78,47 +79,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->close();
         }
         $check_stmt->close();
-        
+
         header("Location: kelolaBuku.php");
         exit;
     }
-    
+
     if (isset($_POST['edit_book'])) {
         $edit_id = $_POST['edit_id'];
         $judul = trim($_POST['judul']);
         $penulis = trim($_POST['penulis']);
-        $tahun = (int)$_POST['tahun'];
+        $tahun = (int) $_POST['tahun'];
         $isbn = trim($_POST['isbn']);
-        $halaman = (int)$_POST['halaman'];
-        $stok = (int)$_POST['stok'];
-        
-        $stmt = $conn->prepare("UPDATE buku SET Judul = ?, Penulis = ?, Tahun = ?, Jumlah_halaman = ?, ISBN = ?, stok = ? WHERE ID = ?");
+        $halaman = (int) $_POST['halaman'];
+        $stok = (int) $_POST['stok'];
+
+        $stmt = $conn->prepare("UPDATE buku SET Judul = ?, Penulis = ?, Tahun = ?, Jumlah_halaman = ?, ISBN = ?, Stok = ? WHERE ID = ?");
         $stmt->bind_param("ssiisis", $judul, $penulis, $tahun, $halaman, $isbn, $stok, $edit_id);
-        
+
         if ($stmt->execute()) {
             $_SESSION['success_message'] = "Buku berhasil diperbarui!";
         } else {
             $_SESSION['error_message'] = "Gagal memperbarui buku: " . $conn->error;
         }
         $stmt->close();
-        
+
         header("Location: kelolaBuku.php");
         exit;
     }
-    
+
     if (isset($_POST['delete_id'])) {
         $delete_id = $_POST['delete_id'];
-        
+
         $stmt = $conn->prepare("DELETE FROM buku WHERE ID = ?");
         $stmt->bind_param("s", $delete_id);
-        
+
         if ($stmt->execute()) {
             $_SESSION['success_message'] = "Buku berhasil dihapus!";
         } else {
             $_SESSION['error_message'] = "Gagal menghapus buku: " . $conn->error;
         }
         $stmt->close();
-        
+
         header("Location: kelolaBuku.php");
         exit;
     }
@@ -166,6 +167,7 @@ $stmt->close();
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -221,7 +223,8 @@ $stmt->close();
                     <div class="flex items-center space-x-4">
                         <div class="relative">
                             <form action="kelolaBuku.php" method="GET">
-                                <input type="text" name="search" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                <input type="text" name="search"
+                                    class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="Cari buku..." value="<?php echo htmlspecialchars($search_query); ?>">
                                 <button type="submit" class="absolute right-2 top-2 text-gray-500 hover:text-blue-700">
                                     <i class="fas fa-search"></i>
@@ -245,10 +248,11 @@ $stmt->close();
                     </div>
                 </div>
             </header>
-
-            <main class="flex-1 overflow-y-auto p-6 bg-[#FFFAEC]">
+          
+            <main class="flex-1 overflow-y-auto p-6">
                 <?php if (isset($_SESSION['success_message'])): ?>
-                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 flex justify-between items-center">
+                    <div
+                        class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 flex justify-between items-center">
                         <span><?php echo $_SESSION['success_message']; ?></span>
                         <button onclick="this.parentElement.remove()" class="text-green-700 hover:text-green-900">
                             <i class="fas fa-times"></i>
@@ -258,7 +262,8 @@ $stmt->close();
                 <?php endif; ?>
 
                 <?php if (isset($_SESSION['error_message'])): ?>
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex justify-between items-center">
+                    <div
+                        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex justify-between items-center">
                         <span><?php echo $_SESSION['error_message']; ?></span>
                         <button onclick="this.parentElement.remove()" class="text-red-700 hover:text-red-900">
                             <i class="fas fa-times"></i>
@@ -275,17 +280,20 @@ $stmt->close();
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-blue-500">
+                    <div
+                        class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-blue-500">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku</h3>
                         <p class="text-3xl font-bold text-blue-600"><?php echo $book_stats['total_buku']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Buku dalam koleksi</p>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-orange-500">
+                    <div
+                        class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-orange-500">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku Dipinjam</h3>
                         <p class="text-3xl font-bold text-orange-600"><?php echo $book_stats['totalPeminjaman']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Buku dipinjam anggota</p>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-green-500">
+                    <div
+                        class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-green-500">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Buku Tersedia</h3>
                         <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['tersedia']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Buku belum dipinjam</p>
@@ -295,9 +303,11 @@ $stmt->close();
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="flex items-center justify-between p-4 border-b">
                         <div class="text-sm text-gray-500">
-                            Menampilkan <span class="font-medium">1 - <?php echo count($books); ?></span> dari <span class="font-medium"><?php echo $book_stats['total_buku']; ?></span> buku
+                            Menampilkan <span class="font-medium">1 - <?php echo count($books); ?></span> dari <span
+                                class="font-medium"><?php echo $book_stats['total_buku']; ?></span> buku
                         </div>
-                        <select class="bg-gray-100 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select
+                            class="bg-gray-100 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="10">10 per halaman</option>
                             <option value="25">25 per halaman</option>
                             <option value="50">50 per halaman</option>
@@ -323,7 +333,8 @@ $stmt->close();
                                 <?php foreach ($books as $book): ?>
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['id']); ?></td>
-                                        <td class="px-6 py-4 font-medium text-gray-900"><?php echo htmlspecialchars($book['judul']); ?></td>
+                                        <td class="px-6 py-4 font-medium text-gray-900">
+                                            <?php echo htmlspecialchars($book['judul']); ?></td>
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['penulis']); ?></td>
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['tahun']); ?></td>
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['isbn']); ?></td>
@@ -331,7 +342,7 @@ $stmt->close();
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['stok']); ?></td>
                                         <td class="px-6 py-4">
                                             <?php if ($book['status'] === 'Tersedia'): ?>
-                                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                                                <span class="bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full">
                                                     Tersedia
                                                 </span>
                                             <?php else: ?>
@@ -342,18 +353,20 @@ $stmt->close();
                                         </td>
                                         <td class="px-6 py-4 text-right">
                                             <div class="flex justify-end space-x-2">
-                                                <button onclick="viewBook(<?php echo htmlspecialchars(json_encode($book)); ?>)" 
-                                                    class="text-blue-600 hover:text-blue-900 p-1 rounded-full hover:bg-blue-50" 
+                                                <button
+                                                    onclick="viewBook(<?php echo htmlspecialchars(json_encode($book)); ?>)"
+                                                    class="text-blue-600 hover:text-blue-900 p-1 rounded-full hover:bg-blue-50"
                                                     title="Lihat Detail">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <button onclick="editBook('<?php echo $book['id']; ?>')" 
-                                                    class="text-yellow-600 hover:text-yellow-900 p-1 rounded-full hover:bg-yellow-50" 
+                                                <button onclick="editBook('<?php echo $book['id']; ?>')"
+                                                    class="text-yellow-600 hover:text-yellow-900 p-1 rounded-full hover:bg-yellow-50"
                                                     title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button onclick="confirmDelete('<?php echo $book['id']; ?>', '<?php echo htmlspecialchars(addslashes($book['judul'])); ?>')" 
-                                                    class="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-50" 
+                                                <button
+                                                    onclick="confirmDelete('<?php echo $book['id']; ?>', '<?php echo htmlspecialchars(addslashes($book['judul'])); ?>')"
+                                                    class="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-50"
                                                     title="Hapus">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -363,7 +376,8 @@ $stmt->close();
                                 <?php endforeach; ?>
                                 <?php if (empty($books)): ?>
                                     <tr>
-                                        <td colspan="9" class="px-6 py-4 text-center text-gray-500">Tidak ada buku ditemukan</td>
+                                        <td colspan="9" class="px-6 py-4 text-center text-gray-500">Tidak ada buku ditemukan
+                                        </td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -372,10 +386,13 @@ $stmt->close();
 
                     <div class="flex items-center justify-between p-4 border-t">
                         <div class="text-sm text-gray-500">
-                            Menampilkan <span class="font-medium">1 - <?php echo count($books); ?></span> dari <span class="font-medium"><?php echo $book_stats['total_buku']; ?></span> buku
+                            Menampilkan <span class="font-medium">1 - <?php echo count($books); ?></span> dari <span
+                                class="font-medium"><?php echo $book_stats['total_buku']; ?></span> buku
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 disabled:opacity-50" disabled>
+                            <button
+                                class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 disabled:opacity-50"
+                                disabled>
                                 <i class="fas fa-chevron-left text-xs"></i>
                             </button>
                             <button class="bg-[#393E46] text-white px-3 py-1 rounded-md">1</button>
@@ -403,36 +420,59 @@ $stmt->close();
             </div>
             <form id="addForm" method="POST" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Buku <span class="text-red-500">*</span></label>
-                    <input type="text" name="id_buku" id="id_buku" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Buku <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" name="id_buku" id="id_buku"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul <span class="text-red-500">*</span></label>
-                    <input type="text" name="judul" id="addJudul" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" name="judul" id="addJudul"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Penulis <span class="text-red-500">*</span></label>
-                    <input type="text" name="penulis" id="addPenulis" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Penulis <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" name="penulis" id="addPenulis"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tahun <span class="text-red-500">*</span></label>
-                    <input type="number" name="tahun" id="addTahun" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1900" max="<?php echo date('Y'); ?>" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tahun <span
+                            class="text-red-500">*</span></label>
+                    <input type="number" name="tahun" id="addTahun"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="1900" max="<?php echo date('Y'); ?>" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ISBN <span class="text-red-500">*</span></label>
-                    <input type="text" name="isbn" id="addIsbn" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ISBN <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" name="isbn" id="addIsbn"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span class="text-red-500">*</span></label>
-                    <input type="number" name="halaman" id="halaman" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span
+                            class="text-red-500">*</span></label>
+                    <input type="number" name="halaman" id="halaman"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="1" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span class="text-red-500">*</span></label>
-                    <input type="number" name="stok" id="addStok" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="0" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span
+                            class="text-red-500">*</span></label>
+                    <input type="number" name="stok" id="addStok"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="0" required>
                 </div>
                 <div class="flex justify-end space-x-3 mt-6">
-                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200">Batal</button>
-                    <button type="submit" name="add_book" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">Tambah</button>
+                    <button type="button" onclick="closeAddModal()"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200">Batal</button>
+                    <button type="submit" name="add_book"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">Tambah</button>
                 </div>
             </form>
         </div>
@@ -449,7 +489,8 @@ $stmt->close();
             <div id="bookDetails" class="space-y-3 text-sm">
             </div>
             <div class="flex justify-end mt-6">
-                <button onclick="closeViewModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200">Tutup</button>
+                <button onclick="closeViewModal()"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200">Tutup</button>
             </div>
         </div>
     </div>
@@ -465,36 +506,58 @@ $stmt->close();
             <form id="editForm" method="POST" class="space-y-4">
                 <input type="hidden" name="edit_id" id="editId">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Buku <span class="text-red-500">*</span></label>
-                    <input type="text" id="editIdBuku" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Buku <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" id="editIdBuku"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul <span class="text-red-500">*</span></label>
-                    <input type="text" name="judul" id="editJudul" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" name="judul" id="editJudul"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Penulis <span class="text-red-500">*</span></label>
-                    <input type="text" name="penulis" id="editPenulis" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Penulis <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" name="penulis" id="editPenulis"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tahun <span class="text-red-500">*</span></label>
-                    <input type="number" name="tahun" id="editTahun" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1900" max="<?php echo date('Y'); ?>" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tahun <span
+                            class="text-red-500">*</span></label>
+                    <input type="number" name="tahun" id="editTahun"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="1900" max="<?php echo date('Y'); ?>" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ISBN <span class="text-red-500">*</span></label>
-                    <input type="text" name="isbn" id="editIsbn" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ISBN <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" name="isbn" id="editIsbn"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span class="text-red-500">*</span></label>
-                    <input type="number" name="halaman" id="editHalaman" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span
+                            class="text-red-500">*</span></label>
+                    <input type="number" name="halaman" id="editHalaman"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="1" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span class="text-red-500">*</span></label>
-                    <input type="number" name="stok" id="editStok" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="0" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span
+                            class="text-red-500">*</span></label>
+                    <input type="number" name="stok" id="editStok"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="0" required>
                 </div>
                 <div class="flex justify-end space-x-3 mt-6">
-                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200">Batal</button>
-                    <button type="submit" name="edit_book" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">Simpan</button>
+                    <button type="button" onclick="closeEditModal()"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200">Batal</button>
+                    <button type="submit" name="edit_book"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">Simpan</button>
                 </div>
             </form>
         </div>
@@ -503,12 +566,15 @@ $stmt->close();
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg p-6 w-full max-w-sm">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Konfirmasi Hapus</h3>
-            <p class="text-gray-700 mb-6">Apakah Anda yakin ingin menghapus buku "<span id="bookTitle" class="font-medium"></span>"? Tindakan ini tidak dapat dibatalkan.</p>
+            <p class="text-gray-700 mb-6">Apakah Anda yakin ingin menghapus buku "<span id="bookTitle"
+                    class="font-medium"></span>"? Tindakan ini tidak dapat dibatalkan.</p>
             <div class="flex justify-end space-x-3">
-                <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200">Batal</button>
+                <button onclick="closeDeleteModal()"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200">Batal</button>
                 <form id="deleteForm" method="POST" style="display: inline;">
                     <input type="hidden" name="delete_id" id="deleteId">
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200">Hapus</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200">Hapus</button>
                 </form>
             </div>
         </div>
@@ -529,7 +595,7 @@ $stmt->close();
         function viewBook(book) {
             const modal = document.getElementById('viewModal');
             const details = document.getElementById('bookDetails');
-            
+
             details.innerHTML = `
                 <div class="flex">
                     <strong class="w-24">ID:</strong>
@@ -566,7 +632,7 @@ $stmt->close();
                     </span>
                 </div>
             `;
-            
+
             modal.classList.remove('hidden');
         }
 
@@ -576,7 +642,7 @@ $stmt->close();
 
         function editBook(id) {
             const book = booksData.find(b => b.id === id);
-            
+
             if (book) {
                 document.getElementById('editId').value = book.id;
                 document.getElementById('editIdBuku').value = book.id;
@@ -586,7 +652,7 @@ $stmt->close();
                 document.getElementById('editIsbn').value = book.isbn;
                 document.getElementById('editHalaman').value = book.halaman;
                 document.getElementById('editStok').value = book.stok;
-                
+
                 document.getElementById('editModal').classList.remove('hidden');
             }
         }
@@ -600,12 +666,12 @@ $stmt->close();
             document.getElementById('deleteId').value = id;
             document.getElementById('deleteModal').classList.remove('hidden');
         }
-        
+
         function closeDeleteModal() {
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        document.getElementById('addForm').addEventListener('submit', function(e) {
+        document.getElementById('addForm').addEventListener('submit', function (e) {
             const isbn = document.getElementById('addIsbn').value;
             const tahun = document.getElementById('addTahun').value;
             const stok = document.getElementById('addStok').value;
@@ -630,7 +696,7 @@ $stmt->close();
             }
         });
 
-        document.getElementById('editForm')?.addEventListener('submit', function(e) {
+        document.getElementById('editForm')?.addEventListener('submit', function (e) {
             const isbn = document.getElementById('editIsbn').value;
             const tahun = document.getElementById('editTahun').value;
             const stok = document.getElementById('editStok').value;
@@ -655,12 +721,12 @@ $stmt->close();
             }
         });
 
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const addModal = document.getElementById('addModal');
             const viewModal = document.getElementById('viewModal');
             const editModal = document.getElementById('editModal');
             const deleteModal = document.getElementById('deleteModal');
-            
+
             if (event.target === addModal) closeAddModal();
             if (event.target === viewModal) closeViewModal();
             if (event.target === editModal) closeEditModal();
@@ -693,7 +759,7 @@ $stmt->close();
                 element.remove();
             }, 300);
         }
-
+      
         document.getElementById('id_buku').addEventListener('focus', function() {
             if (!this.value) {
                 this.value = generateBookId();
@@ -703,7 +769,7 @@ $stmt->close();
         let searchTimeout;
         const searchInput = document.querySelector('input[name="search"]');
 
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
                 e.preventDefault();
                 addBook();
@@ -723,13 +789,13 @@ $stmt->close();
             form.addEventListener('input', () => {
                 formChanged = true;
             });
-            
+
             form.addEventListener('submit', () => {
                 formChanged = false;
             });
         });
 
-        window.addEventListener('beforeunload', function(e) {
+        window.addEventListener('beforeunload', function (e) {
             if (formChanged) {
                 e.preventDefault();
                 e.returnValue = '';
@@ -737,11 +803,12 @@ $stmt->close();
         });
 
         document.querySelectorAll('[title]').forEach(element => {
-            element.addEventListener('mouseenter', function() {
+            element.addEventListener('mouseenter', function () {
                 this.setAttribute('data-tooltip', this.getAttribute('title'));
                 this.removeAttribute('title');
             });
         });
     </script>
 </body>
+
 </html>
