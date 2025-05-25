@@ -61,7 +61,7 @@ if (!empty($search_query)) {
 <body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
         <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
-            <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-gray-200">
+            <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-[#FFFAEC]">
                 <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
                 </div>
@@ -86,6 +86,10 @@ if (!empty($search_query)) {
                 <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
+                </a>
+                <a href="daftarPeminjaman.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
+                    <i class="fas fa-book w-6"></i>
+                    <span class="ml-2">Daftar Peminjaman</span>
                 </a>
                 <a href="?logout=1" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black mt-auto">
                     <i class="fas fa-sign-out-alt w-6"></i>
@@ -224,7 +228,7 @@ if (!empty($search_query)) {
                             <a href="#" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
                                 <i class="fas fa-chevron-left text-xs"></i>
                             </a>
-                            <a href="#" class="bg-blue-600 text-white px-3 py-1 rounded-md">1</a>
+                            <a href="#" class="bg-[#393E46] text-white px-3 py-1 rounded-md">1</a>
                             <a href="#" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">2</a>
                             <a href="#" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
                                 <i class="fas fa-chevron-right text-xs"></i>

@@ -72,8 +72,8 @@ $lending_stats = [
 <body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
         <div class="w-64 bg-[#DFD0B8] shadow-md">
-            <div class="p-4 flex items-center space-x-3 border-b border-gray-200">
-                <div class="bg-blue-800 p-2 rounded">
+            <div class="p-4 flex items-center space-x-3 border-b border-[#FFFAEC]">
+                <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
                 </div>
                 <div class="text-sm leading-tight">
@@ -97,6 +97,10 @@ $lending_stats = [
                 <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
+                </a>
+                <a href="daftarPeminjaman.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
+                    <i class="fas fa-book w-6"></i>
+                    <span class="ml-2">Daftar Peminjaman</span>
                 </a>
                 <a href="?logout=1" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black mt-auto">
                     <i class="fas fa-sign-out-alt w-6"></i>
