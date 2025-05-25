@@ -94,7 +94,7 @@ $borrowed_books = [
 <body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
         <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
-            <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-gray-200">
+            <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-[#FFFAEC]">
                 <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
                 </div>
