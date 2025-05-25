@@ -22,27 +22,23 @@ $user = [
 $message = '';
 $message_type = '';
 
-// Proses pengembalian buku
 if (isset($_POST['kembalikan_buku']) && isset($_POST['id_peminjaman'])) {
     $id_peminjaman = $_POST['id_peminjaman'];
     $id_buku = $_POST['id_buku'];
     
     try {
-        // Mulai transaksi
+
         $conn->begin_transaction();
         
-        // Update data peminjaman - set tanggal kembali dan status
         $tanggal_kembali = date('Y-m-d');
         $update_peminjaman = $conn->prepare("UPDATE peminjaman SET Tanggal_kembali = ?, status_peminjaman = 'Dikembalikan' WHERE Id_Peminjaman = ? AND NRP = ? AND Tanggal_kembali IS NULL");
         $update_peminjaman->bind_param("sss", $tanggal_kembali, $id_peminjaman, $user['nrp']);
         
         if ($update_peminjaman->execute() && $update_peminjaman->affected_rows > 0) {
-            // Update stok buku (tambah 1)
             $update_stok = $conn->prepare("UPDATE buku SET Stok = Stok + 1 WHERE ID = ?");
             $update_stok->bind_param("s", $id_buku);
             $update_stok->execute();
             
-            // Commit transaksi
             $conn->commit();
             
             $_SESSION['return_success'] = "Buku berhasil dikembalikan!";
@@ -60,14 +56,12 @@ if (isset($_POST['kembalikan_buku']) && isset($_POST['id_peminjaman'])) {
     }
 }
 
-// Tampilkan pesan sukses dari session
 if (isset($_SESSION['return_success'])) {
     $message = $_SESSION['return_success'];
     $message_type = 'success';
     unset($_SESSION['return_success']);
 }
 
-// Ambil data buku yang sedang dipinjam oleh anggota
 $borrowed_books = [];
 try {
     $query = "SELECT p.Id_Peminjaman, p.ID_Buku, p.Judul, p.Tanggal_Pinjam, p.Batas_waktu, 
@@ -83,7 +77,6 @@ try {
     $result = $stmt->get_result();
     
     while ($row = $result->fetch_assoc()) {
-        // Tentukan status (normal/terlambat)
         $status = (date('Y-m-d') > $row['Batas_waktu']) ? 'Terlambat' : 'Normal';
         
         $borrowed_books[] = [
@@ -92,7 +85,6 @@ try {
             'judul' => $row['Judul'],
             'isbn' => $row['ISBN'] ?? 'N/A',
             'jumlah_halaman' => $row['Jumlah_halaman'] ?? 0,
-            'tahun_terbit' => $row['Tahun_terbit'] ?? 'N/A',
             'penulis' => $row['Penulis'] ?? 'N/A',
             'tanggal_pinjam' => $row['Tanggal_Pinjam'],
             'batas_waktu' => $row['Batas_waktu'],
@@ -116,7 +108,6 @@ try {
 </head>
 <body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
             <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-[#FFFAEC]">
                 <div class="bg-[#393E46] p-2 rounded">
@@ -151,9 +142,7 @@ try {
             </nav>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
             <header class="bg-[#DFD0B8] shadow-sm z-10">
                 <div class="flex items-center justify-between p-4">
                     <div class="font-bold text-lg">Pengembalian Buku</div>
@@ -177,9 +166,7 @@ try {
                 </div>
             </header>
 
-            <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-6">
-                <!-- Breadcrumb -->
                 <div class="flex justify-between items-center mb-6">
                     <div class="text-sm">
                         <a href="dashboard.php" class="text-[#948979] hover:text-[#948979]">Dashboard</a> / 
@@ -189,7 +176,6 @@ try {
 
                 <h2 class="text-xl font-medium mb-6">Pengembalian Buku</h2>
 
-                <!-- Alert Messages -->
                 <?php if ($message): ?>
                 <div class="mb-6 px-4 py-3 rounded-lg flex items-center <?php echo $message_type == 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'; ?>">
                     <i class="fas <?php echo $message_type == 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> mr-2"></i>
@@ -197,7 +183,6 @@ try {
                 </div>
                 <?php endif; ?>
 
-                <!-- Books Table -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6 border-b border-gray-200">
                         <div class="flex justify-between items-center">
@@ -288,7 +273,6 @@ try {
         </div>
     </div>
 
-    <!-- Detail Modal -->
     <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg w-full max-w-lg">
@@ -300,10 +284,7 @@ try {
                         </button>
                     </div>
                     
-                    <div id="detailContent" class="space-y-4">
-                        <!-- Detail akan diisi melalui JavaScript -->
-                    </div>
-                    
+                    <div id="detailContent" class="space-y-4"></div>  
                     <div class="flex justify-end mt-6">
                         <button onclick="closeDetailModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Tutup</button>
                     </div>
@@ -313,7 +294,6 @@ try {
     </div>
 
     <script>
-        // Search functionality
         document.getElementById('searchInput').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
             const rows = document.querySelectorAll('.book-row');
@@ -328,7 +308,6 @@ try {
             });
         });
 
-        // Show book detail modal
         function showBookDetail(idPeminjaman, title, idBuku, isbn, penulis, jumlahHalaman, tanggalPinjam, batasWaktu, status) {
             const detailContent = document.getElementById('detailContent');
             detailContent.innerHTML = `
@@ -383,24 +362,20 @@ try {
             document.getElementById('detailModal').classList.remove('hidden');
         }
 
-        // Close detail modal
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
         }
 
-        // Confirm return book
         function confirmReturn(judulBuku) {
             return confirm('Apakah Anda yakin ingin mengembalikan buku "' + judulBuku + '"?');
         }
 
-        // Close modal when clicking outside
         document.getElementById('detailModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeDetailModal();
             }
         });
 
-        // Auto hide success message
         document.addEventListener('DOMContentLoaded', function() {
             const successMessage = document.querySelector('.bg-green-100');
             if (successMessage) {
