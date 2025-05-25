@@ -14,19 +14,17 @@ if (isset($_GET['logout'])) {
 }
 
 $user = [
-    'name' => $_SESSION['user_name'] ?? 'Anggota',
-    'id' => $_SESSION['user_id'] ?? '1',
-    'nrp' => $_SESSION['user_nrp'] ?? '001' // Pastikan NRP ada di session
+    'name' => $_SESSION['member_name'] ?? 'Anggota',
+    'id' => $_SESSION['member_id'] ?? '1',
+    'nrp' => $_SESSION['member_nrp'] ?? '001' 
 ];
 
-// Initialize variables
 $books = [];
 $error_message = '';
 $success_message = '';
 
 $selected_status = $_GET['status'] ?? 'all';
 
-// Handle peminjaman buku baru
 if (isset($_POST['pinjam_buku'])) {
     $id_buku = trim($_POST['id_buku'] ?? '');
     $isbn_buku = trim($_POST['isbn_buku'] ?? '');
@@ -34,7 +32,6 @@ if (isset($_POST['pinjam_buku'])) {
     
     if (!empty($id_buku) && !empty($isbn_buku)) {
         try {
-            // Cek apakah buku exists dan available (sesuai struktur tabel yang diberikan)
             $check_book = $conn->prepare("SELECT * FROM buku WHERE ID = ? AND ISBN = ? AND Stok > 0");
             $check_book->bind_param("ss", $id_buku, $isbn_buku);
             $check_book->execute();
@@ -43,7 +40,6 @@ if (isset($_POST['pinjam_buku'])) {
             if ($book_result->num_rows > 0) {
                 $book_data = $book_result->fetch_assoc();
                 
-                // Cek apakah buku sudah dipinjam oleh anggota ini dan belum dikembalikan
                 $check_existing = $conn->prepare("SELECT * FROM peminjaman WHERE NRP = ? AND ID_Buku = ? AND Tanggal_kembali IS NULL");
                 $check_existing->bind_param("ss", $nrp_anggota, $id_buku);
                 $check_existing->execute();
@@ -52,30 +48,25 @@ if (isset($_POST['pinjam_buku'])) {
                 if ($existing_result->num_rows > 0) {
                     $error_message = "Anda sudah meminjam buku ini dan belum mengembalikannya.";
                 } else {
-                    // Generate ID Peminjaman dengan format #P001
                     $get_last_id = $conn->query("SELECT Id_Peminjaman FROM peminjaman ORDER BY Id_Peminjaman DESC LIMIT 1");
                     $last_id_result = $get_last_id->fetch_assoc();
                     
                     if ($last_id_result && $last_id_result['Id_Peminjaman']) {
-                        // Extract number dari format #P001
                         $last_number = intval(substr($last_id_result['Id_Peminjaman'], 2));
                         $new_number = $last_number + 1;
                     } else {
                         $new_number = 1;
                     }
                     $id_peminjaman = '#P' . str_pad($new_number, 3, '0', STR_PAD_LEFT);
-                    
-                    // Set tanggal
+
                     $tanggal_pinjam = date('Y-m-d');
                     $batas_waktu = date('Y-m-d', strtotime('+7 days'));
                     $status_peminjaman = 'Dipinjam';
                     
-                    // Insert peminjaman dengan kolom sesuai struktur tabel
                     $insert_peminjaman = $conn->prepare("INSERT INTO peminjaman (Id_Peminjaman, NRP, ID_Buku, Judul, Tanggal_Pinjam, Batas_waktu, status_peminjaman) VALUES (?, ?, ?, ?, ?, ?, ?)");
                     $insert_peminjaman->bind_param("sssssss", $id_peminjaman, $nrp_anggota, $id_buku, $book_data['Judul'], $tanggal_pinjam, $batas_waktu, $status_peminjaman);
                     
                     if ($insert_peminjaman->execute()) {
-                        // Optional: Update stok buku (kurangi 1)
                         $update_stok = $conn->prepare("UPDATE buku SET Stok = Stok - 1 WHERE ID = ?");
                         $update_stok->bind_param("s", $id_buku);
                         $update_stok->execute();
@@ -98,7 +89,6 @@ if (isset($_POST['pinjam_buku'])) {
     }
 }
 
-// Get data peminjaman berdasarkan anggota yang login (sesuai struktur tabel)
 try {
     $where_clause = "WHERE p.NRP = ?";
     $params = [$user['nrp']];
@@ -127,7 +117,6 @@ try {
     $result = $stmt->get_result();
     
     while ($row = $result->fetch_assoc()) {
-        // Tentukan status berdasarkan kondisi
         if ($row['Tanggal_kembali'] !== null) {
             $status = 'Dikembalikan';
         } elseif (date('Y-m-d') > $row['Batas_waktu']) {
@@ -152,7 +141,6 @@ try {
     $error_message = "Error loading data: " . $e->getMessage();
 }
 
-// Check for success message from session
 if (isset($_SESSION['success_message'])) {
     $success_message = $_SESSION['success_message'];
     unset($_SESSION['success_message']);
@@ -216,9 +204,12 @@ if (isset($_SESSION['success_message'])) {
                             </button>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <span><?php echo htmlspecialchars($user['name']); ?></span>
                             <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                                 <i class="fas fa-user text-gray-500"></i>
+                            </div>
+                            <div class="text-sm">
+                                <div class="font-medium"><?php echo htmlspecialchars($user['name']); ?></div>
+                                <div class="text-gray-500 text-xs">Anggota</div>
                             </div>
                         </div>
                     </div>
@@ -328,7 +319,6 @@ if (isset($_SESSION['success_message'])) {
         </div>
     </div>
 
-    <!-- Modal Pinjam Buku -->
     <div id="pinjamModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg w-full max-w-md">
@@ -363,7 +353,6 @@ if (isset($_SESSION['success_message'])) {
         </div>
     </div>
 
-    <!-- Modal Detail Buku -->
     <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg w-full max-w-md">
@@ -462,8 +451,7 @@ if (isset($_SESSION['success_message'])) {
             }
             window.location.href = url.toString();
         }
-        
-        // Search functionality
+
         document.getElementById('searchInput').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
             const rows = document.querySelectorAll('.book-row');
@@ -481,7 +469,6 @@ if (isset($_SESSION['success_message'])) {
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Peminjaman page loaded');
 
-            // Close modal when clicking outside
             document.getElementById('pinjamModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closePinjamModal();

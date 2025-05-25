@@ -14,8 +14,8 @@ if (isset($_GET['logout'])) {
 }
 
 $user = [
-    'name' => $_SESSION['user_name'] ?? 'Anggota',
-    'id' => $_SESSION['user_id'] ?? '1'
+    'name' => $_SESSION['member_name'] ?? 'Anggota',
+    'id' => $_SESSION['member_id'] ?? '1'
 ];
 
 $statuses = ['Semua', 'Tersedia', 'Dipinjam'];
@@ -154,11 +154,14 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
                             </form>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <span><?php echo htmlspecialchars($user['name']); ?></span>
                             <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                                 <i class="fas fa-user text-gray-500"></i>
                             </div>
-                        </div>
+                            <div class="text-sm">
+                                <div class="font-medium"><?php echo htmlspecialchars($user['name']); ?></div>
+                                <div class="text-gray-500 text-xs">Anggota</div>
+                            </div>
+                    </div>
                     </div>
                 </div>
             </header>

@@ -18,7 +18,6 @@ $admin = [
     'id' => $_SESSION['admin_id'] ?? '1'
 ];
 
-// Mengambil total anggota dari database
 $total_query = "SELECT COUNT(*) as total FROM anggota";
 $total_result = mysqli_query($conn, $total_query);
 $total_row = mysqli_fetch_assoc($total_result);
@@ -29,7 +28,6 @@ $member_stats = [
 $success_message = '';
 $error_message = '';
 
-// Handle POST requests (Edit dan Delete)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'edit') {
@@ -69,7 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Handle search
 $search_query = $_GET['search'] ?? '';
 $where_clause = '';
 if (!empty($search_query)) {
@@ -80,18 +77,15 @@ if (!empty($search_query)) {
                     Jurusan LIKE '%$search_escaped%'";
 }
 
-// Pagination
 $per_page = $_GET['per_page'] ?? 10;
 $page = $_GET['page'] ?? 1;
 $offset = ($page - 1) * $per_page;
 
-// Mengambil data anggota dari database
 $query = "SELECT NRP, Nama, Email, Jurusan, No_Telp, Jenis_kelamin FROM anggota $where_clause 
           ORDER BY Nama ASC 
           LIMIT $offset, $per_page";
 $result = mysqli_query($conn, $query);
 
-// Count total records for pagination
 $count_query = "SELECT COUNT(*) as total FROM anggota $where_clause";
 $count_result = mysqli_query($conn, $count_query);
 $count_row = mysqli_fetch_assoc($count_result);
@@ -176,6 +170,10 @@ if ($result) {
                         <div class="flex items-center space-x-2">
                             <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                                 <i class="fas fa-user text-gray-500"></i>
+                            </div>
+                            <div class="text-sm">
+                                <div class="font-medium"><?php echo htmlspecialchars($admin['name']); ?></div>
+                                <div class="text-gray-500 text-xs">Admin</div>
                             </div>
                         </div>
                     </div>

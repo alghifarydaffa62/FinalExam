@@ -41,7 +41,10 @@ function getBookStats($conn) {
         $stats['tersedia'] = $row['tersedia'] ?? 0;
     }
 
-    $stats['dipinjam'] = 0;
+    $peminjaman = $conn->query("SELECT COUNT(*) as totalPeminjaman FROM peminjaman");
+    if($peminjaman) {
+        $stats['totalPeminjaman'] = $peminjaman->fetch_assoc()['totalPeminjaman'];
+    }
     
     return $stats;
 }
@@ -225,13 +228,15 @@ $stmt->close();
                             <button class="text-gray-500 hover:text-blue-700">
                                 <i class="fas fa-bell"></i>
                             </button>
-                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white">
-                                <?php echo substr($admin['name'], 0, 1); ?>
+                            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-gray-500"></i>
                             </div>
-                            <span class="text-sm"><?php echo htmlspecialchars($admin['name']); ?></span>
+                            <div class="text-sm">
+                                <div class="font-medium"><?php echo htmlspecialchars($admin['name']); ?></div>
+                                <div class="text-gray-500 text-xs">Admin</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -273,7 +278,7 @@ $stmt->close();
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-orange-500">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku Dipinjam</h3>
-                        <p class="text-3xl font-bold text-orange-600"><?php echo $book_stats['dipinjam']; ?></p>
+                        <p class="text-3xl font-bold text-orange-600"><?php echo $book_stats['totalPeminjaman']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Buku dipinjam anggota</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-green-500">
