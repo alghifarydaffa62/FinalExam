@@ -35,6 +35,16 @@ function getBookStats($conn) {
     if ($result) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
+
+    $anggota = $conn->query("SELECT COUNT(*) as totalAnggota FROM anggota");
+    if($anggota) {
+        $stats['total_anggota'] = $anggota->fetch_assoc()['totalAnggota'];
+    }
+
+    $peminjaman = $conn->query("SELECT COUNT(*) as totalPeminjaman FROM peminjaman");
+    if($peminjaman) {
+        $stats['totalPeminjaman'] = $peminjaman->fetch_assoc()['totalPeminjaman'];
+    }
     
     return $stats;
 }
@@ -144,12 +154,12 @@ $lending_stats = [
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Pinjam</h3>
-                        <p class="text-3xl font-bold text-orange-600"><?php echo $book_stats['dipinjam']; ?></p>
+                        <p class="text-3xl font-bold text-orange-600"><?php echo $book_stats['totalPeminjaman']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Buku sedang dipinjam</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Anggota</h3>
-                        <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['anggota']; ?></p>
+                        <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['total_anggota']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Anggota terdaftar</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
