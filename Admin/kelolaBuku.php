@@ -31,20 +31,37 @@ function getBookStats($conn)
         'tersedia' => 0
     ];
 
+    // Hitung total buku
     $result = $conn->query("SELECT COUNT(*) as total FROM buku");
     if ($result) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
 
+    // Hitung total stok buku yang tersedia
     $result = $conn->query("SELECT SUM(Stok) as tersedia FROM buku WHERE Stok > 0");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['tersedia'] = $row['tersedia'] ?? 0;
     }
 
-    $peminjaman = $conn->query("SELECT COUNT(*) as totalPeminjaman FROM peminjaman");
-    if ($peminjaman) {
-        $stats['totalPeminjaman'] = $peminjaman->fetch_assoc()['totalPeminjaman'];
+    // Hitung total peminjaman aktif (status = 'dipinjam')
+    // Jika ingin berdasarkan NRP tertentu, uncomment baris berikut dan sesuaikan
+    $nrp = $_SESSION['nrp'] ?? null; // Sesuaikan dengan session NRP yang ada
+    if ($nrp) {
+        $peminjaman = $conn->prepare("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE status_peminjaman = 'dipinjam' AND NRP = ?");
+        $peminjaman->bind_param("s", $nrp);
+        $peminjaman->execute();
+        $result = $peminjaman->get_result();
+        if ($result) {
+            $stats['totalPeminjaman'] = $result->fetch_assoc()['totalPeminjaman'];
+        }
+        $peminjaman->close();
+    } else {
+        // Hitung semua peminjaman aktif jika tidak ada NRP spesifik
+        $peminjaman = $conn->query("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE status_peminjaman = 'dipinjam'");
+        if ($peminjaman) {
+            $stats['totalPeminjaman'] = $peminjaman->fetch_assoc()['totalPeminjaman'];
+        }
     }
 
     return $stats;

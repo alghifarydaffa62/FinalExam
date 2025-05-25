@@ -56,9 +56,9 @@ function getBookStats($conn, $user_nrp) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
 
-    // Query total peminjaman user berdasarkan NRP
+    // UPDATED: Query total peminjaman user berdasarkan NRP dengan status "dipinjam"
     try {
-        $stmt = $conn->prepare("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE NRP = ?");
+        $stmt = $conn->prepare("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE NRP = ? AND status_peminjaman = 'dipinjam'");
         $stmt->bind_param("s", $user_nrp);
         $stmt->execute();
         $peminjaman_result = $stmt->get_result();
@@ -87,8 +87,8 @@ try {
                p.Tanggal_Pinjam as borrow_date, 
                p.Tanggal_Kembali as due_date,
                CASE 
-                   WHEN p.Status = 'dipinjam' THEN 'Dipinjam'
-                   WHEN p.Status = 'dikembalikan' THEN 'Dikembalikan'
+                   WHEN p.status_peminjaman = 'dipinjam' THEN 'Dipinjam'
+                   WHEN p.status_peminjaman = 'dikembalikan' THEN 'Dikembalikan'
                    ELSE 'Dipinjam'
                END as status,
                p.ID_Peminjaman as id
@@ -218,7 +218,7 @@ try {
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Peminjaman</h3>
                         <p class="text-3xl font-bold text-[#948979]"><?php echo $book_stats['totalPeminjaman']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Total buku yang pernah dipinjam</p>
+                        <p class="text-sm text-gray-500 mt-1">Buku yang sedang dipinjam</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Buku</h3>

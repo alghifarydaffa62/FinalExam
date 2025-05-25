@@ -19,11 +19,11 @@ $books = []; // Inisialisasi array books
 $error_message = ''; // Inisialisasi error message
 $success_message = ''; // Inisialisasi success message
 
-// Filter status
+// Filter status - hanya dipinjam dan terlambat
 $selected_status = $_GET['status'] ?? 'all';
 
 // Query untuk ambil data peminjaman dari database
-// Ini sudah disesuaikan dengan struktur tabel lo (anggota.Nama, buku.ID)
+// Hanya ambil data dengan status_peminjaman = 'dipinjam'
 $sql = "SELECT
     p.Id_Peminjaman,
     p.Tanggal_Pinjam,
@@ -37,28 +37,27 @@ $sql = "SELECT
     CASE
         WHEN p.Batas_waktu < CURDATE() AND p.status_peminjaman = 'dipinjam' THEN 'Terlambat'
         WHEN p.status_peminjaman = 'dipinjam' THEN 'Dipinjam'
-        WHEN p.status_peminjaman = 'dikembalikan' THEN 'Dikembalikan'
         ELSE 'Dipinjam'
     END AS status_tampilan
 FROM peminjaman p
 JOIN buku b ON p.ID_Buku = b.ID
-JOIN anggota a ON p.NRP = a.NRP";
+JOIN anggota a ON p.NRP = a.NRP
+WHERE p.status_peminjaman = 'dipinjam'"; // Hanya ambil yang statusnya 'dipinjam'
 
-// INISIASI VARIABEL UNTUK KONDISI WHERE
-$conditions = [];
+// INISIASI VARIABEL UNTUK KONDISI WHERE TAMBAHAN
+$additional_conditions = [];
 
-// Filter berdasarkan status
+// Filter berdasarkan status (hanya untuk dipinjam dan terlambat)
 if ($selected_status == 'dipinjam') {
-    $conditions[] = "(p.status_peminjaman = 'dipinjam' AND p.Batas_waktu >= CURDATE())";
+    $additional_conditions[] = "p.Batas_waktu >= CURDATE()";
 } elseif ($selected_status == 'terlambat') {
-    $conditions[] = "(p.Batas_waktu < CURDATE() AND p.status_peminjaman = 'dipinjam')";
-} elseif ($selected_status == 'dikembalikan') {
-    $conditions[] = "p.status_peminjaman = 'dikembalikan'";
+    $additional_conditions[] = "p.Batas_waktu < CURDATE()";
 }
+// Tidak ada kondisi untuk 'dikembalikan' karena sudah difilter di WHERE utama
 
-// Tambahkan WHERE clause HANYA JIKA ADA KONDISI
-if (!empty($conditions)) {
-    $sql .= " WHERE " . implode(" AND ", $conditions);
+// Tambahkan kondisi tambahan jika ada
+if (!empty($additional_conditions)) {
+    $sql .= " AND " . implode(" AND ", $additional_conditions);
 }
 
 // Tambahkan ORDER BY di akhir query
@@ -79,23 +78,6 @@ try {
     $books = [];
     $error_message = "Error mengambil data: " . $e->getMessage();
 }
-
-// Bagian untuk form pinjam buku (modal di halaman admin, ini tidak perlu ada di admin
-// karena admin punya fitur kelola buku sendiri. Tapi kalau lo mau pertahankan, biarkan saja)
-// Di sini gue biarin aja sesuai kode lo sebelumnya, tapi fungsinya mungkin bukan untuk admin meminjamkan
-// melainkan untuk admin menambahkan pinjaman secara manual.
-
-// if (isset($_POST['pinjam_buku'])) { ... } // Ini gue komen out, biar nggak bentrok dengan fungsi admin.
-// Kalau admin mau pinjam buku, harusnya beda logika dengan anggota.
-// Kalo ini buat ngetes doang, ya biarin aja. Tapi kalau mau dipakai admin,
-// pastikan logikanya disesuaikan.
-/*
-if (isset($_POST['pinjam_buku'])) {
-    $judul_buku = $_POST['judul_buku'] ?? '';
-    $isbn_buku = $_POST['isbn_buku'] ?? '';
-    // ... (Logika insert buku baru oleh admin) ...
-}
-*/
 ?>
 
 <!DOCTYPE html>
@@ -175,7 +157,7 @@ if (isset($_POST['pinjam_buku'])) {
                 <div class="flex justify-between items-center mb-6">
                     <div class="text-sm">
                         <a href="dashboardAdmin.php" class="text-[#948979] hover:text-[#948979]">Dashboard</a> /
-                        <span class="text-gray-600">Pengembalian</span>
+                        <span class="text-gray-600">Peminjaman Aktif</span>
                     </div>
                 </div>
 
@@ -192,7 +174,7 @@ if (isset($_POST['pinjam_buku'])) {
                 <?php endif; ?>
 
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-medium">Manajemen Daftar Peminjaman</h2>
+                    <h2 class="text-xl font-medium">Daftar Peminjaman Aktif</h2>
                 </div>
 
                 <div class="bg-white rounded-lg shadow-sm mb-6">
@@ -200,10 +182,9 @@ if (isset($_POST['pinjam_buku'])) {
                     <div class="p-4 flex flex-wrap items-center justify-between gap-2 border-b border-gray-200">
                         <div class="flex flex-wrap gap-2">
                             <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="filterByStatus(this.value)">
-                                <option value="all" <?php echo ($selected_status == 'all') ? 'selected' : ''; ?>>Semua Status</option>
-                                <option value="dipinjam" <?php echo ($selected_status == 'dipinjam') ? 'selected' : ''; ?>>Dipinjam</option>
+                                <option value="all" <?php echo ($selected_status == 'all') ? 'selected' : ''; ?>>Semua Peminjaman Aktif</option>
+                                <option value="dipinjam" <?php echo ($selected_status == 'dipinjam') ? 'selected' : ''; ?>>Normal</option>
                                 <option value="terlambat" <?php echo ($selected_status == 'terlambat') ? 'selected' : ''; ?>>Terlambat</option>
-                                <option value="dikembalikan" <?php echo ($selected_status == 'dikembalikan') ? 'selected' : ''; ?>>Dikembalikan</option>
                             </select>
                         </div>
                     </div>
@@ -224,7 +205,7 @@ if (isset($_POST['pinjam_buku'])) {
                             <tbody class="divide-y divide-gray-200">
                                 <?php if (empty($books)): ?>
                                 <tr>
-                                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">Tidak ada data peminjaman</td>
+                                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">Tidak ada peminjaman aktif</td>
                                 </tr>
                                 <?php else: ?>
                                     <?php foreach ($books as $book): ?>
@@ -243,8 +224,6 @@ if (isset($_POST['pinjam_buku'])) {
                                                 <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Dipinjam</span>
                                             <?php elseif ($display_status == 'Terlambat'): ?>
                                                 <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Terlambat</span>
-                                            <?php elseif ($display_status == 'Dikembalikan'): ?>
-                                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Dikembalikan</span>
                                             <?php else: ?>
                                                 <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800"><?php echo $display_status; ?></span>
                                             <?php endif; ?>
