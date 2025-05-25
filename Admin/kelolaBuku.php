@@ -690,13 +690,6 @@ $stmt->close();
             }, 300);
         }
 
-        function generateBookId() {
-            const prefix = 'BK';
-            const timestamp = Date.now().toString().slice(-6);
-            const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-            return prefix + timestamp + random;
-        }
-
         document.getElementById('id_buku').addEventListener('focus', function() {
             if (!this.value) {
                 this.value = generateBookId();
@@ -705,14 +698,6 @@ $stmt->close();
 
         let searchTimeout;
         const searchInput = document.querySelector('input[name="search"]');
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    this.form.submit();
-                }, 500);
-            });
-        }
 
         document.addEventListener('keydown', function(e) {
             if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
