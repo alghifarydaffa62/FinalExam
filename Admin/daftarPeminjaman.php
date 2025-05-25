@@ -1,13 +1,12 @@
 <?php
 session_start();
+include '../konek.php'; // Panggil file koneksi MySQLi lo
 
 if (isset($_GET['logout'])) {
     session_destroy();
-    
     if (isset($_COOKIE['admin_remember'])) {
         setcookie('admin_remember', '', time() - 3600, '/');
     }
-
     header("Location: loginAdmin.php");
     exit;
 }
@@ -16,50 +15,87 @@ $admin = [
     'id' => $_SESSION['admin_id'] ?? '1'
 ];
 
-$books = [
-    [
-        'id' => 1,
-        'title' => 'Mahakarya',
-        'isbn' => '978-602-123-456-7',
-        'author' => 'John Doe',
-        'tanggal_pinjam' => '2024-05-15',
-        'tanggal_kembali' => '2024-05-22',
-        'status' => 'Dipinjam'
-    ],
-    [
-        'id' => 2,
-        'title' => 'JavaScript Modern Development',
-        'isbn' => '978-602-987-654-3',
-        'author' => 'Jane Smith',
-        'tanggal_pinjam' => '2024-05-10',
-        'tanggal_kembali' => '2024-05-17',
-        'status' => 'Terlambat'
-    ],
-    [
-        'id' => 3,
-        'title' => 'Database Design Fundamentals',
-        'isbn' => '978-602-555-111-2',
-        'author' => 'Robert Johnson',
-        'tanggal_pinjam' => '2024-05-18',
-        'tanggal_kembali' => '2024-05-25',
-        'status' => 'Dipinjam'
-    ]
-];
+$books = []; // Inisialisasi array books
+$error_message = ''; // Inisialisasi error message
+$success_message = ''; // Inisialisasi success message
 
-$selected_status = $_GET['status'] ?? 'Semua Status';
+// Filter status
+$selected_status = $_GET['status'] ?? 'all';
 
+// Query untuk ambil data peminjaman dari database
+// Ini sudah disesuaikan dengan struktur tabel lo (anggota.Nama, buku.ID)
+$sql = "SELECT
+    p.Id_Peminjaman,
+    p.Tanggal_Pinjam,
+    p.Batas_waktu AS tanggal_kembali_seharusnya,
+    p.Tanggal_kembali AS tanggal_dikembalikan_aktual,
+    p.status_peminjaman,
+    b.Judul,
+    b.ISBN,
+    b.Penulis,
+    a.Nama,
+    CASE
+        WHEN p.Batas_waktu < CURDATE() AND p.status_peminjaman = 'dipinjam' THEN 'Terlambat'
+        WHEN p.status_peminjaman = 'dipinjam' THEN 'Dipinjam'
+        WHEN p.status_peminjaman = 'dikembalikan' THEN 'Dikembalikan'
+        ELSE 'Dipinjam'
+    END AS status_tampilan
+FROM peminjaman p
+JOIN buku b ON p.ID_Buku = b.ID
+JOIN anggota a ON p.NRP = a.NRP";
+
+// INISIASI VARIABEL UNTUK KONDISI WHERE
+$conditions = [];
+
+// Filter berdasarkan status
+if ($selected_status == 'dipinjam') {
+    $conditions[] = "(p.status_peminjaman = 'dipinjam' AND p.Batas_waktu >= CURDATE())";
+} elseif ($selected_status == 'terlambat') {
+    $conditions[] = "(p.Batas_waktu < CURDATE() AND p.status_peminjaman = 'dipinjam')";
+} elseif ($selected_status == 'dikembalikan') {
+    $conditions[] = "p.status_peminjaman = 'dikembalikan'";
+}
+
+// Tambahkan WHERE clause HANYA JIKA ADA KONDISI
+if (!empty($conditions)) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
+}
+
+// Tambahkan ORDER BY di akhir query
+$sql .= " ORDER BY p.Tanggal_Pinjam DESC";
+
+try {
+    // Gunakan mysqli_prepare untuk eksekusi query
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->get_result(); // Ambil hasil
+    
+    $books = [];
+    while ($row = $result->fetch_assoc()) {
+        $books[] = $row; // Masukkan semua baris ke array $books
+    }
+    $stmt->close(); // Tutup statement
+} catch (Exception $e) { // Tangkap Exception umum
+    $books = [];
+    $error_message = "Error mengambil data: " . $e->getMessage();
+}
+
+// Bagian untuk form pinjam buku (modal di halaman admin, ini tidak perlu ada di admin
+// karena admin punya fitur kelola buku sendiri. Tapi kalau lo mau pertahankan, biarkan saja)
+// Di sini gue biarin aja sesuai kode lo sebelumnya, tapi fungsinya mungkin bukan untuk admin meminjamkan
+// melainkan untuk admin menambahkan pinjaman secara manual.
+
+// if (isset($_POST['pinjam_buku'])) { ... } // Ini gue komen out, biar nggak bentrok dengan fungsi admin.
+// Kalau admin mau pinjam buku, harusnya beda logika dengan anggota.
+// Kalo ini buat ngetes doang, ya biarin aja. Tapi kalau mau dipakai admin,
+// pastikan logikanya disesuaikan.
+/*
 if (isset($_POST['pinjam_buku'])) {
     $judul_buku = $_POST['judul_buku'] ?? '';
     $isbn_buku = $_POST['isbn_buku'] ?? '';
-    
-    if (!empty($judul_buku) && !empty($isbn_buku)) {
-        $_SESSION['success_message'] = "Buku berhasil dipinjam!";
-        header("Location: daftarPeminjaman.php");
-        exit;
-    } else {
-        $error_message = "Mohon lengkapi semua data buku yang akan dipinjam.";
-    }
+    // ... (Logika insert buku baru oleh admin) ...
 }
+*/
 ?>
 
 <!DOCTYPE html>
@@ -67,7 +103,7 @@ if (isset($_POST['pinjam_buku'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Koleksi Buku - SiPerpus</title>
+    <title>Manajemen Daftar Peminjaman - SiPerpus</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -138,7 +174,7 @@ if (isset($_POST['pinjam_buku'])) {
             <main class="flex-1 overflow-y-auto p-6 ">
                 <div class="flex justify-between items-center mb-6">
                     <div class="text-sm">
-                        <a href="dashboard.php" class="text-[#948979] hover:text-[#948979]">Dashboard</a> / 
+                        <a href="dashboardAdmin.php" class="text-[#948979] hover:text-[#948979]">Dashboard</a> /
                         <span class="text-gray-600">Pengembalian</span>
                     </div>
                 </div>
@@ -149,7 +185,7 @@ if (isset($_POST['pinjam_buku'])) {
                 </div>
                 <?php endif; ?>
 
-                <?php if (isset($error_message)): ?>
+                <?php if (!empty($error_message)): ?>
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                     <?php echo $error_message; ?>
                 </div>
@@ -164,9 +200,10 @@ if (isset($_POST['pinjam_buku'])) {
                     <div class="p-4 flex flex-wrap items-center justify-between gap-2 border-b border-gray-200">
                         <div class="flex flex-wrap gap-2">
                             <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" onchange="filterByStatus(this.value)">
-                                <option value="all" <?php echo $selected_status == 'Semua Status' ? 'selected' : ''; ?>>Semua Status</option>
-                                <option value="dipinjam" <?php echo $selected_status == 'Dipinjam' ? 'selected' : ''; ?>>Dipinjam</option>
-                                <option value="terlambat" <?php echo $selected_status == 'Terlambat' ? 'selected' : ''; ?>>Terlambat</option>
+                                <option value="all" <?php echo ($selected_status == 'all') ? 'selected' : ''; ?>>Semua Status</option>
+                                <option value="dipinjam" <?php echo ($selected_status == 'dipinjam') ? 'selected' : ''; ?>>Dipinjam</option>
+                                <option value="terlambat" <?php echo ($selected_status == 'terlambat') ? 'selected' : ''; ?>>Terlambat</option>
+                                <option value="dikembalikan" <?php echo ($selected_status == 'dikembalikan') ? 'selected' : ''; ?>>Dikembalikan</option>
                             </select>
                         </div>
                     </div>
@@ -175,6 +212,7 @@ if (isset($_POST['pinjam_buku'])) {
                         <table class="min-w-full">
                             <thead>
                                 <tr class="bg-gray-50 text-xs text-gray-500 uppercase">
+                                    <th class="px-6 py-3 text-left">Nama Anggota</th>
                                     <th class="px-6 py-3 text-left">Judul</th>
                                     <th class="px-6 py-3 text-left">ISBN</th>
                                     <th class="px-6 py-3 text-left">Penulis</th>
@@ -184,22 +222,36 @@ if (isset($_POST['pinjam_buku'])) {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
-                                <?php foreach ($books as $book): ?>
+                                <?php if (empty($books)): ?>
                                 <tr>
-                                    <td class="px-6 py-4 font-medium"><?php echo htmlspecialchars($book['title']); ?></td>
-                                    <td class="px-6 py-4"><?php echo htmlspecialchars($book['isbn']); ?></td>
-                                    <td class="px-6 py-4"><?php echo htmlspecialchars($book['author']); ?></td>
-                                    <td class="px-6 py-4"><?php echo date('d/m/Y', strtotime($book['tanggal_pinjam'])); ?></td>
-                                    <td class="px-6 py-4"><?php echo date('d/m/Y', strtotime($book['tanggal_kembali'])); ?></td>
-                                    <td class="px-6 py-4">
-                                        <?php if ($book['status'] == 'Dipinjam'): ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Dipinjam</span>
-                                        <?php elseif ($book['status'] == 'Terlambat'): ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Terlambat</span>
-                                        <?php endif; ?>
-                                    </td>
+                                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">Tidak ada data peminjaman</td>
                                 </tr>
-                                <?php endforeach; ?>
+                                <?php else: ?>
+                                    <?php foreach ($books as $book): ?>
+                                    <tr>
+                                        <td class="px-6 py-4"><?php echo htmlspecialchars($book['Nama'] ?? 'N/A'); ?></td>
+                                        <td class="px-6 py-4 font-medium"><?php echo htmlspecialchars($book['Judul'] ?? 'N/A'); ?></td>
+                                        <td class="px-6 py-4"><?php echo htmlspecialchars($book['ISBN'] ?? 'N/A'); ?></td>
+                                        <td class="px-6 py-4"><?php echo htmlspecialchars($book['Penulis'] ?? 'N/A'); ?></td>
+                                        <td class="px-6 py-4"><?php echo htmlspecialchars(date('d/m/Y', strtotime($book['Tanggal_Pinjam'] ?? 'now'))); ?></td>
+                                        <td class="px-6 py-4"><?php echo htmlspecialchars(date('d/m/Y', strtotime($book['tanggal_kembali_seharusnya'] ?? 'now'))); ?></td>
+                                        <td class="px-6 py-4">
+                                            <?php
+                                            // Menggunakan alias status_tampilan dari query SQL
+                                            $display_status = $book['status_tampilan'] ?? 'N/A';
+                                            if ($display_status == 'Dipinjam'): ?>
+                                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Dipinjam</span>
+                                            <?php elseif ($display_status == 'Terlambat'): ?>
+                                                <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Terlambat</span>
+                                            <?php elseif ($display_status == 'Dikembalikan'): ?>
+                                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Dikembalikan</span>
+                                            <?php else: ?>
+                                                <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800"><?php echo $display_status; ?></span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -213,28 +265,28 @@ if (isset($_POST['pinjam_buku'])) {
             <div class="bg-white rounded-lg w-full max-w-md">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium">Pinjam Buku Baru</h3>
+                        <h3 class="text-lg font-medium">Pinjam Buku Baru (Admin)</h3>
                         <button onclick="closePinjamModal()" class="text-gray-500 hover:text-gray-700">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    
+
                     <form method="POST" action="">
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Judul Buku</label>
                             <input type="text" name="judul_buku" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan judul buku" required>
                         </div>
-                        
+
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">ISBN</label>
                             <input type="text" name="isbn_buku" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan ISBN buku" required>
                         </div>
-                        
+
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Penulis</label>
                             <input type="text" name="penulis_buku" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan nama penulis">
                         </div>
-                        
+
                         <div class="flex justify-end space-x-2">
                             <button type="button" onclick="closePinjamModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Batal</button>
                             <button type="submit" name="pinjam_buku" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Pinjam Buku</button>
@@ -249,26 +301,41 @@ if (isset($_POST['pinjam_buku'])) {
         function openPinjamModal() {
             document.getElementById('pinjamModal').classList.remove('hidden');
         }
-        
+
         function closePinjamModal() {
             document.getElementById('pinjamModal').classList.add('hidden');
         }
-        
-        function filterByStatus(status) {
-            if (status === 'all') {
-                window.location.href = 'peminjaman.php';
-            } else {
-                window.location.href = 'peminjaman.php?status=' + status;
-            }
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Peminjaman page loaded');
 
-            document.getElementById('pinjamModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closePinjamModal();
-                }
+        function filterByStatus(status) {
+            const url = new URL(window.location);
+            if (status === 'all') {
+                url.searchParams.delete('status');
+            } else {
+                url.searchParams.set('status', status);
+            }
+            window.location.href = url.toString();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Daftar Peminjaman Admin page loaded');
+
+            const searchInput = document.querySelector('header input[type="text"]');
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const tableBody = document.querySelector('tbody');
+                const rows = tableBody.querySelectorAll('tr');
+
+                rows.forEach(row => {
+                    // Cari di kolom Judul (indeks 1) dan Nama Anggota (indeks 0)
+                    const namaAnggota = row.cells[0]?.textContent.toLowerCase() || '';
+                    const judulBuku = row.cells[1]?.textContent.toLowerCase() || '';
+
+                    if (namaAnggota.includes(searchTerm) || judulBuku.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
             });
         });
     </script>
