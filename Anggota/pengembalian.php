@@ -13,11 +13,35 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
+$user_nrp = null;
 $user = [
     'name' => $_SESSION['member_name'] ?? 'Anggota',
-    'id' => $_SESSION['member_id'] ?? '1',
-    'nrp' => $_SESSION['member_nrp'] ?? '001'
+    'id' => $_SESSION['member_id'] ?? '1'
 ];
+
+// Query untuk mendapatkan NRP berdasarkan nama user
+if (!empty($user['name'])) {
+    try {
+        $get_nrp = $conn->prepare("SELECT NRP FROM anggota WHERE Nama = ?");
+        $get_nrp->bind_param("s", $user['name']);
+        $get_nrp->execute();
+        $nrp_result = $get_nrp->get_result();
+        
+        if ($nrp_result->num_rows > 0) {
+            $user_data = $nrp_result->fetch_assoc();
+            $user_nrp = $user_data['NRP'];
+        }
+    } catch (Exception $e) {
+        error_log("Error getting user NRP: " . $e->getMessage());
+    }
+}
+
+// Jika tidak bisa mendapatkan NRP, redirect ke login
+if (!$user_nrp) {
+    session_destroy();
+    header("Location: loginAnggota.php");
+    exit;
+}
 
 $message = '';
 $message_type = '';
@@ -32,7 +56,7 @@ if (isset($_POST['kembalikan_buku']) && isset($_POST['id_peminjaman'])) {
         
         $tanggal_kembali = date('Y-m-d');
         $update_peminjaman = $conn->prepare("UPDATE peminjaman SET Tanggal_kembali = ?, status_peminjaman = 'Dikembalikan' WHERE Id_Peminjaman = ? AND NRP = ? AND Tanggal_kembali IS NULL");
-        $update_peminjaman->bind_param("sss", $tanggal_kembali, $id_peminjaman, $user['nrp']);
+        $update_peminjaman->bind_param("sss", $tanggal_kembali, $id_peminjaman, $user_nrp);
         
         if ($update_peminjaman->execute() && $update_peminjaman->affected_rows > 0) {
             $update_stok = $conn->prepare("UPDATE buku SET Stok = Stok + 1 WHERE ID = ?");
@@ -40,7 +64,7 @@ if (isset($_POST['kembalikan_buku']) && isset($_POST['id_peminjaman'])) {
             $update_stok->execute();
             
             $conn->commit();
-            
+        
             $_SESSION['return_success'] = "Buku berhasil dikembalikan!";
             header("Location: " . $_SERVER['PHP_SELF']);
             exit;
@@ -65,14 +89,14 @@ if (isset($_SESSION['return_success'])) {
 $borrowed_books = [];
 try {
     $query = "SELECT p.Id_Peminjaman, p.ID_Buku, p.Judul, p.Tanggal_Pinjam, p.Batas_waktu, 
-                      b.ISBN, b.Jumlah_halaman, b.Penulis
+                      b.Penulis, b.Jumlah_halaman, b.ISBN
               FROM peminjaman p 
               LEFT JOIN buku b ON p.ID_Buku = b.ID 
-              WHERE p.NRP = ? AND p.Tanggal_kembali IS NULL 
+              WHERE p.NRP = ? AND (p.Tanggal_kembali IS NULL OR p.status_peminjaman != 'Dikembalikan')
               ORDER BY p.Tanggal_Pinjam DESC";
     
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("s", $user['nrp']);
+    $stmt->bind_param("s", $user_nrp);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -86,6 +110,8 @@ try {
             'isbn' => $row['ISBN'] ?? 'N/A',
             'jumlah_halaman' => $row['Jumlah_halaman'] ?? 0,
             'penulis' => $row['Penulis'] ?? 'N/A',
+            'jumlah_halaman' => $row['Jumlah_halaman'] ?? 0,
+            'isbn' => $row['ISBN'] ?? 'N/A',
             'tanggal_pinjam' => $row['Tanggal_Pinjam'],
             'batas_waktu' => $row['Batas_waktu'],
             'status' => $status
@@ -159,7 +185,7 @@ try {
                             </div>
                             <div class="text-sm">
                                 <div class="font-medium"><?php echo htmlspecialchars($user['name']); ?></div>
-                                <div class="text-gray-500 text-xs">Anggota</div>
+                                <div class="text-gray-500 text-xs">NRP: <?php echo htmlspecialchars($user_nrp); ?></div>
                             </div>
                         </div>
                     </div>
@@ -209,9 +235,8 @@ try {
                             <thead>
                                 <tr class="bg-gray-50">
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Peminjaman</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Buku</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul Buku</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penulis</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Buku</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Pinjam</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batas Waktu</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -222,12 +247,11 @@ try {
                                 <?php foreach ($borrowed_books as $book): ?>
                                 <tr class="hover:bg-gray-50 book-row">
                                     <td class="px-6 py-4 whitespace-nowrap font-mono text-sm"><?php echo htmlspecialchars($book['id_peminjaman']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap font-medium"><?php echo htmlspecialchars($book['id_buku']); ?></td>
                                     <td class="px-6 py-4 book-title">
                                         <div class="font-medium"><?php echo htmlspecialchars($book['judul']); ?></div>
                                         <div class="text-sm text-gray-500">ISBN: <?php echo htmlspecialchars($book['isbn']); ?></div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap"><?php echo htmlspecialchars($book['penulis']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium"><?php echo htmlspecialchars($book['id_buku']); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap"><?php echo date('d/m/Y', strtotime($book['tanggal_pinjam'])); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <?php echo date('d/m/Y', strtotime($book['batas_waktu'])); ?>
@@ -251,7 +275,7 @@ try {
                                         <div class="flex space-x-2">
                                             <button onclick="showBookDetail('<?php echo htmlspecialchars($book['id_peminjaman']); ?>', '<?php echo htmlspecialchars($book['judul']); ?>', '<?php echo htmlspecialchars($book['id_buku']); ?>', '<?php echo htmlspecialchars($book['isbn']); ?>', '<?php echo htmlspecialchars($book['penulis']); ?>', '<?php echo htmlspecialchars($book['jumlah_halaman']); ?>', '<?php echo date('d/m/Y', strtotime($book['tanggal_pinjam'])); ?>', '<?php echo date('d/m/Y', strtotime($book['batas_waktu'])); ?>', '<?php echo htmlspecialchars($book['status']); ?>')" 
                                                     class="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200">
-                                                <i class="fas fa-eye mr-1"></i>Detail
+                                                <i class="fas fa-eye mr-1"></i>View
                                             </button>
                                             <form method="post" action="" class="inline" onsubmit="return confirmReturn('<?php echo htmlspecialchars($book['judul']); ?>')">
                                                 <input type="hidden" name="id_peminjaman" value="<?php echo htmlspecialchars($book['id_peminjaman']); ?>">
@@ -325,15 +349,16 @@ try {
                             <label class="block text-sm font-medium text-gray-700">ID Buku</label>
                             <p class="text-sm text-gray-900">${idBuku}</p>
                         </div>
-
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">ISBN</label>
+                            <p class="text-sm text-gray-900">${isbn}</p>
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Penulis</label>
                             <p class="text-sm text-gray-900">${penulis}</p>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Jumlah Halaman</label>
                             <p class="text-sm text-gray-900">${jumlahHalaman} halaman</p>

@@ -13,10 +13,36 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
+// Ambil NRP user berdasarkan nama yang tersimpan di session
+$user_nrp = null;
 $user = [
     'name' => $_SESSION['member_name'] ?? 'Anggota',
     'id' => $_SESSION['member_id'] ?? '1'
 ];
+
+// Query untuk mendapatkan NRP berdasarkan nama user
+if (!empty($user['name'])) {
+    try {
+        $get_nrp = $conn->prepare("SELECT NRP FROM anggota WHERE Nama = ?");
+        $get_nrp->bind_param("s", $user['name']);
+        $get_nrp->execute();
+        $nrp_result = $get_nrp->get_result();
+        
+        if ($nrp_result->num_rows > 0) {
+            $user_data = $nrp_result->fetch_assoc();
+            $user_nrp = $user_data['NRP'];
+        }
+    } catch (Exception $e) {
+        error_log("Error getting user NRP: " . $e->getMessage());
+    }
+}
+
+// Jika tidak bisa mendapatkan NRP, redirect ke login
+if (!$user_nrp) {
+    session_destroy();
+    header("Location: loginAnggota.php");
+    exit;
+}
 
 $statuses = ['Semua', 'Tersedia', 'Dipinjam'];
 
@@ -159,7 +185,7 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
                             </div>
                             <div class="text-sm">
                                 <div class="font-medium"><?php echo htmlspecialchars($user['name']); ?></div>
-                                <div class="text-gray-500 text-xs">Anggota</div>
+                                <div class="text-gray-500 text-xs">NRP: <?php echo htmlspecialchars($user_nrp); ?></div>
                             </div>
                     </div>
                     </div>
