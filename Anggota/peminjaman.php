@@ -364,10 +364,7 @@ if (isset($_SESSION['success_message'])) {
                         </button>
                     </div>
                     
-                    <div id="detailContent" class="space-y-3">
-                        <!-- Detail akan diisi melalui JavaScript -->
-                    </div>
-                    
+                    <div id="detailContent" class="space-y-3"></div>
                     <div class="flex justify-end mt-6">
                         <button onclick="closeDetailModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Tutup</button>
                     </div>
