@@ -8,12 +8,12 @@ if (isset($_GET['logout'])) {
         setcookie('admin_remember', '', time() - 3600, '/');
     }
 
-    header("Location: loginAnggota.php");
+    header("Location: loginAdmin.php");
     exit;
 }
-$user = [
-    'name' => $_SESSION['user_name'] ?? 'Anggota',
-    'id' => $_SESSION['user_id'] ?? '1'
+$admin = [
+    'name' => $_SESSION['admin_name'] ?? 'Admin',
+    'id' => $_SESSION['admin_id'] ?? '1'
 ];
 
 $books = [
@@ -54,7 +54,7 @@ if (isset($_POST['pinjam_buku'])) {
     
     if (!empty($judul_buku) && !empty($isbn_buku)) {
         $_SESSION['success_message'] = "Buku berhasil dipinjam!";
-        header("Location: peminjaman.php");
+        header("Location: daftarPeminjaman.php");
         exit;
     } else {
         $error_message = "Mohon lengkapi semua data buku yang akan dipinjam.";
@@ -84,21 +84,25 @@ if (isset($_POST['pinjam_buku'])) {
                 </div>
             </div>
             <nav class="mt-4">
-                <a href="dashboard.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
+                <a href="dashboardAdmin.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-chart-bar w-6"></i>
                     <span class="ml-2">Dashboard</span>
                 </a>
-                <a href="peminjaman.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
-                    <i class="fas fa-book-open w-6"></i>
-                    <span class="ml-2">Peminjaman</span>
-                </a>
-                <a href="pengembalian.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
-                    <i class="fas fa-history w-6"></i>
-                    <span class="ml-2">Pengembalian</span>
-                </a>
-                <a href="data-buku.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
+                <a href="kelolaBuku.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-book w-6"></i>
-                    <span class="ml-2">Data Buku</span>
+                    <span class="ml-2">Buku</span>
+                </a>
+                <a href="kelolaKeterlambatan.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
+                    <i class="fas fa-clock w-6"></i>
+                    <span class="ml-2">Keterlambatan</span>
+                </a>
+                <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
+                    <i class="fas fa-users w-6"></i>
+                    <span class="ml-2">Anggota</span>
+                </a>
+                <a href="daftarPeminjaman.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
+                    <i class="fas fa-book w-6"></i>
+                    <span class="ml-2">Daftar Peminjaman</span>
                 </a>
                 <a href="?logout=1" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black mt-auto">
                     <i class="fas fa-sign-out-alt w-6"></i>
@@ -119,9 +123,12 @@ if (isset($_POST['pinjam_buku'])) {
                             </button>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <span><?php echo htmlspecialchars($user['name']); ?></span>
                             <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                                 <i class="fas fa-user text-gray-500"></i>
+                            </div>
+                            <div class="text-sm">
+                                <div class="font-medium"><?php echo htmlspecialchars($admin['name']); ?></div>
+                                <div class="text-gray-500 text-xs">Admin</div>
                             </div>
                         </div>
                     </div>
@@ -149,16 +156,10 @@ if (isset($_POST['pinjam_buku'])) {
                 <?php endif; ?>
 
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-medium">Manajemen Koleksi Buku</h2>
-                    <button onclick="openPinjamModal()" class="bg-[#DFD0B8] text-black px-4 py-2 rounded-md flex items-center text-sm hover:bg-[#948979]">
-                        <i class="fas fa-plus mr-2"></i> Pinjam Buku Baru
-                    </button>
+                    <h2 class="text-xl font-medium">Manajemen Daftar Peminjaman</h2>
                 </div>
 
                 <div class="bg-white rounded-lg shadow-sm mb-6">
-                    <div class="p-4 border-b border-gray-200">
-                        <h3 class="font-medium">Daftar Buku Dipinjam</h3>
-                    </div>
 
                     <div class="p-4 flex flex-wrap items-center justify-between gap-2 border-b border-gray-200">
                         <div class="flex flex-wrap gap-2">
@@ -180,7 +181,6 @@ if (isset($_POST['pinjam_buku'])) {
                                     <th class="px-6 py-3 text-left">Tanggal Pinjam</th>
                                     <th class="px-6 py-3 text-left">Tanggal Kembali</th>
                                     <th class="px-6 py-3 text-left">Status</th>
-                                    <th class="px-6 py-3 text-left">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
@@ -197,12 +197,6 @@ if (isset($_POST['pinjam_buku'])) {
                                         <?php elseif ($book['status'] == 'Terlambat'): ?>
                                             <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Terlambat</span>
                                         <?php endif; ?>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex space-x-2">
-                                            <a href="detail-buku.php?id=<?php echo $book['id']; ?>" class="text-blue-600 hover:text-blue-800 text-sm">Detail</a>
-                                            <a href="kembalikan.php?id=<?php echo $book['id']; ?>" class="text-green-600 hover:text-green-800 text-sm">Kembalikan</a>
-                                        </div>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
