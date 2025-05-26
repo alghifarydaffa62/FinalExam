@@ -130,10 +130,6 @@ if ($result) {
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Buku</span>
                 </a>
-                <a href="kelolaKeterlambatan.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
-                    <i class="fas fa-clock w-6"></i>
-                    <span class="ml-2">Keterlambatan</span>
-                </a>
                 <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 bg-[#948979] text-white">
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>

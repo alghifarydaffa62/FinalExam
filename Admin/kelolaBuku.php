@@ -31,22 +31,18 @@ function getBookStats($conn)
         'tersedia' => 0
     ];
 
-    // Hitung total buku
     $result = $conn->query("SELECT COUNT(*) as total FROM buku");
     if ($result) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
 
-    // Hitung total stok buku yang tersedia
     $result = $conn->query("SELECT SUM(Stok) as tersedia FROM buku WHERE Stok > 0");
     if ($result) {
         $row = $result->fetch_assoc();
         $stats['tersedia'] = $row['tersedia'] ?? 0;
     }
 
-    // Hitung total peminjaman aktif (status = 'dipinjam')
-    // Jika ingin berdasarkan NRP tertentu, uncomment baris berikut dan sesuaikan
-    $nrp = $_SESSION['nrp'] ?? null; // Sesuaikan dengan session NRP yang ada
+    $nrp = $_SESSION['nrp'] ?? null; 
     if ($nrp) {
         $peminjaman = $conn->prepare("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE status_peminjaman = 'dipinjam' AND NRP = ?");
         $peminjaman->bind_param("s", $nrp);
@@ -57,7 +53,6 @@ function getBookStats($conn)
         }
         $peminjaman->close();
     } else {
-        // Hitung semua peminjaman aktif jika tidak ada NRP spesifik
         $peminjaman = $conn->query("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE status_peminjaman = 'dipinjam'");
         if ($peminjaman) {
             $stats['totalPeminjaman'] = $peminjaman->fetch_assoc()['totalPeminjaman'];
@@ -214,10 +209,6 @@ $stmt->close();
                     <i class="fas fa-book w-6"></i>
                     <span class="ml-2">Buku</span>
                 </a>
-                <a href="kelolaKeterlambatan.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
-                    <i class="fas fa-clock w-6"></i>
-                    <span class="ml-2">Keterlambatan</span>
-                </a>
                 <a href="kelolaAnggota.php" class="flex items-center px-4 py-3 hover:bg-[#948979] text-black">
                     <i class="fas fa-users w-6"></i>
                     <span class="ml-2">Anggota</span>
@@ -363,7 +354,7 @@ $stmt->close();
                                                     Tersedia
                                                 </span>
                                             <?php else: ?>
-                                                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                                                <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                                                     Habis
                                                 </span>
                                             <?php endif; ?>
@@ -644,7 +635,7 @@ $stmt->close();
                 </div>
                 <div class="flex">
                     <strong class="w-24">Status:</strong>
-                    <span class="px-2 py-1 rounded-full text-xs ${book.status === 'Tersedia' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                    <span class="px-2 py-1 rounded-full text-xs ${book.status === 'Tersedia' ? 'bg-green-100 text-green-800' : 'bg-red-500 text-white'}">
                         ${book.status}
                     </span>
                 </div>

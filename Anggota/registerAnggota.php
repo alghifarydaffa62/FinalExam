@@ -13,19 +13,52 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = trim($_POST['password']);
     $jurusan = trim($_POST['jurusan']);
     $phoneNumber = trim($_POST['phoneNumber']);
+    $gender = trim($_POST['gender']);
+
+    // Process gender - convert to uppercase
+    $gender = strtoupper($gender);
+    
+    // Process phone number - ensure it starts with +62
+    if (!empty($phoneNumber)) {
+        // Remove all non-numeric characters except +
+        $cleanPhone = preg_replace('/[^0-9+]/', '', $phoneNumber);
+        
+        // If starts with 0, replace with +62
+        if (substr($cleanPhone, 0, 1) === '0') {
+            $cleanPhone = '+62' . substr($cleanPhone, 1);
+        }
+        // If doesn't start with +62, add it (for cases like 85546...)
+        elseif (substr($cleanPhone, 0, 3) !== '+62') {
+            $cleanPhone = '+62' . $cleanPhone;
+        }
+        
+        $phoneNumber = $cleanPhone;
+    }
 
     $formData = array(
         'nrp' => $nrp,
         'namaLengkap' => $nama,
         'email' => $email,
         'jurusan' => $jurusan,
-        'phoneNumber' => $phoneNumber
+        'phoneNumber' => $phoneNumber,
+        'gender' => $gender
     );
 
-    if (empty($nrp) || empty($nama) || empty($email) || empty($password) || empty($jurusan) || empty($phoneNumber)) {
+    if (empty($nrp) || empty($nama) || empty($email) || empty($password) || empty($jurusan) || empty($phoneNumber) || empty($gender)) {
         $message = "Semua field harus diisi!";
         $messageType = "error";
+    } elseif (!in_array($gender, ['L', 'P'])) {
+        $message = "Jenis kelamin harus L (Laki-laki) atau P (Perempuan)!";
+        $messageType = "error";
     } else {
+        // Validate phone number length (digits after +62)
+        $phoneDigitsOnly = preg_replace('/[^0-9]/', '', $phoneNumber);
+        $phoneAfter62 = substr($phoneDigitsOnly, 2); // Remove "62" from beginning
+        
+        if (strlen($phoneAfter62) > 12) {
+            $message = "Nomor telepon setelah kode negara tidak boleh lebih dari 12 digit!";
+            $messageType = "error";
+        } else {
         $checkStmt = $conn->prepare("SELECT NRP FROM anggota WHERE NRP = ?");
         $checkStmt->bind_param("s", $nrp);
         $checkStmt->execute();
@@ -44,9 +77,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "Email sudah terdaftar! Silakan gunakan email yang berbeda.";
                 $messageType = "error";
             } else {
-                
-                $stmt = $conn->prepare("INSERT INTO anggota (NRP, Nama, Email, Pwd, Jurusan, No_Telp, Jenis_kelamin) VALUES (?, ?, ?, ?, ?, ?, 'L')");
-                $stmt->bind_param("ssssss", $nrp, $nama, $email, $password, $jurusan, $phoneNumber);
+                // Fix: Remove extra parameter - only 7 parameters needed, not 8
+                $stmt = $conn->prepare("INSERT INTO anggota (NRP, Nama, Email, Pwd, Jurusan, No_Telp, Jenis_kelamin) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("sssssss", $nrp, $nama, $email, $password, $jurusan, $phoneNumber, $gender);
                 
                 if ($stmt->execute()) {
                     $message = "Pendaftaran berhasil! Selamat datang di SiPerpus.";
@@ -61,6 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $checkEmailStmt->close();
         }
         $checkStmt->close();
+    }
     }
 }
 
@@ -87,7 +121,7 @@ $conn->close();
             </div>
 
             <?php if (!empty($message)): ?>
-                <div class="mb-4 p-3 rounded-md <?php echo $messageType === 'success' ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'; ?>">
+                <div class="mb-4 p-6 rounded-md <?php echo $messageType === 'success' ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'; ?>">
                     <?php echo htmlspecialchars($message); ?>
                 </div>
             <?php endif; ?>
@@ -99,7 +133,7 @@ $conn->close();
                         type="text" 
                         id="namaLengkap" 
                         name="namaLengkap" 
-                        placeholder="e.g. Daffa Al Ghifary"
+                        placeholder="Daffa Al Ghifary"
                         value="<?php echo isset($formData['namaLengkap']) ? htmlspecialchars($formData['namaLengkap']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
@@ -138,7 +172,7 @@ $conn->close();
                         type="text" 
                         id="nrp" 
                         name="nrp" 
-                        placeholder="e.g. 3124....."
+                        placeholder="3124....."
                         pattern="[0-9]{10}"
                         maxlength="10"
                         value="<?php echo isset($formData['nrp']) ? htmlspecialchars($formData['nrp']) : ''; ?>"
@@ -152,7 +186,7 @@ $conn->close();
                         type="email" 
                         id="email" 
                         name="email" 
-                        placeholder="e.g. daffa@student.edu"
+                        placeholder="daffa@student.edu"
                         value="<?php echo isset($formData['email']) ? htmlspecialchars($formData['email']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
@@ -184,11 +218,26 @@ $conn->close();
                         type="tel" 
                         id="phoneNumber" 
                         name="phoneNumber" 
-                        placeholder="e.g. +62 812-3456-7890"
-                        pattern="[\+]?[0-9\s\-\(\)]+"
+                        placeholder="085123456789 atau +6285123456789"
+                        oninput="validatePhoneInput(this)"
                         value="<?php echo isset($formData['phoneNumber']) ? htmlspecialchars($formData['phoneNumber']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">Jenis Kelamin</label>
+                    <div class="relative">
+                        <select 
+                            id="gender" 
+                            name="gender" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
+                            required>
+                            <option value="">Pilih Jenis Kelamin</option>
+                            <option value="L" <?php echo (isset($formData['gender']) && $formData['gender'] === 'L') ? 'selected' : ''; ?>>L - Laki-laki</option>
+                            <option value="P" <?php echo (isset($formData['gender']) && $formData['gender'] === 'P') ? 'selected' : ''; ?>>P - Perempuan</option>
+                        </select>
+                    </div>
                 </div>
 
                 <button 
@@ -242,6 +291,36 @@ $conn->close();
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                 `;
             }
+        }
+
+        function validatePhoneInput(input) {
+            // Remove non-numeric characters except +
+            let value = input.value.replace(/[^0-9+]/g, '');
+            
+            // Handle different input formats
+            if (value.startsWith('0')) {
+                // Convert 0xxx to +62xxx
+                let digitsAfterZero = value.substring(1);
+                if (digitsAfterZero.length > 12) {
+                    digitsAfterZero = digitsAfterZero.substring(0, 12);
+                }
+                value = '+62' + digitsAfterZero;
+            } else if (value.startsWith('+62')) {
+                // Already has +62, limit digits after +62
+                let digitsAfter62 = value.substring(3);
+                if (digitsAfter62.length > 12) {
+                    digitsAfter62 = digitsAfter62.substring(0, 12);
+                }
+                value = '+62' + digitsAfter62;
+            } else if (value.match(/^[0-9]/)) {
+                // Pure numbers without 0 prefix (like 85123...)
+                if (value.length > 12) {
+                    value = value.substring(0, 12);
+                }
+                value = '+62' + value;
+            }
+            
+            input.value = value;
         }
 
         document.addEventListener('click', function(event) {
