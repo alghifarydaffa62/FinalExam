@@ -13,14 +13,12 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
-// Ambil NRP user berdasarkan nama yang tersimpan di session
 $user_nrp = null;
 $user = [
     'name' => $_SESSION['member_name'] ?? 'Anggota',
     'id' => $_SESSION['member_id'] ?? '1'
 ];
 
-// Query untuk mendapatkan NRP berdasarkan nama user
 if (!empty($user['name'])) {
     try {
         $get_nrp = $conn->prepare("SELECT NRP FROM anggota WHERE Nama = ?");
@@ -37,7 +35,6 @@ if (!empty($user['name'])) {
     }
 }
 
-// Jika tidak bisa mendapatkan NRP, redirect ke login
 if (!$user_nrp) {
     session_destroy();
     header("Location: loginAnggota.php");
@@ -48,17 +45,13 @@ $books = [];
 $error_message = '';
 $success_message = '';
 
-// Hapus filter status karena hanya tampilkan yang dipinjam
-// $selected_status = $_GET['status'] ?? 'all';
 
 if (isset($_POST['pinjam_buku'])) {
-    // Untuk peminjaman buku, gunakan NRP user yang sedang login
-    $nrp_input = $user_nrp; // Gunakan NRP user yang login
+    $nrp_input = $user_nrp; 
     $judul_buku = trim($_POST['judul_buku'] ?? '');
     
     if (!empty($judul_buku)) {
         try {
-            // Cari buku berdasarkan judul dan pastikan stok tersedia
             $check_book = $conn->prepare("SELECT * FROM buku WHERE Judul LIKE ? AND Stok > 0");
             $judul_search = "%{$judul_buku}%";
             $check_book->bind_param("s", $judul_search);
@@ -67,8 +60,7 @@ if (isset($_POST['pinjam_buku'])) {
             
             if ($book_result->num_rows > 0) {
                 $book_data = $book_result->fetch_assoc();
-                
-                // Cek apakah user sudah meminjam buku yang sama dan belum dikembalikan
+
                 $check_existing = $conn->prepare("SELECT * FROM peminjaman WHERE NRP = ? AND ID_Buku = ? AND Tanggal_kembali IS NULL");
                 $check_existing->bind_param("ss", $nrp_input, $book_data['ID']);
                 $check_existing->execute();
@@ -77,7 +69,6 @@ if (isset($_POST['pinjam_buku'])) {
                 if ($existing_result->num_rows > 0) {
                     $error_message = "Anda sudah meminjam buku '{$book_data['Judul']}' dan belum mengembalikannya.";
                 } else {
-                    // Generate ID peminjaman baru
                     $get_last_id = $conn->query("SELECT Id_Peminjaman FROM peminjaman ORDER BY Id_Peminjaman DESC LIMIT 1");
                     $last_id_result = $get_last_id->fetch_assoc();
                     
@@ -92,13 +83,11 @@ if (isset($_POST['pinjam_buku'])) {
                     $tanggal_pinjam = date('Y-m-d');
                     $batas_waktu = date('Y-m-d', strtotime('+7 days'));
                     $status_peminjaman = 'Dipinjam';
-                    
-                    // Insert data peminjaman
+
                     $insert_peminjaman = $conn->prepare("INSERT INTO peminjaman (Id_Peminjaman, NRP, ID_Buku, Judul, Tanggal_Pinjam, Batas_waktu, status_peminjaman) VALUES (?, ?, ?, ?, ?, ?, ?)");
                     $insert_peminjaman->bind_param("sssssss", $id_peminjaman, $nrp_input, $book_data['ID'], $book_data['Judul'], $tanggal_pinjam, $batas_waktu, $status_peminjaman);
                     
                     if ($insert_peminjaman->execute()) {
-                        // Update stok buku
                         $update_stok = $conn->prepare("UPDATE buku SET Stok = Stok - 1 WHERE ID = ?");
                         $update_stok->bind_param("s", $book_data['ID']);
                         $update_stok->execute();
@@ -122,7 +111,6 @@ if (isset($_POST['pinjam_buku'])) {
 }
 
 try {
-    // Query hanya untuk menampilkan peminjaman user yang sedang login DAN BELUM DIKEMBALIKAN
     $where_clause = "WHERE p.NRP = ? AND p.Tanggal_kembali IS NULL";
     $params = [$user_nrp];
     $param_types = "s";
@@ -142,7 +130,6 @@ try {
     $result = $stmt->get_result();
     
     while ($row = $result->fetch_assoc()) {
-        // Hanya akan ada status "Dipinjam" atau "Terlambat" karena yang dikembalikan sudah difilter
         if (date('Y-m-d') > $row['Batas_waktu']) {
             $status = 'Terlambat';
         } else {
@@ -338,7 +325,6 @@ if (isset($_SESSION['success_message'])) {
         </div>
     </div>
 
-    <!-- Modal Pinjam Buku -->
     <div id="pinjamModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg w-full max-w-md">

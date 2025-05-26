@@ -19,7 +19,6 @@ $user = [
     'id' => $_SESSION['member_id'] ?? '1'
 ];
 
-// Query untuk mendapatkan NRP berdasarkan nama user
 if (!empty($user['name'])) {
     try {
         $get_nrp = $conn->prepare("SELECT NRP FROM anggota WHERE Nama = ?");
@@ -36,7 +35,6 @@ if (!empty($user['name'])) {
     }
 }
 
-// Jika tidak bisa mendapatkan NRP, redirect ke login
 if (!$user_nrp) {
     session_destroy();
     header("Location: loginAnggota.php");

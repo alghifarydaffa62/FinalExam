@@ -12,7 +12,7 @@
           
          <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
-                </div><!-- <img src="./images/Logo.png"     alt="" class="w-11 h-11"> -->
+                </div>
             <div>
                 <h1 class="text-2xl font-bold">SiPerpus</h1>
                 <p class="text-sm">Sistem Perpustakaan Digital</p>
