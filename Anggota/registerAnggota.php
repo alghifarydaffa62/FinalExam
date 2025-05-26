@@ -15,19 +15,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $phoneNumber = trim($_POST['phoneNumber']);
     $gender = trim($_POST['gender']);
 
-    // Process gender - convert to uppercase
     $gender = strtoupper($gender);
-    
-    // Process phone number - ensure it starts with +62
+
     if (!empty($phoneNumber)) {
-        // Remove all non-numeric characters except +
         $cleanPhone = preg_replace('/[^0-9+]/', '', $phoneNumber);
-        
-        // If starts with 0, replace with +62
+
         if (substr($cleanPhone, 0, 1) === '0') {
             $cleanPhone = '+62' . substr($cleanPhone, 1);
         }
-        // If doesn't start with +62, add it (for cases like 85546...)
+
         elseif (substr($cleanPhone, 0, 3) !== '+62') {
             $cleanPhone = '+62' . $cleanPhone;
         }
@@ -51,9 +47,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $message = "Jenis kelamin harus L (Laki-laki) atau P (Perempuan)!";
         $messageType = "error";
     } else {
-        // Validate phone number length (digits after +62)
         $phoneDigitsOnly = preg_replace('/[^0-9]/', '', $phoneNumber);
-        $phoneAfter62 = substr($phoneDigitsOnly, 2); // Remove "62" from beginning
+        $phoneAfter62 = substr($phoneDigitsOnly, 2); 
         
         if (strlen($phoneAfter62) > 12) {
             $message = "Nomor telepon setelah kode negara tidak boleh lebih dari 12 digit!";
@@ -77,7 +72,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "Email sudah terdaftar! Silakan gunakan email yang berbeda.";
                 $messageType = "error";
             } else {
-                // Fix: Remove extra parameter - only 7 parameters needed, not 8
                 $stmt = $conn->prepare("INSERT INTO anggota (NRP, Nama, Email, Pwd, Jurusan, No_Telp, Jenis_kelamin) VALUES (?, ?, ?, ?, ?, ?, ?)");
                 $stmt->bind_param("sssssss", $nrp, $nama, $email, $password, $jurusan, $phoneNumber, $gender);
                 
@@ -133,7 +127,7 @@ $conn->close();
                         type="text" 
                         id="namaLengkap" 
                         name="namaLengkap" 
-                        placeholder="Daffa Al Ghifary"
+                        placeholder="Daffa Al Ghifary"  
                         value="<?php echo isset($formData['namaLengkap']) ? htmlspecialchars($formData['namaLengkap']) : ''; ?>"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#948979] focus:border-transparent bg-white"
                         required />
@@ -294,42 +288,89 @@ $conn->close();
         }
 
         function validatePhoneInput(input) {
-            // Remove non-numeric characters except +
+            // Hapus semua karakter non-digit dan non-plus
             let value = input.value.replace(/[^0-9+]/g, '');
             
-            // Handle different input formats
+            // Jika dimulai dengan 0 (format Indonesia lokal)
             if (value.startsWith('0')) {
-                // Convert 0xxx to +62xxx
                 let digitsAfterZero = value.substring(1);
-                if (digitsAfterZero.length > 12) {
-                    digitsAfterZero = digitsAfterZero.substring(0, 12);
+                // Batasi maksimal 12 digit setelah 0
+                if (digitsAfterZero.length > 11) {
+                    digitsAfterZero = digitsAfterZero.substring(0, 11);
                 }
                 value = '+62' + digitsAfterZero;
-            } else if (value.startsWith('+62')) {
-                // Already has +62, limit digits after +62
+            } 
+            // Jika sudah dimulai dengan +62
+            else if (value.startsWith('+62')) {
                 let digitsAfter62 = value.substring(3);
-                if (digitsAfter62.length > 12) {
-                    digitsAfter62 = digitsAfter62.substring(0, 12);
+                // Batasi maksimal 12 digit setelah +62
+                if (digitsAfter62.length > 11) {
+                    digitsAfter62 = digitsAfter62.substring(0, 11);
                 }
                 value = '+62' + digitsAfter62;
-            } else if (value.match(/^[0-9]/)) {
-                // Pure numbers without 0 prefix (like 85123...)
-                if (value.length > 12) {
-                    value = value.substring(0, 12);
+            } 
+            // Jika dimulai dengan digit biasa (tanpa 0 atau +62)
+            else if (value.match(/^[1-9]/)) {
+                // Batasi maksimal 12 digit
+                if (value.length > 11) {
+                    value = value.substring(0, 11);
                 }
                 value = '+62' + value;
+            }
+            // Jika hanya + saja, biarkan user mengetik
+            else if (value === '+') {
+                value = '+';
+            }
+            // Jika kosong, biarkan kosong
+            else if (value === '') {
+                value = '';
             }
             
             input.value = value;
         }
 
-        document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('dropdownMenu');
-            const button = document.getElementById('dropdownButton');
+        // Tambahkan event listener untuk mencegah input yang tidak valid
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneInput = document.getElementById('phoneNumber');
             
-            if (!button.contains(event.target) && !dropdown.contains(event.target)) {
-                dropdown.classList.add('hidden');
-            }
+            // Validasi saat user mengetik
+            phoneInput.addEventListener('input', function(e) {
+                validatePhoneInput(this);
+            });
+            
+            // Validasi saat user paste
+            phoneInput.addEventListener('paste', function(e) {
+                setTimeout(() => {
+                    validatePhoneInput(this);
+                }, 10);
+            });
+            
+            // Mencegah karakter yang tidak diinginkan
+            phoneInput.addEventListener('keypress', function(e) {
+                const char = String.fromCharCode(e.which);
+                const currentValue = this.value;
+                
+                // Hanya izinkan angka, + (hanya di awal), dan backspace/delete
+                if (!/[0-9+]/.test(char) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Hanya izinkan + di awal
+                if (char === '+' && currentValue.length > 0) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Cek panjang maksimal setelah format
+                if (char !== '+' && currentValue.startsWith('+62')) {
+                    const digitsAfter62 = currentValue.substring(3).replace(/[^0-9]/g, '');
+                    if (digitsAfter62.length >= 11) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            });
         });
     </script>
 </body>
