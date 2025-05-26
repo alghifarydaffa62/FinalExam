@@ -44,7 +44,7 @@ if (!$user_nrp) {
     exit;
 }
 
-$statuses = ['Semua', 'Tersedia', 'Dipinjam'];
+$statuses = ['Semua', 'Tersedia', 'Habis'];
 
 $status_filter = $_GET['status'] ?? 'Semua';
 $search_query = $_GET['search'] ?? '';
@@ -67,7 +67,7 @@ function getBookData($conn, $status_filter = 'Semua', $search_query = '') {
 
     if ($status_filter == 'Tersedia') {
         $sql .= " AND Stok > 0";
-    } elseif ($status_filter == 'Dipinjam') {
+    } elseif ($status_filter == 'Habis') {
         $sql .= " AND Stok = 0";
     }
     
@@ -84,7 +84,7 @@ function getBookData($conn, $status_filter = 'Semua', $search_query = '') {
     
     if ($result) {
         while ($row = $result->fetch_assoc()) {
-            $status = ($row['Stok'] > 0) ? 'Tersedia' : 'Dipinjam';
+            $status = ($row['Stok'] > 0) ? 'Tersedia' : 'Habis';
             
             $books[] = [
                 'id' => $row['ID'],
@@ -237,7 +237,7 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
                             <p class="text-sm text-gray-600 mb-2"><?php echo htmlspecialchars($book['author']); ?></p>
                             <div class="flex justify-between items-center mb-3">
                                 <span class="text-xs text-gray-500"><?php echo htmlspecialchars($book['year']); ?></span>
-                                <span class="text-xs <?php echo $book['status'] == 'Tersedia' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'; ?> px-2 py-1 rounded-full"><?php echo htmlspecialchars($book['status']); ?></span>
+                                <span class="text-xs <?php echo $book['status'] == 'Tersedia' ? 'bg-green-100 text-green-800' : 'bg-red-500 text-white'; ?> px-2 py-1 rounded-full"><?php echo htmlspecialchars($book['status']); ?></span>
                             </div>
                             <div class="flex justify-center">
                                 <button onclick="showBookDetail('<?php echo $book['id']; ?>')" class="text-[#948979] hover:text-[#948979] text-sm font-medium">
@@ -363,7 +363,7 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
                 if (book.status === 'Tersedia') {
                     statusElement.className = 'inline-block px-3 py-1 text-sm rounded-full mt-1 bg-green-100 text-green-800';
                 } else {
-                    statusElement.className = 'inline-block px-3 py-1 text-sm rounded-full mt-1 bg-yellow-100 text-yellow-800';
+                    statusElement.className = 'inline-block px-3 py-1 text-sm rounded-full mt-1 bg-red-500 text-white';
                 }
                 
                 document.getElementById('bookDetailModal').classList.remove('hidden');
