@@ -13,14 +13,12 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
-// Ambil NRP user berdasarkan nama yang tersimpan di session
 $user_nrp = null;
 $user = [
     'name' => $_SESSION['member_name'] ?? 'Anggota',
     'id' => $_SESSION['member_id'] ?? '1'
 ];
 
-// Query untuk mendapatkan NRP berdasarkan nama user
 if (!empty($user['name'])) {
     try {
         $get_nrp = $conn->prepare("SELECT NRP FROM anggota WHERE Nama = ?");
@@ -37,7 +35,6 @@ if (!empty($user['name'])) {
     }
 }
 
-// Jika tidak bisa mendapatkan NRP, redirect ke login
 if (!$user_nrp) {
     session_destroy();
     header("Location: loginAnggota.php");
@@ -50,13 +47,11 @@ function getBookStats($conn, $user_nrp) {
         'totalPeminjaman' => 0
     ];
 
-    // Query total buku
     $result = $conn->query("SELECT COUNT(*) as total FROM buku");
     if ($result) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
 
-    // UPDATED: Query total peminjaman user berdasarkan NRP dengan status "dipinjam"
     try {
         $stmt = $conn->prepare("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE NRP = ? AND status_peminjaman = 'dipinjam'");
         $stmt->bind_param("s", $user_nrp);
@@ -76,10 +71,8 @@ function getBookStats($conn, $user_nrp) {
     return $stats;
 }
 
-// Panggil fungsi dengan parameter user_nrp
 $book_stats = getBookStats($conn, $user_nrp);
 
-// Query untuk mendapatkan data peminjaman aktual dari database
 $borrowing_history = [];
 try {
     $stmt = $conn->prepare("
@@ -103,7 +96,6 @@ try {
     $result = $stmt->get_result();
     
     while ($row = $result->fetch_assoc()) {
-        // Format tanggal dari database ke format yang diinginkan
         $borrow_date = date('d/m/Y', strtotime($row['borrow_date']));
         $due_date = date('d/m/Y', strtotime($row['due_date']));
         
@@ -118,7 +110,7 @@ try {
     $stmt->close();
 } catch (Exception $e) {
     error_log("Error getting borrowing history: " . $e->getMessage());
-    // Fallback ke data dummy jika query gagal
+
     $borrowing_history = [
         [
             'id' => 0,

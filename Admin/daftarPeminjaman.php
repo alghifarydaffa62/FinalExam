@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../konek.php'; // Panggil file koneksi MySQLi lo
+include '../konek.php'; 
 
 if (isset($_GET['logout'])) {
     session_destroy();
@@ -21,8 +21,6 @@ $success_message = '';
 
 $selected_status = $_GET['status'] ?? 'all';
 
-// Query untuk ambil data peminjaman dari database
-// Hanya ambil data dengan status_peminjaman = 'dipinjam'
 $sql = "SELECT
     p.Id_Peminjaman,
     p.Tanggal_Pinjam,
@@ -41,39 +39,33 @@ $sql = "SELECT
 FROM peminjaman p
 JOIN buku b ON p.ID_Buku = b.ID
 JOIN anggota a ON p.NRP = a.NRP
-WHERE p.status_peminjaman = 'dipinjam'"; // Hanya ambil yang statusnya 'dipinjam'
+WHERE p.status_peminjaman = 'dipinjam'"; 
 
-// INISIASI VARIABEL UNTUK KONDISI WHERE TAMBAHAN
 $additional_conditions = [];
 
-// Filter berdasarkan status (hanya untuk dipinjam dan terlambat)
 if ($selected_status == 'dipinjam') {
     $additional_conditions[] = "p.Batas_waktu >= CURDATE()";
 } elseif ($selected_status == 'terlambat') {
     $additional_conditions[] = "p.Batas_waktu < CURDATE()";
 }
-// Tidak ada kondisi untuk 'dikembalikan' karena sudah difilter di WHERE utama
 
-// Tambahkan kondisi tambahan jika ada
 if (!empty($additional_conditions)) {
     $sql .= " AND " . implode(" AND ", $additional_conditions);
 }
 
-// Tambahkan ORDER BY di akhir query
 $sql .= " ORDER BY p.Tanggal_Pinjam DESC";
 
 try {
-    // Gunakan mysqli_prepare untuk eksekusi query
     $stmt = $conn->prepare($sql);
     $stmt->execute();
-    $result = $stmt->get_result(); // Ambil hasil
+    $result = $stmt->get_result(); 
     
     $books = [];
     while ($row = $result->fetch_assoc()) {
-        $books[] = $row; // Masukkan semua baris ke array $books
+        $books[] = $row; 
     }
     $stmt->close(); // Tutup statement
-} catch (Exception $e) { // Tangkap Exception umum
+} catch (Exception $e) { 
     $books = [];
     $error_message = "Error mengambil data: " . $e->getMessage();
 }
@@ -300,7 +292,6 @@ try {
                 const rows = tableBody.querySelectorAll('tr');
 
                 rows.forEach(row => {
-                    // Cari di kolom Judul (indeks 1) dan Nama Anggota (indeks 0)
                     const namaAnggota = row.cells[0]?.textContent.toLowerCase() || '';
                     const judulBuku = row.cells[1]?.textContent.toLowerCase() || '';
 

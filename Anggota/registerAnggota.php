@@ -288,40 +288,37 @@ $conn->close();
         }
 
         function validatePhoneInput(input) {
-            // Hapus semua karakter non-digit dan non-plus
             let value = input.value.replace(/[^0-9+]/g, '');
-            
-            // Jika dimulai dengan 0 (format Indonesia lokal)
+
             if (value.startsWith('0')) {
                 let digitsAfterZero = value.substring(1);
-                // Batasi maksimal 12 digit setelah 0
                 if (digitsAfterZero.length > 11) {
                     digitsAfterZero = digitsAfterZero.substring(0, 11);
                 }
                 value = '+62' + digitsAfterZero;
             } 
-            // Jika sudah dimulai dengan +62
+
             else if (value.startsWith('+62')) {
                 let digitsAfter62 = value.substring(3);
-                // Batasi maksimal 12 digit setelah +62
+
                 if (digitsAfter62.length > 11) {
                     digitsAfter62 = digitsAfter62.substring(0, 11);
                 }
                 value = '+62' + digitsAfter62;
             } 
-            // Jika dimulai dengan digit biasa (tanpa 0 atau +62)
+
             else if (value.match(/^[1-9]/)) {
-                // Batasi maksimal 12 digit
+
                 if (value.length > 11) {
                     value = value.substring(0, 11);
                 }
                 value = '+62' + value;
             }
-            // Jika hanya + saja, biarkan user mengetik
+
             else if (value === '+') {
                 value = '+';
             }
-            // Jika kosong, biarkan kosong
+
             else if (value === '') {
                 value = '';
             }
@@ -329,40 +326,33 @@ $conn->close();
             input.value = value;
         }
 
-        // Tambahkan event listener untuk mencegah input yang tidak valid
         document.addEventListener('DOMContentLoaded', function() {
             const phoneInput = document.getElementById('phoneNumber');
-            
-            // Validasi saat user mengetik
+
             phoneInput.addEventListener('input', function(e) {
                 validatePhoneInput(this);
             });
-            
-            // Validasi saat user paste
+
             phoneInput.addEventListener('paste', function(e) {
                 setTimeout(() => {
                     validatePhoneInput(this);
                 }, 10);
             });
-            
-            // Mencegah karakter yang tidak diinginkan
+
             phoneInput.addEventListener('keypress', function(e) {
                 const char = String.fromCharCode(e.which);
                 const currentValue = this.value;
-                
-                // Hanya izinkan angka, + (hanya di awal), dan backspace/delete
+
                 if (!/[0-9+]/.test(char) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
                     e.preventDefault();
                     return false;
                 }
-                
-                // Hanya izinkan + di awal
+
                 if (char === '+' && currentValue.length > 0) {
                     e.preventDefault();
                     return false;
                 }
-                
-                // Cek panjang maksimal setelah format
+
                 if (char !== '+' && currentValue.startsWith('+62')) {
                     const digitsAfter62 = currentValue.substring(3).replace(/[^0-9]/g, '');
                     if (digitsAfter62.length >= 11) {

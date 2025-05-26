@@ -31,25 +31,21 @@ function getBookStats($conn) {
         'keterlambatan' => 0
     ];
 
-    // Query untuk menghitung total buku
     $result = $conn->query("SELECT COUNT(*) as total FROM buku");
     if ($result) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
 
-    // Query untuk menghitung total anggota
     $anggota = $conn->query("SELECT COUNT(*) as totalAnggota FROM anggota");
     if($anggota) {
         $stats['total_anggota'] = $anggota->fetch_assoc()['totalAnggota'];
     }
 
-    // Query untuk menghitung total peminjaman berdasarkan status_peminjaman = "dipinjam"
     $peminjaman = $conn->query("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE status_peminjaman = 'dipinjam'");
     if($peminjaman) {
         $stats['totalPeminjaman'] = $peminjaman->fetch_assoc()['totalPeminjaman'];
     }
 
-    // Query untuk menghitung jumlah buku yang terlambat dikembalikan dengan status "dipinjam"
     $terlambat_query = $conn->query("SELECT COUNT(*) as totalTerlambat FROM peminjaman WHERE status_peminjaman = 'dipinjam' AND Batas_waktu < CURDATE()");
     if ($terlambat_query) {
         $stats['keterlambatan'] = $terlambat_query->fetch_assoc()['totalTerlambat'];
@@ -59,48 +55,39 @@ function getBookStats($conn) {
 }
 
 function getLendingStats($conn) {
-    // Array untuk menyimpan data 6 bulan terakhir
     $stats = [
         'labels' => [],
         'total_buku' => [],
         'total_peminjaman' => [],
         'total_pengembalian' => []
     ];
-    
-    // Cek apakah kolom created_at ada di tabel buku
+
     $check_column = $conn->query("SHOW COLUMNS FROM buku LIKE 'created_at'");
     $has_created_at = $check_column && $check_column->num_rows > 0;
-    
-    // Ambil total buku saat ini
+
     $total_buku_result = $conn->query("SELECT COUNT(*) as total FROM buku");
     $total_buku_current = $total_buku_result ? $total_buku_result->fetch_assoc()['total'] : 0;
-    
-    // Loop untuk 6 bulan terakhir
+
     for ($i = 5; $i >= 0; $i--) {
         $date = date('Y-m', strtotime("-$i months"));
         $month_name = date('M', strtotime("-$i months"));
         $year = date('Y', strtotime("-$i months"));
         $month = date('m', strtotime("-$i months"));
-        
-        // Label bulan
+
         $stats['labels'][] = $month_name;
-        
-        // Total buku - jika ada created_at gunakan, jika tidak gunakan total saat ini
+
         if ($has_created_at) {
             $buku_query = $conn->query("SELECT COUNT(*) as total FROM buku WHERE DATE_FORMAT(created_at, '%Y-%m') <= '$date'");
             $total_buku = $buku_query ? $buku_query->fetch_assoc()['total'] : 0;
         } else {
-            // Jika tidak ada created_at, gunakan total buku saat ini untuk semua bulan
             $total_buku = $total_buku_current;
         }
         $stats['total_buku'][] = $total_buku;
         
-        // Total peminjaman pada bulan tersebut
         $peminjaman_query = $conn->query("SELECT COUNT(*) as total FROM peminjaman WHERE YEAR(tanggal_pinjam) = $year AND MONTH(tanggal_pinjam) = $month");
         $total_peminjaman = $peminjaman_query ? $peminjaman_query->fetch_assoc()['total'] : 0;
         $stats['total_peminjaman'][] = $total_peminjaman;
-        
-        // Total pengembalian pada bulan tersebut
+
         $pengembalian_query = $conn->query("SELECT COUNT(*) as total FROM peminjaman WHERE YEAR(tanggal_kembali) = $year AND MONTH(tanggal_kembali) = $month AND status_peminjaman = 'dikembalikan'");
         $total_pengembalian = $pengembalian_query ? $pengembalian_query->fetch_assoc()['total'] : 0;
         $stats['total_pengembalian'][] = $total_pengembalian;
