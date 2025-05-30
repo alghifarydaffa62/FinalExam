@@ -209,7 +209,7 @@ if (isset($_SESSION['success_message'])) {
                     <div class="font-bold text-lg">Peminjaman Buku Saya</div>
                     <div class="flex items-center space-x-4">
                         <div class="relative">
-                            <input type="text" id="searchInput" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64" placeholder="Cari buku...">
+                            <input type="text" id="searchInput" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64">
                             <button class="absolute right-2 top-2 text-gray-500">
                                 <i class="fas fa-search"></i>
                             </button>
@@ -382,22 +382,60 @@ if (isset($_SESSION['success_message'])) {
             document.getElementById('pinjamModal').classList.add('hidden');
         }
 
+        // Enhanced search functionality - now searches across multiple fields
         document.getElementById('searchInput').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
+            const searchTerm = this.value.toLowerCase().trim();
             const rows = document.querySelectorAll('.book-row');
+            let visibleCount = 0;
             
             rows.forEach(row => {
-                const title = row.querySelector('.book-title').textContent.toLowerCase();
-                if (title.includes(searchTerm)) {
+                // Get all searchable fields from table cells
+                const cells = row.querySelectorAll('td');
+                const loanId = cells[0]?.textContent.toLowerCase() || ''; // ID Peminjaman
+                const title = cells[1]?.textContent.toLowerCase() || ''; // Judul
+                const bookId = cells[2]?.textContent.toLowerCase() || ''; // ID Buku
+                const isbn = cells[3]?.textContent.toLowerCase() || ''; // ISBN
+                const author = cells[4]?.textContent.toLowerCase() || ''; // Penulis
+                
+                // Check if search term matches any of the fields
+                const isMatch = searchTerm === '' ||
+                            loanId.includes(searchTerm) || 
+                            title.includes(searchTerm) || 
+                            bookId.includes(searchTerm) || 
+                            isbn.includes(searchTerm) || 
+                            author.includes(searchTerm);
+                
+                // Show or hide row based on match
+                if (isMatch) {
                     row.style.display = '';
+                    visibleCount++;
                 } else {
                     row.style.display = 'none';
                 }
             });
+            
+            // Update search results counter
+            updateSearchCounter(searchTerm, visibleCount);
         });
+
+        function updateSearchCounter(searchTerm, visibleCount) {
+            const totalElement = document.querySelector('.text-sm.text-gray-600:last-child');
+            
+            if (searchTerm.trim() === '') {
+                totalElement.textContent = `Total: ${visibleCount} buku`;
+            } else {
+                totalElement.textContent = `Ditemukan: ${visibleCount} buku dari pencarian "${searchTerm}"`;
+            }
+        }
         
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Peminjaman page loaded');
+
+            // Update search placeholder to reflect new capabilities
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.placeholder = 'Cari Peminjaman...';
+            }
 
             document.getElementById('pinjamModal').addEventListener('click', function(e) {
                 if (e.target === this) {

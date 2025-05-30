@@ -49,7 +49,6 @@ if (isset($_POST['kembalikan_buku']) && isset($_POST['id_peminjaman'])) {
     $id_buku = $_POST['id_buku'];
     
     try {
-
         $conn->begin_transaction();
         
         $tanggal_kembali = date('Y-m-d');
@@ -108,8 +107,6 @@ try {
             'isbn' => $row['ISBN'] ?? 'N/A',
             'jumlah_halaman' => $row['Jumlah_halaman'] ?? 0,
             'penulis' => $row['Penulis'] ?? 'N/A',
-            'jumlah_halaman' => $row['Jumlah_halaman'] ?? 0,
-            'isbn' => $row['ISBN'] ?? 'N/A',
             'tanggal_pinjam' => $row['Tanggal_Pinjam'],
             'batas_waktu' => $row['Batas_waktu'],
             'status' => $status
@@ -172,7 +169,7 @@ try {
                     <div class="font-bold text-lg">Pengembalian Buku</div>
                     <div class="flex items-center space-x-4">
                         <div class="relative">
-                            <input type="text" id="searchInput" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64" placeholder="Cari buku...">
+                            <input type="text" id="searchInput" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-80" placeholder="Cari data buku..">
                             <button class="absolute right-2 top-2 text-gray-500">
                                 <i class="fas fa-search"></i>
                             </button>
@@ -211,7 +208,7 @@ try {
                     <div class="p-6 border-b border-gray-200">
                         <div class="flex justify-between items-center">
                             <h3 class="text-lg font-medium">Buku Yang Sedang Dipinjam</h3>
-                            <div class="text-sm text-gray-500">
+                            <div class="text-sm text-gray-500" id="searchResultsCount">
                                 Total: <?php echo count($borrowed_books); ?> buku
                             </div>
                         </div>
@@ -234,6 +231,7 @@ try {
                                 <tr class="bg-gray-50">
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Peminjaman</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul Buku</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penulis</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Buku</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Pinjam</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batas Waktu</th>
@@ -244,15 +242,18 @@ try {
                             <tbody class="divide-y divide-gray-200" id="bookTableBody">
                                 <?php foreach ($borrowed_books as $book): ?>
                                 <tr class="hover:bg-gray-50 book-row">
-                                    <td class="px-6 py-4 whitespace-nowrap font-mono text-sm"><?php echo htmlspecialchars($book['id_peminjaman']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-mono text-sm book-id-peminjaman"><?php echo htmlspecialchars($book['id_peminjaman']); ?></td>
                                     <td class="px-6 py-4 book-title">
                                         <div class="font-medium"><?php echo htmlspecialchars($book['judul']); ?></div>
-                                        <div class="text-sm text-gray-500">ISBN: <?php echo htmlspecialchars($book['isbn']); ?></div>
+                                        <div class="text-sm text-gray-500 book-isbn">ISBN: <?php echo htmlspecialchars($book['isbn']); ?></div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap font-medium"><?php echo htmlspecialchars($book['id_buku']); ?></td>
+                                    <td class="px-6 py-4 book-penulis"><?php echo htmlspecialchars($book['penulis']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium book-id-buku"><?php echo htmlspecialchars($book['id_buku']); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap"><?php echo date('d/m/Y', strtotime($book['tanggal_pinjam'])); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <?php echo date('d/m/Y', strtotime($book['batas_waktu'])); ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         <?php if ($book['status'] == 'Terlambat'): ?>
                                             <div class="text-xs text-red-600 font-medium">
                                                 <?php 
@@ -260,11 +261,6 @@ try {
                                                 echo "Terlambat " . ceil($days_late) . " hari";
                                                 ?>
                                             </div>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php if ($book['status'] == 'Terlambat'): ?>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Terlambat</span>
                                         <?php else: ?>
                                             <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Dalam Peminjaman</span>
                                         <?php endif; ?>
@@ -316,19 +312,53 @@ try {
     </div>
 
     <script>
+        // Enhanced search function
         document.getElementById('searchInput').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
+            const searchTerm = this.value.toLowerCase().trim();
             const rows = document.querySelectorAll('.book-row');
             
             rows.forEach(row => {
-                const title = row.querySelector('.book-title').textContent.toLowerCase();
-                if (title.includes(searchTerm)) {
+                // Get all searchable fields
+                const idPeminjaman = row.querySelector('.book-id-peminjaman').textContent.toLowerCase();
+                const judulBuku = row.querySelector('.book-title div:first-child').textContent.toLowerCase();
+                const isbn = row.querySelector('.book-isbn').textContent.toLowerCase();
+                const penulis = row.querySelector('.book-penulis').textContent.toLowerCase();
+                const idBuku = row.querySelector('.book-id-buku').textContent.toLowerCase();
+                
+                // Check if search term matches any field
+                const isMatch = idPeminjaman.includes(searchTerm) ||
+                               judulBuku.includes(searchTerm) ||
+                               isbn.includes(searchTerm) ||
+                               penulis.includes(searchTerm) ||
+                               idBuku.includes(searchTerm);
+                
+                // Show or hide row based on match
+                if (isMatch || searchTerm === '') {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
                 }
             });
+            
+            // Update search results count
+            updateSearchResultsCount();
         });
+
+        // Function to update search results count
+        function updateSearchResultsCount() {
+            const visibleRows = document.querySelectorAll('.book-row:not([style*="none"])');
+            const totalRows = document.querySelectorAll('.book-row').length;
+            const countElement = document.getElementById('searchResultsCount');
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            
+            if (countElement) {
+                if (searchTerm) {
+                    countElement.textContent = `Menampilkan: ${visibleRows.length} dari ${totalRows} buku`;
+                } else {
+                    countElement.textContent = `Total: ${totalRows} buku`;
+                }
+            }
+        }
 
         function showBookDetail(idPeminjaman, title, idBuku, isbn, penulis, jumlahHalaman, tanggalPinjam, batasWaktu, status) {
             const detailContent = document.getElementById('detailContent');
