@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     if ($remember) {
                         $cookie_value = base64_encode($member['NRP'] . ':' . $member['Email']);
-                        setcookie('member_remember', $cookie_value, time() + (30 * 24 * 60 * 60), '/'); // 30 hari
+                        setcookie('member_remember', $cookie_value, time() + (30 * 24 * 60 * 60), '/'); 
                     }
                     
                     $success_message = "Login berhasil! Mengalihkan ke dashboard...";

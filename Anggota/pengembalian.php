@@ -312,39 +312,33 @@ try {
     </div>
 
     <script>
-        // Enhanced search function
         document.getElementById('searchInput').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
             const rows = document.querySelectorAll('.book-row');
             
             rows.forEach(row => {
-                // Get all searchable fields
                 const idPeminjaman = row.querySelector('.book-id-peminjaman').textContent.toLowerCase();
                 const judulBuku = row.querySelector('.book-title div:first-child').textContent.toLowerCase();
                 const isbn = row.querySelector('.book-isbn').textContent.toLowerCase();
                 const penulis = row.querySelector('.book-penulis').textContent.toLowerCase();
                 const idBuku = row.querySelector('.book-id-buku').textContent.toLowerCase();
-                
-                // Check if search term matches any field
+
                 const isMatch = idPeminjaman.includes(searchTerm) ||
                                judulBuku.includes(searchTerm) ||
                                isbn.includes(searchTerm) ||
                                penulis.includes(searchTerm) ||
                                idBuku.includes(searchTerm);
-                
-                // Show or hide row based on match
+
                 if (isMatch || searchTerm === '') {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
                 }
             });
-            
-            // Update search results count
+
             updateSearchResultsCount();
         });
 
-        // Function to update search results count
         function updateSearchResultsCount() {
             const visibleRows = document.querySelectorAll('.book-row:not([style*="none"])');
             const totalRows = document.querySelectorAll('.book-row').length;

@@ -64,7 +64,7 @@ try {
     while ($row = $result->fetch_assoc()) {
         $books[] = $row; 
     }
-    $stmt->close(); // Tutup statement
+    $stmt->close(); 
 } catch (Exception $e) { 
     $books = [];
     $error_message = "Error mengambil data: " . $e->getMessage();
@@ -180,7 +180,8 @@ try {
                         <table class="min-w-full">
                             <thead>
                                 <tr class="bg-gray-50 text-xs text-gray-500 uppercase">
-                                    <th class="px-6 py-3 text-left">Nama Anggota</th>
+                                    <th class="px-6 py-3 text-left">ID Peminjaman</th>
+                                    <th class="px-6 py-3 text-left">Nama Peminjam</th>
                                     <th class="px-6 py-3 text-left">Judul</th>
                                     <th class="px-6 py-3 text-left">ISBN</th>
                                     <th class="px-6 py-3 text-left">Penulis</th>
@@ -197,6 +198,7 @@ try {
                                 <?php else: ?>
                                     <?php foreach ($books as $book): ?>
                                     <tr>
+                                        <td class="px-6 py-4"><?php echo htmlspecialchars($book['Id_Peminjaman'] ?? 'N/A'); ?></td>
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['Nama'] ?? 'N/A'); ?></td>
                                         <td class="px-6 py-4 font-medium"><?php echo htmlspecialchars($book['Judul'] ?? 'N/A'); ?></td>
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['ISBN'] ?? 'N/A'); ?></td>
@@ -205,7 +207,6 @@ try {
                                         <td class="px-6 py-4"><?php echo htmlspecialchars(date('d/m/Y', strtotime($book['tanggal_kembali_seharusnya'] ?? 'now'))); ?></td>
                                         <td class="px-6 py-4">
                                             <?php
-                                            // Menggunakan alias status_tampilan dari query SQL
                                             $display_status = $book['status_tampilan'] ?? 'N/A';
                                             if ($display_status == 'Dipinjam'): ?>
                                                 <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Dipinjam</span>
@@ -292,10 +293,22 @@ try {
                 const rows = tableBody.querySelectorAll('tr');
 
                 rows.forEach(row => {
-                    const namaAnggota = row.cells[0]?.textContent.toLowerCase() || '';
-                    const judulBuku = row.cells[1]?.textContent.toLowerCase() || '';
+                    if (row.cells.length === 1 && row.cells[0].getAttribute('colspan')) {
+                        return;
+                    }
 
-                    if (namaAnggota.includes(searchTerm) || judulBuku.includes(searchTerm)) {
+                    
+                    const IDBuku = row.cells[0]?.textContent.toLowerCase() || ''; 
+                    const namaPeminjam = row.cells[1]?.textContent.toLowerCase() || ''; 
+                    const judulBuku = row.cells[2]?.textContent.toLowerCase() || '';   
+                    const isbn = row.cells[3]?.textContent.toLowerCase() || '';         
+                    const penulis = row.cells[4]?.textContent.toLowerCase() || '';      
+
+                    if (IDBuku.includes(searchTerm) ||
+                        namaPeminjam.includes(searchTerm) || 
+                        judulBuku.includes(searchTerm) || 
+                        isbn.includes(searchTerm) || 
+                        penulis.includes(searchTerm)) {
                         row.style.display = '';
                     } else {
                         row.style.display = 'none';

@@ -145,10 +145,10 @@ $params = [];
 $types = "";
 
 if (!empty($search_query)) {
-    $where_clause = "WHERE Judul LIKE ? OR Penulis LIKE ? OR ISBN LIKE ?";
+    $where_clause = "WHERE Judul LIKE ? OR Penulis LIKE ? OR ISBN LIKE ? OR ID LIKE ?";
     $search_param = "%" . $search_query . "%";
-    $params = [$search_param, $search_param, $search_param];
-    $types = "sss";
+    $params = [$search_param, $search_param, $search_param, $search_param];
+    $types = "ssss";
 }
 
 $sql = "SELECT * FROM buku $where_clause ORDER BY Judul ASC";
