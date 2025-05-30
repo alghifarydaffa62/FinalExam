@@ -178,8 +178,8 @@ $lending_stats = getLendingStats($conn);
                         <a href="kelolaBuku.php" class="bg-[#393E46] text-white px-4 py-2 rounded-lg hover:bg-[#948979]">Tambah Buku</a>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-4">Tambah Anggota</h3>
-                        <a href="kelolaAnggota.php" class="bg-[#393E46] text-white px-4 py-2 rounded-lg ">Tambah Anggota</a>
+                        <h3 class="text-lg font-medium mb-4">Data Anggota</h3>
+                        <a href="kelolaAnggota.php" class="bg-[#393E46] text-white px-4 py-2 rounded-lg ">Data Anggota</a>
                     </div>
                 </div>
 
