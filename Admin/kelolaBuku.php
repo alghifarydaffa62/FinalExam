@@ -157,7 +157,15 @@ if (!empty($search_query)) {
     $types = "ssss";
 }
 
-$sql = "SELECT * FROM buku $where_clause ORDER BY Judul ASC";
+$buku_per_halaman = 8;
+$halaman_saat_ini = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($halaman_saat_ini - 1) * $buku_per_halaman;
+
+$total_buku = $book_stats['total_buku'];
+$total_halaman = ceil($total_buku / $buku_per_halaman);
+
+$sql = "SELECT * FROM buku $where_clause ORDER BY Judul ASC LIMIT $buku_per_halaman OFFSET $offset";
+
 $stmt = $conn->prepare($sql);
 
 if (!empty($params)) {
@@ -328,9 +336,9 @@ $stmt->close();
                         </div>
                         <select
                             class="bg-gray-100 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="10">10 per halaman</option>
-                            <option value="25">25 per halaman</option>
-                            <option value="50">50 per halaman</option>
+                            <option value="10">8 per halaman</option>
+                            <option value="25">10 per halaman</option>
+                            <option value="50">15 per halaman</option>
                         </select>
                     </div>
 
@@ -405,26 +413,35 @@ $stmt->close();
                     </div>
 
                     <div class="flex items-center justify-between p-4 border-t">
-                        <div class="text-sm text-gray-500">
-                            Menampilkan <span class="font-medium">1 - <?php echo count($books); ?></span> dari <span
-                                class="font-medium"><?php echo $book_stats['total_buku']; ?></span> buku
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button
-                                class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 disabled:opacity-50"
-                                disabled>
-                                <i class="fas fa-chevron-left text-xs"></i>
-                            </button>
-                            <button class="bg-[#393E46] text-white px-3 py-1 rounded-md">1</button>
-                            <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">2</button>
-                            <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">3</button>
-                            <span class="text-gray-500">...</span>
-                            <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">15</button>
-                            <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
-                                <i class="fas fa-chevron-right text-xs"></i>
-                            </button>
-                        </div>
-                    </div>
+    <div class="text-sm text-gray-500">
+        Menampilkan <span class="font-medium"><?php echo ($offset + 1) . ' - ' . min($offset + $buku_per_halaman, $total_buku); ?></span> dari <span class="font-medium"><?php echo $total_buku; ?></span> buku
+    </div>
+    <div class="flex items-center space-x-2">
+        <?php if ($halaman_saat_ini > 1): ?>
+            <a href="?page=<?php echo $halaman_saat_ini - 1; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
+                <i class="fas fa-chevron-left text-xs"></i>
+            </a>
+        <?php else: ?>
+            <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 disabled:opacity-50" disabled>
+                <i class="fas fa-chevron-left text-xs"></i>
+            </button>
+        <?php endif; ?>
+
+        <?php for ($i = 1; $i <= $total_halaman; $i++): ?>
+            <a href="?page=<?php echo $i; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 <?php echo ($i == $halaman_saat_ini) ? 'bg-[#393E46] text-white' : ''; ?>"><?php echo $i; ?></a>
+        <?php endfor; ?>
+
+        <?php if ($halaman_saat_ini < $total_halaman): ?>
+            <a href="?page=<?php echo $halaman_saat_ini + 1; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
+                <i class="fas fa-chevron-right text-xs"></i>
+            </a>
+        <?php else: ?>
+            <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 disabled:opacity-50" disabled>
+                <i class="fas fa-chevron-right text-xs"></i>
+            </button>
+        <?php endif; ?>
+    </div>
+</div>
                 </div>
             </main>
         </div>
