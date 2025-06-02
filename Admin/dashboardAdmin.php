@@ -28,6 +28,7 @@ function getBookStats($conn) {
         'total_buku' => 0,
         'dipinjam' => 0,
         'anggota' => 0,
+        'pengembalian' => 0,
         'keterlambatan' => 0
     ];
 
@@ -44,6 +45,11 @@ function getBookStats($conn) {
     $peminjaman = $conn->query("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE status_peminjaman = 'dipinjam'");
     if($peminjaman) {
         $stats['totalPeminjaman'] = $peminjaman->fetch_assoc()['totalPeminjaman'];
+    }
+
+    $pengembalian = $conn->query("SELECT COUNT(*) as totalPengembalian FROM peminjaman WHERE status_peminjaman = 'dikembalikan'");
+    if($pengembalian) {
+        $stats['pengembalian'] = $pengembalian->fetch_assoc()['totalPengembalian'];
     }
 
     $terlambat_query = $conn->query("SELECT COUNT(*) as totalTerlambat FROM peminjaman WHERE status_peminjaman = 'dipinjam' AND Batas_waktu < CURDATE()");
@@ -183,7 +189,7 @@ $lending_stats = getLendingStats($conn);
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Total Buku</h3>
                         <p class="text-3xl font-bold text-blue-600"><?php echo $book_stats['total_buku']; ?></p>
@@ -198,6 +204,11 @@ $lending_stats = getLendingStats($conn);
                         <h3 class="text-lg font-medium mb-2">Total Anggota</h3>
                         <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['total_anggota']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Anggota terdaftar</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
+                        <h3 class="text-lg font-medium mb-2">Total Pengembalian</h3>
+                        <p class="text-3xl font-bold text-blue-900"><?php echo $book_stats['pengembalian']; ?></p>
+                        <p class="text-sm text-gray-500 mt-1">Buku dikembalikan</p>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
                         <h3 class="text-lg font-medium mb-2">Keterlambatan</h3>
@@ -231,29 +242,29 @@ $lending_stats = getLendingStats($conn);
                 {
                     label: 'Jumlah Buku',
                     data: <?php echo json_encode($lending_stats['total_buku']); ?>,
-                    borderColor: 'rgb(239, 68, 68)',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderColor: 'rgb(37, 99, 235)', 
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
                     tension: 0.4,
                     pointRadius: 4,
-                    pointBackgroundColor: 'rgb(239, 68, 68)'
+                    pointBackgroundColor: 'rgb(37, 99, 235)'
                 },
                 {
                     label: 'Total Peminjaman',
                     data: <?php echo json_encode($lending_stats['total_peminjaman']); ?>,
-                    borderColor: 'rgb(59, 130, 246)',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: 'rgb(234, 88, 12)', 
+                    backgroundColor: 'rgba(234, 88, 12, 0.1)',
                     tension: 0.4,
                     pointRadius: 4,
-                    pointBackgroundColor: 'rgb(59, 130, 246)'
+                    pointBackgroundColor: 'rgb(234, 88, 12)'
                 },
                 {
                     label: 'Total Pengembalian',
                     data: <?php echo json_encode($lending_stats['total_pengembalian']); ?>,
-                    borderColor: 'rgb(139, 92, 246)',
-                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    borderColor: 'rgb(30, 58, 138)', // blue-900 equivalent
+                    backgroundColor: 'rgba(30, 58, 138, 0.1)',
                     tension: 0.4,
                     pointRadius: 4,
-                    pointBackgroundColor: 'rgb(139, 92, 246)'
+                    pointBackgroundColor: 'rgb(30, 58, 138)'
                 }
             ]
         };

@@ -28,12 +28,18 @@ function getBookStats($conn)
     $stats = [
         'total_buku' => 0,
         'dipinjam' => 0,
-        'tersedia' => 0
+        'tersedia' => 0,
+        'dikembalikan' => 0
     ];
 
     $result = $conn->query("SELECT COUNT(*) as total FROM buku");
     if ($result) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
+    }
+
+    $dikembalikan = $conn->query("SELECT COUNT(*) as totalPengembalian FROM peminjaman WHERE status_peminjaman = 'dikembalikan'");
+    if ($dikembalikan) {
+        $stats['totalPengembalian'] = $dikembalikan->fetch_assoc()['totalPengembalian'];
     }
 
     $result = $conn->query("SELECT SUM(Stok) as tersedia FROM buku WHERE Stok > 0");
@@ -287,7 +293,7 @@ $stmt->close();
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 w-3/4">
                     <div
                         class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-blue-500">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku</h3>
@@ -305,6 +311,12 @@ $stmt->close();
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Buku Tersedia</h3>
                         <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['tersedia']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Buku belum dipinjam</p>
+                    </div>
+                    <div
+                        class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-blue-900">
+                        <h3 class="text-sm font-medium text-gray-500 mb-2">Buku Dikembalikan</h3>
+                        <p class="text-3xl font-bold text-blue-900"><?php echo $book_stats['totalPengembalian']; ?></p>
+                        <p class="text-sm text-gray-500 mt-1">Pengembalian Buku</p>
                     </div>
                 </div>
 
