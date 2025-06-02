@@ -47,7 +47,7 @@ function getBookStats($conn, $user_nrp) {
         'totalPeminjaman' => 0
     ];
 
-    $result = $conn->query("SELECT COUNT(*) as total FROM buku");
+    $result = $conn->query("SELECT SUM(Stok) as total FROM buku WHERE Stok > 0");
     if ($result) {
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
