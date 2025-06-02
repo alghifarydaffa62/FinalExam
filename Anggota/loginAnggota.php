@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     if ($remember) {
                         $cookie_value = base64_encode($member['NRP'] . ':' . $member['Email']);
-                        setcookie('member_remember', $cookie_value, time() + (30 * 24 * 60 * 60), '/'); 
+                        setcookie('member_remember', $cookie_value, time() + (5 * 60 * 60), '/'); 
                     }
                     
                     $success_message = "Login berhasil! Mengalihkan ke dashboard...";
@@ -118,7 +118,7 @@ if (!isset($_SESSION['member_logged_in']) && isset($_COOKIE['member_remember']))
             Kembali ke home
         </a>
 
-        <div class="bg-[#DFD0B8] p-8 rounded-lg shadow-md mt-6">
+        <div class="bg-white p-8 rounded-lg shadow-md mt-6">
             <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Sign In Member - SiPerpus</h2>
             
             <?php if (!empty($error_message)): ?>

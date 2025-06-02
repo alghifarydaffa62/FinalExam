@@ -5,8 +5,8 @@ include '../konek.php';
 if (isset($_GET['logout'])) {
     session_destroy();
     
-    if (isset($_COOKIE['admin_remember'])) {
-        setcookie('admin_remember', '', time() - 3600, '/');
+    if (isset($_COOKIE['member_remember'])) {
+        setcookie('member_remember', '', time() - 3600, '/');
     }
 
     header("Location: loginAnggota.php");
