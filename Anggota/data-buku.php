@@ -49,7 +49,8 @@ $search_query = $_GET['search'] ?? '';
 function getBookData($conn, $status_filter = 'Semua', $search_query = '') {
     $books = [];
 
-    $sql = "SELECT ID, Judul, Penulis, Tahun, Jumlah_halaman, ISBN, Stok FROM buku WHERE 1=1";
+    // Updated SQL to include Cover column
+    $sql = "SELECT ID, Judul, Penulis, Tahun, Jumlah_halaman, ISBN, Stok, Cover FROM buku WHERE 1=1";
     $params = [];
     $types = "";
 
@@ -98,6 +99,8 @@ function getBookData($conn, $status_filter = 'Semua', $search_query = '') {
                 'ISBN' => $row['ISBN'],
                 'stock' => $row['Stok'],
                 'Stok' => $row['Stok'],
+                'cover' => $row['Cover'], // Added cover field
+                'Cover' => $row['Cover'],
                 'status' => $status
             ];
         }
@@ -124,6 +127,16 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
     <title>Data Buku - SiPerpus</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .book-cover {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+        }
+        .book-cover-placeholder {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        }
+    </style>
 </head>
 <body class="bg-[#FFFAEC]">
     <div class="flex h-screen">
@@ -226,8 +239,20 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     <?php foreach ($current_page_books as $book): ?>
                     <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition">
-                        <div class="bg-gray-200 h-48 flex items-center justify-center">
-                            <i class="fas fa-book text-gray-400 text-4xl"></i>
+                        <div class="h-48 relative overflow-hidden">
+                            <?php if (!empty($book['cover']) && file_exists('../uploads/covers/' . $book['cover'])): ?>
+                                <img src="../uploads/covers/<?php echo htmlspecialchars($book['cover']); ?>" 
+                                     alt="Cover <?php echo htmlspecialchars($book['title']); ?>" 
+                                     class="book-cover"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="book-cover-placeholder h-full hidden items-center justify-center">
+                                    <i class="fas fa-book text-gray-400 text-4xl"></i>
+                                </div>
+                            <?php else: ?>
+                                <div class="book-cover-placeholder h-full flex items-center justify-center">
+                                    <i class="fas fa-book text-gray-400 text-4xl"></i>
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <div class="p-4">
                             <h4 class="font-medium text-lg truncate" title="<?php echo htmlspecialchars($book['title']); ?>"><?php echo htmlspecialchars($book['title']); ?></h4>
@@ -287,8 +312,11 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
                     
                     <div class="grid md:grid-cols-3 gap-6">
                         <div class="md:col-span-1">
-                            <div class="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-book text-gray-400 text-6xl"></i>
+                            <div id="modal-cover-container" class="h-64 rounded-lg overflow-hidden">
+                                <img id="modal-cover-image" src="" alt="" class="book-cover hidden">
+                                <div id="modal-cover-placeholder" class="book-cover-placeholder h-full flex items-center justify-center">
+                                    <i class="fas fa-book text-gray-400 text-6xl"></i>
+                                </div>
                             </div>
                         </div>
 
@@ -354,6 +382,26 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
                 document.getElementById('modal-year').textContent = book.year;
                 document.getElementById('modal-pages').textContent = book.pages + ' halaman';
                 document.getElementById('modal-stok').textContent = book.stock;
+                
+                // Handle cover image in modal
+                const modalImage = document.getElementById('modal-cover-image');
+                const modalPlaceholder = document.getElementById('modal-cover-placeholder');
+                
+                if (book.cover && book.cover.trim() !== '') {
+                    modalImage.src = '../uploads/covers/' + book.cover;
+                    modalImage.alt = 'Cover ' + book.title;
+                    modalImage.onload = function() {
+                        modalImage.classList.remove('hidden');
+                        modalPlaceholder.classList.add('hidden');
+                    };
+                    modalImage.onerror = function() {
+                        modalImage.classList.add('hidden');
+                        modalPlaceholder.classList.remove('hidden');
+                    };
+                } else {
+                    modalImage.classList.add('hidden');
+                    modalPlaceholder.classList.remove('hidden');
+                }
                 
                 const statusElement = document.getElementById('modal-status');
                 statusElement.textContent = book.status;

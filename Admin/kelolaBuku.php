@@ -68,6 +68,38 @@ function getBookStats($conn)
     return $stats;
 }
 
+function uploadCover($file) {
+    $target_dir = "../uploads/covers/";
+    
+    if (!file_exists($target_dir)) {
+        mkdir($target_dir, 0777, true);
+    }
+    
+    $imageFileType = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
+    $new_filename = uniqid() . '_' . time() . '.' . $imageFileType;
+    $target_file = $target_dir . $new_filename;
+
+    $allowed_types = array("jpg", "jpeg", "png", "gif");
+    if (!in_array($imageFileType, $allowed_types)) {
+        return array('success' => false, 'message' => 'Hanya file JPG, JPEG, PNG & GIF yang diizinkan.');
+    }
+
+    if ($file["size"] > 5000000) {
+        return array('success' => false, 'message' => 'File terlalu besar. Maksimal 5MB.');
+    }
+
+    $check = getimagesize($file["tmp_name"]);
+    if ($check === false) {
+        return array('success' => false, 'message' => 'File bukan gambar yang valid.');
+    }
+    
+    if (move_uploaded_file($file["tmp_name"], $target_file)) {
+        return array('success' => true, 'filename' => $new_filename);
+    } else {
+        return array('success' => false, 'message' => 'Gagal mengupload file.');
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_book'])) {
         $id_buku = trim($_POST['id_buku']);
@@ -77,6 +109,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $isbn = trim($_POST['isbn']);
         $halaman = (int) $_POST['halaman'];
         $stok = (int) $_POST['stok'];
+        $cover = null;
+
+        // Handle cover upload
+        if (isset($_FILES['cover']) && $_FILES['cover']['error'] == 0) {
+            $upload_result = uploadCover($_FILES['cover']);
+            if ($upload_result['success']) {
+                $cover = $upload_result['filename'];
+            } else {
+                $_SESSION['error_message'] = $upload_result['message'];
+                header("Location: kelolaBuku.php");
+                exit;
+            }
+        }
 
         $check_stmt = $conn->prepare("SELECT ID FROM buku WHERE ID = ?");
         $check_stmt->bind_param("s", $id_buku);
@@ -86,8 +131,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result->num_rows > 0) {
             $_SESSION['error_message'] = "ID Buku sudah ada! Gunakan ID yang berbeda.";
         } else {
-            $stmt = $conn->prepare("INSERT INTO buku (ID, Judul, Penulis, Tahun, Jumlah_halaman, ISBN, Stok) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssisis", $id_buku, $judul, $penulis, $tahun, $halaman, $isbn, $stok);
+            $stmt = $conn->prepare("INSERT INTO buku (ID, Judul, Penulis, Tahun, Jumlah_halaman, ISBN, Stok, Cover) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssisiss", $id_buku, $judul, $penulis, $tahun, $halaman, $isbn, $stok, $cover);
 
             if ($stmt->execute()) {
                 $_SESSION['success_message'] = "Buku berhasil ditambahkan!";
@@ -110,9 +155,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $isbn = trim($_POST['isbn']);
         $halaman = (int) $_POST['halaman'];
         $stok = (int) $_POST['stok'];
+        $cover = $_POST['current_cover'] ?? null;
 
-        $stmt = $conn->prepare("UPDATE buku SET Judul = ?, Penulis = ?, Tahun = ?, Jumlah_halaman = ?, ISBN = ?, Stok = ? WHERE ID = ?");
-        $stmt->bind_param("ssiisis", $judul, $penulis, $tahun, $halaman, $isbn, $stok, $edit_id);
+        // Handle cover upload
+        if (isset($_FILES['cover']) && $_FILES['cover']['error'] == 0) {
+            $upload_result = uploadCover($_FILES['cover']);
+            if ($upload_result['success']) {
+                // Hapus cover lama jika ada
+                if ($cover && file_exists("uploads/covers/" . $cover)) {
+                    unlink("uploads/covers/" . $cover);
+                }
+                $cover = $upload_result['filename'];
+            } else {
+                $_SESSION['error_message'] = $upload_result['message'];
+                header("Location: kelolaBuku.php");
+                exit;
+            }
+        }
+
+        $stmt = $conn->prepare("UPDATE buku SET Judul = ?, Penulis = ?, Tahun = ?, Jumlah_halaman = ?, ISBN = ?, Stok = ?, Cover = ? WHERE ID = ?");
+        $stmt->bind_param("ssiisiss", $judul, $penulis, $tahun, $halaman, $isbn, $stok, $cover, $edit_id);
 
         if ($stmt->execute()) {
             $_SESSION['success_message'] = "Buku berhasil diperbarui!";
@@ -185,6 +247,7 @@ while ($row = $result->fetch_assoc()) {
         'isbn' => $row['ISBN'],
         'halaman' => $row['Jumlah_halaman'],
         'stok' => $row['Stok'],
+        'cover' => $row['Cover'],
         'status' => $row['Stok'] > 0 ? 'Tersedia' : 'Habis'
     ];
 }
@@ -404,8 +467,7 @@ $stmt->close();
                                 <?php endforeach; ?>
                                 <?php if (empty($books)): ?>
                                     <tr>
-                                        <td colspan="9" class="px-6 py-4 text-center text-gray-500">Tidak ada buku ditemukan
-                                        </td>
+                                        <td colspan="10" class="px-6 py-4 text-center text-gray-500">Tidak ada buku ditemukan</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -413,97 +475,98 @@ $stmt->close();
                     </div>
 
                     <div class="flex items-center justify-between p-4 border-t">
-    <div class="text-sm text-gray-500">
-        Menampilkan <span class="font-medium"><?php echo ($offset + 1) . ' - ' . min($offset + $buku_per_halaman, $total_buku); ?></span> dari <span class="font-medium"><?php echo $total_buku; ?></span> buku
-    </div>
-    <div class="flex items-center space-x-2">
-        <?php if ($halaman_saat_ini > 1): ?>
-            <a href="?page=<?php echo $halaman_saat_ini - 1; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
-                <i class="fas fa-chevron-left text-xs"></i>
-            </a>
-        <?php else: ?>
-            <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 disabled:opacity-50" disabled>
-                <i class="fas fa-chevron-left text-xs"></i>
-            </button>
-        <?php endif; ?>
+                        <div class="text-sm text-gray-500">
+                            Menampilkan <span class="font-medium"><?php echo ($offset + 1) . ' - ' . min($offset + $buku_per_halaman, $total_buku); ?></span> dari <span class="font-medium"><?php echo $total_buku; ?></span> buku
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <?php if ($halaman_saat_ini > 1): ?>
+                                <a href="?page=<?php echo $halaman_saat_ini - 1; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
+                                    <i class="fas fa-chevron-left text-xs"></i>
+                                </a>
+                            <?php else: ?>
+                                <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 disabled:opacity-50" disabled>
+                                    <i class="fas fa-chevron-left text-xs"></i>
+                                </button>
+                            <?php endif; ?>
 
-        <?php for ($i = 1; $i <= $total_halaman; $i++): ?>
-            <a href="?page=<?php echo $i; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 <?php echo ($i == $halaman_saat_ini) ? 'bg-[#393E46] text-white' : ''; ?>"><?php echo $i; ?></a>
-        <?php endfor; ?>
+                            <?php for ($i = 1; $i <= $total_halaman; $i++): ?>
+                                <a href="?page=<?php echo $i; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 <?php echo ($i == $halaman_saat_ini) ? 'bg-[#393E46] text-white' : ''; ?>"><?php echo $i; ?></a>
+                            <?php endfor; ?>
 
-        <?php if ($halaman_saat_ini < $total_halaman): ?>
-            <a href="?page=<?php echo $halaman_saat_ini + 1; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
-                <i class="fas fa-chevron-right text-xs"></i>
-            </a>
-        <?php else: ?>
-            <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 disabled:opacity-50" disabled>
-                <i class="fas fa-chevron-right text-xs"></i>
-            </button>
-        <?php endif; ?>
-    </div>
-</div>
+                            <?php if ($halaman_saat_ini < $total_halaman): ?>
+                                <a href="?page=<?php echo $halaman_saat_ini + 1; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
+                                    <i class="fas fa-chevron-right text-xs"></i>
+                                </a>
+                            <?php else: ?>
+                                <button class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 disabled:opacity-50" disabled>
+                                    <i class="fas fa-chevron-right text-xs"></i>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
     </div>
 
-    <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+    <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-medium text-gray-900">Tambah Buku Baru</h3>
                 <button onclick="closeAddModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="addForm" method="POST" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Buku <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" name="id_buku" id="id_buku"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" name="judul" id="addJudul"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Penulis <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" name="penulis" id="addPenulis"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tahun <span
-                            class="text-red-500">*</span></label>
-                    <input type="number" name="tahun" id="addTahun"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        min="1900" max="<?php echo date('Y'); ?>" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ISBN <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" name="isbn" id="addIsbn"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span
-                            class="text-red-500">*</span></label>
-                    <input type="number" name="halaman" id="halaman"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        min="1" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span
-                            class="text-red-500">*</span></label>
-                    <input type="number" name="stok" id="addStok"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        min="0" required>
+            <form id="addForm" method="POST" enctype="multipart/form-data">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ID Buku <span class="text-red-500">*</span></label>
+                        <input type="text" name="id_buku" id="id_buku"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Judul <span class="text-red-500">*</span></label>
+                        <input type="text" name="judul" id="addJudul"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Penulis <span class="text-red-500">*</span></label>
+                        <input type="text" name="penulis" id="addPenulis"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tahun <span class="text-red-500">*</span></label>
+                        <input type="number" name="tahun" id="addTahun"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            min="1900" max="<?php echo date('Y'); ?>" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ISBN <span class="text-red-500">*</span></label>
+                        <input type="text" name="isbn" id="addIsbn"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span class="text-red-500">*</span></label>
+                        <input type="number" name="halaman" id="halaman"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            min="1" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span class="text-red-500">*</span></label>
+                        <input type="number" name="stok" id="addStok"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            min="0" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Cover Buku</label>
+                        <input type="file" name="cover" id="addCover" accept="image/*"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG, GIF (Maks: 5MB)</p>
+                    </div>
                 </div>
                 <div class="flex justify-end space-x-3 mt-6">
                     <button type="button" onclick="closeAddModal()"
@@ -532,63 +595,66 @@ $stmt->close();
         </div>
     </div>
 
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-medium text-gray-900">Edit Buku</h3>
                 <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="editForm" method="POST" class="space-y-4">
+            <form id="editForm" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="edit_id" id="editId">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Buku <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" id="editIdBuku"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" name="judul" id="editJudul"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Penulis <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" name="penulis" id="editPenulis"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tahun <span
-                            class="text-red-500">*</span></label>
-                    <input type="number" name="tahun" id="editTahun"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        min="1900" max="<?php echo date('Y'); ?>" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ISBN <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" name="isbn" id="editIsbn"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span
-                            class="text-red-500">*</span></label>
-                    <input type="number" name="halaman" id="editHalaman"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        min="1" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span
-                            class="text-red-500">*</span></label>
-                    <input type="number" name="stok" id="editStok"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        min="0" required>
+                <input type="hidden" name="current_cover" id="editCurrentCover">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ID Buku <span class="text-red-500">*</span></label>
+                        <input type="text" id="editIdBuku"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Judul <span class="text-red-500">*</span></label>
+                        <input type="text" name="judul" id="editJudul"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Penulis <span class="text-red-500">*</span></label>
+                        <input type="text" name="penulis" id="editPenulis"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tahun <span class="text-red-500">*</span></label>
+                        <input type="number" name="tahun" id="editTahun"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            min="1900" max="<?php echo date('Y'); ?>" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ISBN <span class="text-red-500">*</span></label>
+                        <input type="text" name="isbn" id="editIsbn"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Halaman <span class="text-red-500">*</span></label>
+                        <input type="number" name="halaman" id="editHalaman"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            min="1" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stok <span class="text-red-500">*</span></label>
+                        <input type="number" name="stok" id="editStok"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            min="0" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Cover Buku</label>
+                        <div id="currentCoverPreview" class="mb-2"></div>
+                        <input type="file" name="cover" id="editCover" accept="image/*"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ingin mengubah cover</p>
+                    </div>
                 </div>
                 <div class="flex justify-end space-x-3 mt-6">
                     <button type="button" onclick="closeEditModal()"
@@ -632,7 +698,7 @@ $stmt->close();
         function viewBook(book) {
             const modal = document.getElementById('viewModal');
             const details = document.getElementById('bookDetails');
-
+            
             details.innerHTML = `
                 <div class="flex">
                     <strong class="w-24">ID:</strong>
@@ -682,6 +748,7 @@ $stmt->close();
 
             if (book) {
                 document.getElementById('editId').value = book.id;
+                document.getElementById('editCurrentCover').value = book.cover || '';
                 document.getElementById('editIdBuku').value = book.id;
                 document.getElementById('editJudul').value = book.judul;
                 document.getElementById('editPenulis').value = book.penulis;
@@ -689,6 +756,18 @@ $stmt->close();
                 document.getElementById('editIsbn').value = book.isbn;
                 document.getElementById('editHalaman').value = book.halaman;
                 document.getElementById('editStok').value = book.stok;
+                
+                const previewDiv = document.getElementById('currentCoverPreview');
+                if (book.cover) {
+                    previewDiv.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <img src="uploads/covers/${book.cover}" alt="Current Cover" class="w-16 h-20 object-cover rounded">
+                            <span class="text-sm text-gray-600">Cover saat ini</span>
+                        </div>
+                    `;
+                } else {
+                    previewDiv.innerHTML = '<span class="text-sm text-gray-500">Tidak ada cover</span>';
+                }
 
                 document.getElementById('editModal').classList.remove('hidden');
             }
