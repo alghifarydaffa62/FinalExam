@@ -112,23 +112,23 @@ if (!isset($_SESSION['admin_logged_in']) && isset($_COOKIE['admin_remember'])) {
         }
     </style>
 </head>
-<body class="flex justify-center items-center min-h-screen bg-[#948979]">
-    <div class="w-full max-w-sm">
-        <a href="../home.php" class="bg-[#393E46] text-white py-2 px-6 rounded-md inline-block">
+<body class="flex justify-center items-center min-h-screen bg-[#948979] px-4">
+    <div class="w-full max-w-xs sm:max-w-sm">
+        <a href="../home.php" class="bg-[#393E46] text-white py-2 px-4 sm:px-6 rounded-md inline-block text-sm sm:text-base">
             Kembali ke home
         </a>
 
-        <div class="bg-[#DFD0B8] p-8 rounded-lg shadow-md mt-6">
-            <h2 class="text-2xl font-bold text-center text-gray-700 mb-6">Sign In Admin - SiPerpus</h2>
+        <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md mt-6">
+            <h2 class="text-xl sm:text-2xl font-bold text-center text-gray-700 mb-6">Sign In Admin - SiPerpus</h2>
             
             <?php if (!empty($error_message)): ?>
-                <div class="alert alert-danger">
+                <div class="alert alert-danger text-sm">
                     <?php echo htmlspecialchars($error_message); ?>
                 </div>
             <?php endif; ?>
             
             <?php if (!empty($success_message)): ?>
-                <div class="alert alert-success">
+                <div class="alert alert-success text-sm">
                     <?php echo htmlspecialchars($success_message); ?>
                 </div>
             <?php endif; ?>
@@ -137,31 +137,31 @@ if (!isset($_SESSION['admin_logged_in']) && isset($_COOKIE['admin_remember'])) {
                 <div>
                     <input type="email" id="email" name="email" placeholder="Email" required
                         value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
-                        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                        class="w-full px-3 sm:px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base" />
                 </div>
 
                 <div>
                     <input type="password" id="password" name="password" placeholder="Password" required
-                        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                        class="w-full px-3 sm:px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base" />
                 </div>
 
                 <div class="mt-1">
-                    <div class="flex items-center justify-between space-x-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 sm:space-x-2">
                         <div>
                             <input type="checkbox" id="remember" name="remember" />
-                            <label for="remember" class="text-sm text-gray-600">Remember me</label>
+                            <label for="remember" class="text-xs sm:text-sm text-gray-600">Remember me</label>
                         </div>
 
-                        <a href="forgotPassword.php" class="text-sm text-blue-600 hover:underline">Forgot password?</a>
+                        <a href="forgotPassword.php" class="text-xs sm:text-sm text-blue-600 hover:underline">Forgot password?</a>
                     </div>
 
                     <button type="submit"
-                        class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-6 rounded-md hover:bg-[#2f3238] transition-colors mt-4">
+                        class="flex justify-center items-center w-full bg-[#393E46] text-white py-2 px-4 sm:px-6 rounded-md hover:bg-[#2f3238] transition-colors mt-4 text-sm sm:text-base">
                         Login
                     </button>
 
                     <div class="flex justify-center items-center mt-4 border-t pt-4">
-                        <p class="text-center text-sm text-gray-700">
+                        <p class="text-center text-xs sm:text-sm text-gray-700">
                             Login Anggota ?
                             <a href="../Anggota/loginAnggota.php" class="text-blue-500 font-medium hover:underline ml-1">Klik disini</a>
                         </p>
