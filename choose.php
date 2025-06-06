@@ -13,7 +13,7 @@
          <a href="home.php" class="bg-[#393E46] text-white py-2 px-6 rounded-md inline-block">
             Kembali ke home
         </a>
-        <div class="bg-[#DFD0B8] p-8 rounded-lg shadow-md mt-4">
+        <div class="bg-white p-8 rounded-lg shadow-md mt-4">
             <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Sign In</h2>
 
             <form action="#" method="POST" class="space-y-5">
