@@ -117,8 +117,22 @@ $lending_stats = getLendingStats($conn);
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
 <body class="bg-[#FFFAEC]">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
     <div class="flex h-screen">
-        <div class="w-64 bg-[#DFD0B8] shadow-md">
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="fixed top-4 left-4 z-50 lg:hidden bg-[#393E46] text-white p-2 rounded-md">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="fixed lg:static lg:translate-x-0 transform -translate-x-full transition-transform duration-300 ease-in-out w-64 bg-[#DFD0B8] shadow-md flex-shrink-0 h-full z-50 lg:z-auto">
+            <!-- Close button for mobile -->
+            <button id="close-sidebar" class="absolute top-4 right-4 lg:hidden text-black">
+                <i class="fas fa-times"></i>
+            </button>
+
             <div class="p-4 flex items-center space-x-3 border-b border-[#FFFAEC]">
                 <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
@@ -152,21 +166,23 @@ $lending_stats = getLendingStats($conn);
             </nav>
         </div>
 
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden lg:ml-0">
+            <!-- Header -->
             <header class="bg-[#DFD0B8] shadow-sm z-10">
-                <div class="flex items-center justify-between p-4">
-                    <div class="font-bold text-lg">Dashboard</div>
-                    <div class="flex items-center space-x-4">
+                <div class="flex items-center justify-between p-4 pl-16 lg:pl-4">
+                    <div class="font-bold text-base lg:text-lg">Dashboard</div>
+                    <div class="flex items-center space-x-2 lg:space-x-4">
                         <div class="relative">
                             <button class="text-gray-500">
                                 <i class="fas fa-bell"></i>
                             </button>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-gray-500"></i>
+                            <div class="w-6 h-6 lg:w-8 lg:h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-gray-500 text-xs lg:text-sm"></i>
                             </div>
-                            <div class="text-sm">
+                            <div class="text-xs lg:text-sm">
                                 <div class="font-medium"><?php echo htmlspecialchars($admin['name']); ?></div>
                                 <div class="text-gray-500 text-xs">Admin</div>
                             </div>
@@ -175,57 +191,57 @@ $lending_stats = getLendingStats($conn);
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 bg-[#FFFAEC]">
-                <h2 class="text-lg font-medium mb-6">Selamat datang, <?php echo htmlspecialchars($admin['name']); ?>!</h2>
+            <main class="flex-1 overflow-y-auto p-4 lg:p-6 bg-[#FFFAEC]">
+                <h2 class="text-base lg:text-lg font-medium mb-4 lg:mb-6">Selamat datang, <?php echo htmlspecialchars($admin['name']); ?>!</h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-4">Tambah Buku</h3>
-                        <a href="kelolaBuku.php" class="bg-[#393E46] text-white px-4 py-2 rounded-lg hover:bg-[#948979]">Tambah Buku</a>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
+                        <h3 class="text-base lg:text-lg font-medium mb-3 lg:mb-4">Tambah Buku</h3>
+                        <a href="kelolaBuku.php" class="bg-[#393E46] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-lg hover:bg-[#948979] text-sm lg:text-base">Tambah Buku</a>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-4">Data Anggota</h3>
-                        <a href="kelolaAnggota.php" class="bg-[#393E46] text-white px-4 py-2 rounded-lg ">Data Anggota</a>
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
+                        <h3 class="text-base lg:text-lg font-medium mb-3 lg:mb-4">Data Anggota</h3>
+                        <a href="kelolaAnggota.php" class="bg-[#393E46] text-white px-3 py-2 lg:px-4 lg:py-2 rounded-lg hover:bg-[#948979] text-sm lg:text-base">Data Anggota</a>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-2">Total Buku</h3>
-                        <p class="text-3xl font-bold text-blue-600"><?php echo $book_stats['total_buku']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Buku dalam koleksi</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 lg:gap-6">
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm hover:shadow-md transition">
+                        <h3 class="text-sm lg:text-lg font-medium mb-2">Total Buku</h3>
+                        <p class="text-2xl lg:text-3xl font-bold text-blue-600"><?php echo $book_stats['total_buku']; ?></p>
+                        <p class="text-xs lg:text-sm text-gray-500 mt-1">Buku dalam koleksi</p>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-2">Total Pinjam</h3>
-                        <p class="text-3xl font-bold text-orange-600"><?php echo $book_stats['totalPeminjaman']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Buku sedang dipinjam</p>
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm hover:shadow-md transition">
+                        <h3 class="text-sm lg:text-lg font-medium mb-2">Total Pinjam</h3>
+                        <p class="text-2xl lg:text-3xl font-bold text-orange-600"><?php echo $book_stats['totalPeminjaman']; ?></p>
+                        <p class="text-xs lg:text-sm text-gray-500 mt-1">Buku sedang dipinjam</p>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-2">Total Anggota</h3>
-                        <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['total_anggota']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Anggota terdaftar</p>
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm hover:shadow-md transition">
+                        <h3 class="text-sm lg:text-lg font-medium mb-2">Total Anggota</h3>
+                        <p class="text-2xl lg:text-3xl font-bold text-green-600"><?php echo $book_stats['total_anggota']; ?></p>
+                        <p class="text-xs lg:text-sm text-gray-500 mt-1">Anggota terdaftar</p>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-2">Total Pengembalian</h3>
-                        <p class="text-3xl font-bold text-blue-900"><?php echo $book_stats['pengembalian']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Buku dikembalikan</p>
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm hover:shadow-md transition">
+                        <h3 class="text-sm lg:text-lg font-medium mb-2">Total Pengembalian</h3>
+                        <p class="text-2xl lg:text-3xl font-bold text-blue-900"><?php echo $book_stats['pengembalian']; ?></p>
+                        <p class="text-xs lg:text-sm text-gray-500 mt-1">Buku dikembalikan</p>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-2">Keterlambatan</h3>
-                        <p class="text-3xl font-bold text-red-600"><?php echo $book_stats['keterlambatan']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Pengembalian terlambat</p>
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm hover:shadow-md transition">
+                        <h3 class="text-sm lg:text-lg font-medium mb-2">Keterlambatan</h3>
+                        <p class="text-2xl lg:text-3xl font-bold text-red-600"><?php echo $book_stats['keterlambatan']; ?></p>
+                        <p class="text-xs lg:text-sm text-gray-500 mt-1">Pengembalian terlambat</p>
                     </div>
                 </div>
 
-                <div class="mt-8">
-                    <h3 class="text-lg font-medium mb-4">Statistik Peminjaman</h3>
-                    <div class="bg-white p-6 rounded-lg shadow-sm">
-                        <div class="flex justify-end space-x-4 mb-4">
+                <div class="mt-6 lg:mt-8">
+                    <h3 class="text-base lg:text-lg font-medium mb-4">Statistik Peminjaman</h3>
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm">
+                        <div class="flex flex-wrap justify-end gap-2 lg:space-x-4 lg:gap-0 mb-4">
                             <button id="btn6bulan" class="text-xs bg-blue-100 text-[#393E46] px-3 py-1 rounded-full">6 bulan</button>
                             <button id="btn3bulan" class="text-xs bg-gray-200 text-gray-800 px-3 py-1 rounded-full">3 bulan</button>
                             <button id="btn1bulan" class="text-xs bg-gray-200 text-gray-800 px-3 py-1 rounded-full">1 bulan</button>
                         </div>
-                        <div style="height: 250px;">
+                        <div class="h-64 lg:h-80">
                             <canvas id="lendingStatsChart"></canvas>
                         </div>
                     </div>
@@ -235,6 +251,46 @@ $lending_stats = getLendingStats($conn);
     </div>
 
     <script>
+        // Mobile menu functionality
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeSidebar = document.getElementById('close-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+
+        function openSidebar() {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeSidebarFunc() {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        mobileMenuBtn.addEventListener('click', openSidebar);
+        closeSidebar.addEventListener('click', closeSidebarFunc);
+        overlay.addEventListener('click', closeSidebarFunc);
+
+        // Close sidebar when clicking on navigation links on mobile
+        const navLinks = sidebar.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 1024) {
+                    closeSidebarFunc();
+                }
+            });
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                closeSidebarFunc();
+            }
+        });
+
+        // Original Chart Code - TIDAK DIUBAH
         let chart;
         const fullData = {
             labels: <?php echo json_encode($lending_stats['labels']); ?>,

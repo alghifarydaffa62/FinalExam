@@ -110,8 +110,22 @@ if ($result) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-[#FFFAEC]">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
     <div class="flex h-screen">
-        <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="fixed top-4 left-4 z-50 lg:hidden bg-[#393E46] text-white p-2 rounded-md">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="fixed lg:static lg:translate-x-0 transform -translate-x-full transition-transform duration-300 ease-in-out w-64 bg-[#DFD0B8] shadow-md flex-shrink-0 h-full z-50 lg:z-auto">
+            <!-- Close button for mobile -->
+            <button id="close-sidebar" class="absolute top-4 right-4 lg:hidden text-black">
+                <i class="fas fa-times"></i>
+            </button>
+
             <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-[#FFFAEC]">
                 <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
@@ -145,14 +159,16 @@ if ($result) {
             </nav>
         </div>
 
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden lg:ml-0">
+            <!-- Header -->
             <header class="bg-[#DFD0B8] shadow-sm z-10">
-                <div class="flex items-center justify-between p-4">
-                    <div class="font-bold text-lg">Kelola Anggota</div>
-                    <div class="flex items-center space-x-4">
-                        <div class="relative">
+                <div class="flex items-center justify-between p-4 pl-16 lg:pl-4">
+                    <div class="font-bold text-base lg:text-lg">Kelola Anggota</div>
+                    <div class="flex items-center space-x-2 lg:space-x-4">
+                        <div class="relative hidden md:block">
                             <form action="kelolaAnggota.php" method="GET">
-                                <input type="text" name="search" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64" 
+                                <input type="text" name="search" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-40 lg:w-64" 
                                     placeholder="Cari anggota..." value="<?php echo htmlspecialchars($search_query); ?>">
                                 <button type="submit" class="absolute right-2 top-2 text-gray-500">
                                     <i class="fas fa-search"></i>
@@ -165,10 +181,10 @@ if ($result) {
                             </button>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-gray-500"></i>
+                            <div class="w-6 h-6 lg:w-8 lg:h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-gray-500 text-xs lg:text-sm"></i>
                             </div>
-                            <div class="text-sm">
+                            <div class="text-xs lg:text-sm">
                                 <div class="font-medium"><?php echo htmlspecialchars($admin['name']); ?></div>
                                 <div class="text-gray-500 text-xs">Admin</div>
                             </div>
@@ -177,7 +193,7 @@ if ($result) {
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 bg-[#FFFAEC]">
+            <main class="flex-1 overflow-y-auto p-4 lg:p-6 bg-[#FFFAEC]">
                 <?php if (!empty($success_message)): ?>
                     <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
                         <?php echo $success_message; ?>
@@ -189,21 +205,34 @@ if ($result) {
                         <?php echo $error_message; ?>
                     </div>
                 <?php endif; ?>
+
+                <!-- Mobile Search -->
+                <div class="mb-4 md:hidden">
+                    <form action="kelolaAnggota.php" method="GET">
+                        <div class="relative">
+                            <input type="text" name="search" class="bg-white rounded-lg px-4 py-2 pr-8 w-full border border-gray-300" 
+                                placeholder="Cari anggota..." value="<?php echo htmlspecialchars($search_query); ?>">
+                            <button type="submit" class="absolute right-2 top-2 text-gray-500">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
                 
-                <div class="mb-6">
-                    <h2 class="text-lg font-medium">Daftar Anggota Perpustakaan</h2>
+                <div class="mb-4 lg:mb-6">
+                    <h2 class="text-base lg:text-lg font-medium">Daftar Anggota Perpustakaan</h2>
                 </div>
 
-                <div class="mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition max-w-sm">
+                <div class="mb-6 lg:mb-8">
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm hover:shadow-md transition max-w-sm">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Anggota</h3>
-                        <p class="text-3xl font-bold text-[#393E46]"><?php echo $member_stats['total_anggota']; ?></p>
+                        <p class="text-2xl lg:text-3xl font-bold text-[#393E46]"><?php echo $member_stats['total_anggota']; ?></p>
                         <p class="text-sm text-gray-500 mt-1">Anggota terdaftar</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <div class="flex items-center justify-between mb-6">
+                <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-6 space-y-4 lg:space-y-0">
                         <div class="text-sm text-gray-500">
                             Menampilkan <?php echo $offset + 1; ?> - <?php echo min($offset + $per_page, $total_records); ?> dari <?php echo $total_records; ?> anggota
                         </div>
@@ -211,7 +240,7 @@ if ($result) {
                             <?php if (!empty($search_query)): ?>
                                 <input type="hidden" name="search" value="<?php echo htmlspecialchars($search_query); ?>">
                             <?php endif; ?>
-                            <select name="per_page" onchange="this.form.submit()" class="bg-white text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                            <select name="per_page" onchange="this.form.submit()" class="bg-white text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm">
                                 <option value="10" <?php echo $per_page == 10 ? 'selected' : ''; ?>>10 per halaman</option>
                                 <option value="25" <?php echo $per_page == 25 ? 'selected' : ''; ?>>25 per halaman</option>
                                 <option value="50" <?php echo $per_page == 50 ? 'selected' : ''; ?>>50 per halaman</option>
@@ -220,42 +249,42 @@ if ($result) {
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
+                        <table class="w-full text-sm text-left min-w-full">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-100">
                                 <tr>
-                                    <th class="px-4 py-3">NRP</th>
-                                    <th class="px-4 py-3">Nama</th>
-                                    <th class="px-4 py-3">Email</th>
-                                    <th class="px-4 py-3">Jurusan</th>
-                                    <th class="px-4 py-3">No. Telp</th>
-                                    <th class="px-4 py-3">Jenis Kelamin</th>
-                                    <th class="px-4 py-3 rounded-tr-lg">Aksi</th>
+                                    <th class="px-2 lg:px-4 py-3 min-w-[80px]">NRP</th>
+                                    <th class="px-2 lg:px-4 py-3 min-w-[100px]">Nama</th>
+                                    <th class="px-2 lg:px-4 py-3 min-w-[150px] hidden sm:table-cell">Email</th>
+                                    <th class="px-2 lg:px-4 py-3 min-w-[100px]">Jurusan</th>
+                                    <th class="px-2 lg:px-4 py-3 min-w-[100px] hidden md:table-cell">No. Telp</th>
+                                    <th class="px-2 lg:px-4 py-3 min-w-[100px] hidden lg:table-cell">Jenis Kelamin</th>
+                                    <th class="px-2 lg:px-4 py-3 rounded-tr-lg min-w-[100px]">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (count($members) > 0): ?>
                                     <?php foreach ($members as $member): ?>
                                         <tr class="border-b hover:bg-gray-50">
-                                            <td class="px-4 py-3 font-medium"><?php echo htmlspecialchars($member['NRP']); ?></td>
-                                            <td class="px-4 py-3"><?php echo htmlspecialchars($member['Nama']); ?></td>
-                                            <td class="px-4 py-3"><?php echo htmlspecialchars($member['Email']); ?></td>
-                                            <td class="px-4 py-3">
+                                            <td class="px-2 lg:px-4 py-3 font-medium text-xs lg:text-sm"><?php echo htmlspecialchars($member['NRP']); ?></td>
+                                            <td class="px-2 lg:px-4 py-3 text-xs lg:text-sm"><?php echo htmlspecialchars($member['Nama']); ?></td>
+                                            <td class="px-2 lg:px-4 py-3 text-xs lg:text-sm hidden sm:table-cell"><?php echo htmlspecialchars($member['Email']); ?></td>
+                                            <td class="px-2 lg:px-4 py-3">
                                                 <span class="bg-blue-100 text-[#393E46] text-xs px-2 py-1 rounded-full">
                                                     <?php echo htmlspecialchars($member['Jurusan']); ?>
                                                 </span>
                                             </td>
-                                            <td class="px-4 py-3"><?php echo htmlspecialchars($member['No_Telp'] ?? '-'); ?></td>
-                                            <td class="px-4 py-3"><?php echo htmlspecialchars($member['Jenis_kelamin'] ?? '-'); ?></td>
-                                            <td class="px-4 py-3">
-                                                <div class="flex space-x-2">
-                                                    <button onclick="viewMember(<?php echo htmlspecialchars(json_encode($member)); ?>)" class="text-blue-600 hover:text-blue-900" title="Detail">
-                                                        <i class="fas fa-eye"></i>
+                                            <td class="px-2 lg:px-4 py-3 text-xs lg:text-sm hidden md:table-cell"><?php echo htmlspecialchars($member['No_Telp'] ?? '-'); ?></td>
+                                            <td class="px-2 lg:px-4 py-3 text-xs lg:text-sm hidden lg:table-cell"><?php echo htmlspecialchars($member['Jenis_kelamin'] ?? '-'); ?></td>
+                                            <td class="px-2 lg:px-4 py-3">
+                                                <div class="flex space-x-1 lg:space-x-2">
+                                                    <button onclick="viewMember(<?php echo htmlspecialchars(json_encode($member)); ?>)" class="text-blue-600 hover:text-blue-900 p-1" title="Detail">
+                                                        <i class="fas fa-eye text-xs lg:text-sm"></i>
                                                     </button>
-                                                    <button onclick="editMember(<?php echo htmlspecialchars(json_encode($member)); ?>)" class="text-yellow-600 hover:text-yellow-900" title="Edit">
-                                                        <i class="fas fa-edit"></i>
+                                                    <button onclick="editMember(<?php echo htmlspecialchars(json_encode($member)); ?>)" class="text-yellow-600 hover:text-yellow-900 p-1" title="Edit">
+                                                        <i class="fas fa-edit text-xs lg:text-sm"></i>
                                                     </button>
-                                                    <button onclick="confirmDelete('<?php echo $member['NRP']; ?>', '<?php echo htmlspecialchars($member['Nama']); ?>')" class="text-red-600 hover:text-red-900" title="Hapus">
-                                                        <i class="fas fa-trash"></i>
+                                                    <button onclick="confirmDelete('<?php echo $member['NRP']; ?>', '<?php echo htmlspecialchars($member['Nama']); ?>')" class="text-red-600 hover:text-red-900 p-1" title="Hapus">
+                                                        <i class="fas fa-trash text-xs lg:text-sm"></i>
                                                     </button>
                                                 </div>
                                             </td>
@@ -274,22 +303,22 @@ if ($result) {
 
                     <?php if ($total_pages > 1): ?>
                         <div class="flex items-center justify-center mt-6">
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-1 lg:space-x-2">
                                 <?php if ($page > 1): ?>
-                                    <a href="?page=<?php echo $page - 1; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>&per_page=<?php echo $per_page; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
+                                    <a href="?page=<?php echo $page - 1; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>&per_page=<?php echo $per_page; ?>" class="bg-gray-100 text-gray-800 px-2 lg:px-3 py-1 rounded-md hover:bg-gray-200">
                                         <i class="fas fa-chevron-left text-xs"></i>
                                     </a>
                                 <?php endif; ?>
                                 
                                 <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
                                     <a href="?page=<?php echo $i; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>&per_page=<?php echo $per_page; ?>" 
-                                       class="<?php echo $i == $page ? 'bg-[#393E46] text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'; ?> px-3 py-1 rounded-md">
+                                       class="<?php echo $i == $page ? 'bg-[#393E46] text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'; ?> px-2 lg:px-3 py-1 rounded-md text-xs lg:text-sm">
                                         <?php echo $i; ?>
                                     </a>
                                 <?php endfor; ?>
                                 
                                 <?php if ($page < $total_pages): ?>
-                                    <a href="?page=<?php echo $page + 1; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>&per_page=<?php echo $per_page; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
+                                    <a href="?page=<?php echo $page + 1; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>&per_page=<?php echo $per_page; ?>" class="bg-gray-100 text-gray-800 px-2 lg:px-3 py-1 rounded-md hover:bg-gray-200">
                                         <i class="fas fa-chevron-right text-xs"></i>
                                     </a>
                                 <?php endif; ?>
@@ -301,25 +330,27 @@ if ($result) {
         </div>
     </div>
 
+    <!-- Detail Modal -->
     <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
+        <div class="bg-white rounded-lg p-4 lg:p-6 max-w-md mx-4 w-full max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium">Detail Anggota</h3>
+                <h3 class="text-base lg:text-lg font-medium">Detail Anggota</h3>
                 <button onclick="closeDetailModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div id="detailContent"></div>
             <div class="flex justify-end mt-6">
-                <button onclick="closeDetailModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg">Tutup</button>
+                <button onclick="closeDetailModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg text-sm lg:text-base">Tutup</button>
             </div>
         </div>
     </div>
 
+    <!-- Edit Modal -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
+        <div class="bg-white rounded-lg p-4 lg:p-6 max-w-md mx-4 w-full max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium">Edit Anggota</h3>
+                <h3 class="text-base lg:text-lg font-medium">Edit Anggota</h3>
                 <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
@@ -331,19 +362,19 @@ if ($result) {
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">NRP</label>
-                        <input type="text" name="nrp" id="editNrp" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" name="nrp" id="editNrp" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
-                        <input type="text" name="nama" id="editNama" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" name="nama" id="editNama" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" id="editEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="email" name="email" id="editEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Jurusan</label>
-                        <select name="jurusan" id="editJurusan" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select name="jurusan" id="editJurusan" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                             <option value="Teknik Informatika">Teknik Informatika</option>
                             <option value="Sastra Indonesia">Sastra Indonesia</option>
                             <option value="Manajemen">Manajemen</option>
@@ -354,11 +385,11 @@ if ($result) {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">No. Telepon</label>
-                        <input type="text" name="no_telp" id="editNoTelp" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" name="no_telp" id="editNoTelp" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
-                        <select name="jenis_kelamin" id="editJenisKelamin" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select name="jenis_kelamin" id="editJenisKelamin" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                             <option value="Laki-laki">Laki-laki</option>
                             <option value="Perempuan">Perempuan</option>
                         </select>
@@ -366,29 +397,70 @@ if ($result) {
                 </div>
                 
                 <div class="flex justify-end space-x-3 mt-6">
-                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-[#393E46] text-white rounded-lg">Simpan</button>
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg text-sm lg:text-base">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-[#393E46] text-white rounded-lg text-sm lg:text-base">Simpan</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Delete Modal -->
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 max-w-sm mx-auto">
-            <h3 class="text-lg font-medium mb-4">Konfirmasi Hapus</h3>
-            <p class="text-gray-700 mb-6">Apakah Anda yakin ingin menghapus anggota <span id="deleteMemberName" class="font-semibold"></span>? Tindakan ini tidak dapat dibatalkan.</p>
+        <div class="bg-white rounded-lg p-4 lg:p-6 max-w-sm mx-4 w-full">
+            <h3 class="text-base lg:text-lg font-medium mb-4">Konfirmasi Hapus</h3>
+            <p class="text-gray-700 mb-6 text-sm lg:text-base">Apakah Anda yakin ingin menghapus anggota <span id="deleteMemberName" class="font-semibold"></span>? Tindakan ini tidak dapat dibatalkan.</p>
             <form id="deleteForm" method="POST">
                 <input type="hidden" name="action" value="delete">
                 <input type="hidden" name="id" id="deleteId">
                 <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg">Hapus</button>
+                    <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg text-sm lg:text-base">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm lg:text-base">Hapus</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
+        // Mobile menu functionality
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeSidebar = document.getElementById('close-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+
+        function openSidebar() {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeSidebarFunc() {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        mobileMenuBtn.addEventListener('click', openSidebar);
+        closeSidebar.addEventListener('click', closeSidebarFunc);
+        overlay.addEventListener('click', closeSidebarFunc);
+
+        // Close sidebar when clicking on navigation links on mobile
+        const navLinks = sidebar.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 1024) {
+                    closeSidebarFunc();
+                }
+            });
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                closeSidebarFunc();
+            }
+        });
+
+        // Original modal functions - TIDAK DIUBAH
         function viewMember(member) {
             const modal = document.getElementById('detailModal');
             const content = document.getElementById('detailContent');
