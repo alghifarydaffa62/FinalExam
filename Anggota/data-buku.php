@@ -139,8 +139,17 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
     </style>
 </head>
 <body class="bg-[#FFFAEC]">
+    <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
     <div class="flex h-screen">
-        <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
+        <button id="mobile-menu-btn" class="fixed top-4 left-4 z-50 lg:hidden bg-[#393E46] text-white p-2 rounded-md">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div id="sidebar" class="fixed lg:static lg:translate-x-0 transform -translate-x-full transition-transform duration-300 ease-in-out w-64 bg-[#DFD0B8] flex-shrink-0 h-full z-50 lg:z-auto">
+            <button id="close-sidebar" class="absolute top-4 right-4 lg:hidden text-black">
+                <i class="fas fa-times"></i>
+            </button>
+
             <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-[#FFFAEC]">
                 <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
@@ -175,34 +184,23 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
             </nav>
         </div>
 
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex-1 flex flex-col overflow-hidden lg:ml-0">
             <header class="bg-[#DFD0B8] shadow-sm z-10">
-                <div class="flex items-center justify-between p-4">
-                    <div class="font-bold text-lg">Data Buku</div>
-                    <div class="flex items-center space-x-4">
-                        <div class="relative">
-                            <form action="" method="get">
-                                <input type="hidden" name="status" value="<?php echo htmlspecialchars($status_filter); ?>">
-                                <input type="text" name="search" class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64" placeholder="Cari buku..." value="<?php echo htmlspecialchars($search_query); ?>">
-                                <button type="submit" class="absolute right-2 top-2 text-gray-500">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </form>
+                <div class="flex items-center justify-between p-4 pl-16 lg:pl-4">
+                    <div class="font-bold text-base lg:text-lg">Data Buku</div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-6 h-6 lg:w-8 lg:h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-gray-500 text-xs lg:text-sm"></i>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-gray-500"></i>
-                            </div>
-                            <div class="text-sm">
-                                <div class="font-medium"><?php echo htmlspecialchars($user['name']); ?></div>
-                                <div class="text-gray-500 text-xs">NRP: <?php echo htmlspecialchars($user_nrp); ?></div>
-                            </div>
-                    </div>
+                        <div class="text-xs lg:text-sm">
+                            <div class="font-medium"><?php echo htmlspecialchars($user['name']); ?></div>
+                            <div class="text-gray-500 text-xs">NRP: <?php echo htmlspecialchars($user_nrp); ?></div>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6">
+            <main class="flex-1 overflow-y-auto p-4 lg:p-6">
                 <div class="flex justify-between items-center mb-6">
                     <div class="text-sm">
                         <a href="dashboard.php" class="text-[#948979] hover:text-[#948979]">Dashboard</a> / 
@@ -242,9 +240,9 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
                         <div class="h-48 relative overflow-hidden">
                             <?php if (!empty($book['cover']) && file_exists('../uploads/covers/' . $book['cover'])): ?>
                                 <img src="../uploads/covers/<?php echo htmlspecialchars($book['cover']); ?>" 
-                                     alt="Cover <?php echo htmlspecialchars($book['title']); ?>" 
-                                     class="book-cover"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    alt="Cover <?php echo htmlspecialchars($book['title']); ?>" 
+                                    class="book-cover"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div class="book-cover-placeholder h-full hidden items-center justify-center">
                                     <i class="fas fa-book text-gray-400 text-4xl"></i>
                                 </div>
@@ -431,6 +429,46 @@ $current_page_books = array_slice($books, $offset, $books_per_page);
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     closeBookDetail();
+                }
+            });
+
+            // Mobile menu functionality moved inside DOMContentLoaded
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const closeSidebar = document.getElementById('close-sidebar');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+
+            function openSidebar() {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+
+            function closeSidebarFunc() {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+
+            mobileMenuBtn.addEventListener('click', openSidebar);
+            closeSidebar.addEventListener('click', closeSidebarFunc);
+            overlay.addEventListener('click', closeSidebarFunc);
+
+            // Close sidebar when clicking on navigation links on mobile
+            const navLinks = sidebar.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    // Only close sidebar if it's currently open and on mobile size
+                    if (!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 1024) {
+                        closeSidebarFunc();
+                    }
+                });
+            });
+
+            // Handle window resize: ensure sidebar is hidden on mobile when resizing to desktop
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 1024) {
+                    closeSidebarFunc();
                 }
             });
         });
