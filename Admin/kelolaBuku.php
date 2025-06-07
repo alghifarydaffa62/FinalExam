@@ -27,9 +27,9 @@ function getBookStats($conn)
 {
     $stats = [
         'total_buku' => 0,
-        'dipinjam' => 0,
+        'dipinjam' => 0, // Ini adalah jumlah buku yang sedang dipinjam (totalPeminjaman)
         'tersedia' => 0,
-        'dikembalikan' => 0
+        'dikembalikan' => 0 // Ini adalah total riwayat pengembalian (totalPengembalian)
     ];
 
     $result = $conn->query("SELECT COUNT(*) as total FROM buku");
@@ -37,33 +37,25 @@ function getBookStats($conn)
         $stats['total_buku'] = $result->fetch_assoc()['total'];
     }
 
-    $dikembalikan = $conn->query("SELECT COUNT(*) as totalPengembalian FROM peminjaman WHERE status_peminjaman = 'dikembalikan'");
-    if ($dikembalikan) {
-        $stats['totalPengembalian'] = $dikembalikan->fetch_assoc()['totalPengembalian'];
+    // Perbaikan: totalPengembalian mengacu pada berapa kali buku dikembalikan, bukan jumlah buku yang sedang dikembalikan
+    $dikembalikan_query = $conn->query("SELECT COUNT(*) as totalPengembalian FROM peminjaman WHERE status_peminjaman = 'dikembalikan'");
+    if ($dikembalikan_query) {
+        $stats['dikembalikan'] = $dikembalikan_query->fetch_assoc()['totalPengembalian'];
     }
 
-    $result = $conn->query("SELECT SUM(Stok) as tersedia FROM buku WHERE Stok > 0");
+    $result = $conn->query("SELECT SUM(Stok) as total_tersedia FROM buku");
     if ($result) {
         $row = $result->fetch_assoc();
-        $stats['tersedia'] = $row['tersedia'] ?? 0;
+        $stats['tersedia'] = $row['total_tersedia'] ?? 0;
     }
 
-    $nrp = $_SESSION['nrp'] ?? null; 
-    if ($nrp) {
-        $peminjaman = $conn->prepare("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE status_peminjaman = 'dipinjam' AND NRP = ?");
-        $peminjaman->bind_param("s", $nrp);
-        $peminjaman->execute();
-        $result = $peminjaman->get_result();
-        if ($result) {
-            $stats['totalPeminjaman'] = $result->fetch_assoc()['totalPeminjaman'];
-        }
-        $peminjaman->close();
-    } else {
-        $peminjaman = $conn->query("SELECT COUNT(*) as totalPeminjaman FROM peminjaman WHERE status_peminjaman = 'dipinjam'");
-        if ($peminjaman) {
-            $stats['totalPeminjaman'] = $peminjaman->fetch_assoc()['totalPeminjaman'];
-        }
+    // Ambil total buku yang sedang dipinjam (status 'dipinjam')
+    // Untuk admin, ini harus total semua peminjaman yang sedang dipinjam, tanpa filter NRP
+    $peminjaman_dipinjam_query = $conn->query("SELECT COUNT(*) as total_dipinjam FROM peminjaman WHERE status_peminjaman = 'dipinjam'");
+    if ($peminjaman_dipinjam_query) {
+        $stats['dipinjam'] = $peminjaman_dipinjam_query->fetch_assoc()['total_dipinjam'];
     }
+
 
     return $stats;
 }
@@ -84,7 +76,7 @@ function uploadCover($file) {
         return array('success' => false, 'message' => 'Hanya file JPG, JPEG, PNG & GIF yang diizinkan.');
     }
 
-    if ($file["size"] > 5000000) {
+    if ($file["size"] > 5000000) { // 5MB limit
         return array('success' => false, 'message' => 'File terlalu besar. Maksimal 5MB.');
     }
 
@@ -161,9 +153,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_FILES['cover']) && $_FILES['cover']['error'] == 0) {
             $upload_result = uploadCover($_FILES['cover']);
             if ($upload_result['success']) {
-                // Hapus cover lama jika ada
-                if ($cover && file_exists("uploads/covers/" . $cover)) {
-                    unlink("uploads/covers/" . $cover);
+                // Hapus cover lama jika ada dan bukan cover default/kosong
+                if ($cover && !empty($cover) && file_exists("../uploads/covers/" . $cover)) {
+                    unlink("../uploads/covers/" . $cover); // Perbaiki path
                 }
                 $cover = $upload_result['filename'];
             } else {
@@ -190,10 +182,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['delete_id'])) {
         $delete_id = $_POST['delete_id'];
 
+        // Ambil nama file cover sebelum menghapus record buku
+        $stmt_get_cover = $conn->prepare("SELECT Cover FROM buku WHERE ID = ?");
+        $stmt_get_cover->bind_param("s", $delete_id);
+        $stmt_get_cover->execute();
+        $result_cover = $stmt_get_cover->get_result();
+        $cover_to_delete = null;
+        if ($row = $result_cover->fetch_assoc()) {
+            $cover_to_delete = $row['Cover'];
+        }
+        $stmt_get_cover->close();
+
         $stmt = $conn->prepare("DELETE FROM buku WHERE ID = ?");
         $stmt->bind_param("s", $delete_id);
 
         if ($stmt->execute()) {
+            // Hapus file cover fisik jika ada
+            if ($cover_to_delete && !empty($cover_to_delete) && file_exists("../uploads/covers/" . $cover_to_delete)) {
+                unlink("../uploads/covers/" . $cover_to_delete);
+            }
             $_SESSION['success_message'] = "Buku berhasil dihapus!";
         } else {
             $_SESSION['error_message'] = "Gagal menghapus buku: " . $conn->error;
@@ -223,15 +230,37 @@ $buku_per_halaman = 8;
 $halaman_saat_ini = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($halaman_saat_ini - 1) * $buku_per_halaman;
 
-$total_buku = $book_stats['total_buku'];
-$total_halaman = ceil($total_buku / $buku_per_halaman);
+// Hitung total buku untuk paginasi (dengan search query jika ada)
+$total_buku_query = "SELECT COUNT(*) as total FROM buku " . $where_clause;
+$stmt_total = $conn->prepare($total_buku_query);
+if (!empty($params)) {
+    $stmt_total->bind_param($types, ...$params);
+}
+$stmt_total->execute();
+$result_total = $stmt_total->get_result();
+$total_buku_filtered = $result_total->fetch_assoc()['total'];
+$stmt_total->close();
 
-$sql = "SELECT * FROM buku $where_clause ORDER BY Judul ASC LIMIT $buku_per_halaman OFFSET $offset";
+$total_halaman = ceil($total_buku_filtered / $buku_per_halaman);
+
+
+$sql = "SELECT * FROM buku $where_clause ORDER BY Judul ASC LIMIT ? OFFSET ?";
 
 $stmt = $conn->prepare($sql);
 
 if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
+    // Gabungkan tipe data: tipe dari pencarian + 'ii' untuk limit dan offset
+    $full_types = $types . "ii";
+    
+    // Gabungkan semua parameter ke dalam satu array
+    $all_params = array_merge($params, [$buku_per_halaman, $offset]);
+    
+    // Panggil bind_param dengan membongkar array yang sudah digabung
+    // Ini adalah PERBAIKAN untuk error "positional argument after argument unpacking"
+    $stmt->bind_param($full_types, ...$all_params); 
+} else {
+    // Jika tidak ada parameter pencarian, langsung bind parameter untuk limit dan offset
+    $stmt->bind_param("ii", $buku_per_halaman, $offset);
 }
 
 $stmt->execute();
@@ -263,11 +292,21 @@ $stmt->close();
     <title>Kelola Buku - SiPerpus</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Optional: Add some basic transition for sidebar for smoother animation */
+        #sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        #sidebarOverlay {
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
 </head>
 
 <body class="bg-[#FFFAEC]">
-    <div class="flex h-screen">
-        <div class="w-64 bg-[#DFD0B8] shadow-md">
+    <div class="md:flex h-screen">
+        <div id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-[#DFD0B8] shadow-md transform -translate-x-full md:relative md:translate-x-0">
             <div class="p-4 flex items-center space-x-3 border-b border-[#FFFAEC]">
                 <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
@@ -301,15 +340,20 @@ $stmt->close();
             </nav>
         </div>
 
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden" style="opacity: 0;"></div>
+
         <div class="flex-1 flex flex-col overflow-hidden">
             <header class="bg-[#DFD0B8] shadow-sm">
                 <div class="flex items-center justify-between p-4">
-                    <div class="font-bold text-lg text-gray-800">Kelola Buku</div>
+                    <button id="menuButton" class="md:hidden text-gray-800 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div class="font-bold text-lg text-gray-800 ml-4 md:ml-0">Kelola Buku</div>
                     <div class="flex items-center space-x-4">
                         <div class="relative">
                             <form action="kelolaBuku.php" method="GET">
                                 <input type="text" name="search"
-                                    class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    class="bg-gray-100 rounded-lg px-4 py-2 pr-8 w-32 sm:w-48 md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="Cari buku..." value="<?php echo htmlspecialchars($search_query); ?>">
                                 <button type="submit" class="absolute right-2 top-2 text-gray-500 hover:text-blue-700">
                                     <i class="fas fa-search"></i>
@@ -325,17 +369,15 @@ $stmt->close();
                             <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                                 <i class="fas fa-user text-gray-500"></i>
                             </div>
-                            <div class="text-sm">
-                                <div class="font-medium"><?php echo htmlspecialchars($admin['name']); ?></div>
+                            <div class="text-sm hidden sm:block"> <div class="font-medium"><?php echo htmlspecialchars($admin['name']); ?></div>
                                 <div class="text-gray-500 text-xs">Admin</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </header>
-          
-            <main class="flex-1 overflow-y-auto p-6">
-                <?php if (isset($_SESSION['success_message'])): ?>
+            
+            <main class="flex-1 overflow-y-auto p-4 md:p-6"> <?php if (isset($_SESSION['success_message'])): ?>
                     <div
                         class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 flex justify-between items-center">
                         <span><?php echo $_SESSION['success_message']; ?></span>
@@ -357,51 +399,50 @@ $stmt->close();
                     <?php unset($_SESSION['error_message']); ?>
                 <?php endif; ?>
 
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-800">Daftar Buku Perpustakaan</h2>
-                    <button onclick="addBook()" class="bg-[#393E46] hover:bg-[#4a4f57] text-white px-4 py-2 rounded-lg flex items-center transition duration-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4 sm:mb-0">Daftar Buku Perpustakaan</h2>
+                    <button onclick="addBook()" class="bg-[#393E46] hover:bg-[#4a4f57] text-white px-4 py-2 rounded-lg flex items-center transition duration-200 w-full sm:w-auto justify-center">
                         <i class="fas fa-plus mr-2"></i> Tambah Buku
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 w-3/4">
-                    <div
-                        class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-blue-500">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"> <div
+                        class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-blue-500">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku</h3>
-                        <p class="text-3xl font-bold text-blue-600"><?php echo $book_stats['total_buku']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Buku dalam koleksi</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-blue-600"><?php echo $book_stats['total_buku']; ?></p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">Buku dalam koleksi</p>
                     </div>
                     <div
-                        class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-orange-500">
-                        <h3 class="text-sm font-medium text-gray-500 mb-2">Total Buku Dipinjam</h3>
-                        <p class="text-3xl font-bold text-orange-600"><?php echo $book_stats['totalPeminjaman']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Buku dipinjam anggota</p>
+                        class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-orange-500">
+                        <h3 class="text-sm font-medium text-gray-500 mb-2">Buku Dipinjam</h3>
+                        <p class="text-2xl sm:text-3xl font-bold text-orange-600"><?php echo $book_stats['dipinjam']; ?></p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">Buku sedang dipinjam</p>
                     </div>
                     <div
-                        class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-green-500">
+                        class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-green-500">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Buku Tersedia</h3>
-                        <p class="text-3xl font-bold text-green-600"><?php echo $book_stats['tersedia']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Buku belum dipinjam</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-green-600"><?php echo $book_stats['tersedia']; ?></p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">Buku belum dipinjam</p>
                     </div>
                     <div
-                        class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-blue-900">
+                        class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 border-l-4 border-blue-900">
                         <h3 class="text-sm font-medium text-gray-500 mb-2">Buku Dikembalikan</h3>
-                        <p class="text-3xl font-bold text-blue-900"><?php echo $book_stats['totalPengembalian']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Pengembalian Buku</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-blue-900"><?php echo $book_stats['dikembalikan']; ?></p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">Total pengembalian buku</p>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="flex items-center justify-between p-4 border-b">
-                        <div class="text-sm text-gray-500">
-                            Menampilkan <span class="font-medium">1 - <?php echo count($books); ?></span> dari <span
-                                class="font-medium"><?php echo $book_stats['total_buku']; ?></span> buku
+                    <div class="flex flex-col sm:flex-row items-center justify-between p-4 border-b">
+                        <div class="text-sm text-gray-500 mb-2 sm:mb-0">
+                            Menampilkan <span class="font-medium"><?php echo ($offset + 1) . ' - ' . min($offset + count($books), $total_buku_filtered); ?></span> dari <span
+                                class="font-medium"><?php echo $total_buku_filtered; ?></span> buku
                         </div>
                         <select
-                            class="bg-gray-100 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="10">8 per halaman</option>
-                            <option value="25">10 per halaman</option>
-                            <option value="50">15 per halaman</option>
+                            class="bg-gray-100 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto">
+                            <option value="8" <?php echo ($buku_per_halaman == 8) ? 'selected' : ''; ?>>8 per halaman</option>
+                            <option value="10" <?php echo ($buku_per_halaman == 10) ? 'selected' : ''; ?>>10 per halaman</option>
+                            <option value="15" <?php echo ($buku_per_halaman == 15) ? 'selected' : ''; ?>>15 per halaman</option>
                         </select>
                     </div>
 
@@ -424,9 +465,9 @@ $stmt->close();
                                 <?php foreach ($books as $book): ?>
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['id']); ?></td>
-                                        <td class="px-6 py-4 font-medium text-gray-900">
+                                        <td class="px-6 py-4 font-medium text-gray-900 truncate max-w-xs sm:max-w-none">
                                             <?php echo htmlspecialchars($book['judul']); ?></td>
-                                        <td class="px-6 py-4"><?php echo htmlspecialchars($book['penulis']); ?></td>
+                                        <td class="px-6 py-4 truncate max-w-[100px] sm:max-w-none"><?php echo htmlspecialchars($book['penulis']); ?></td>
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['tahun']); ?></td>
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['isbn']); ?></td>
                                         <td class="px-6 py-4"><?php echo htmlspecialchars($book['halaman']); ?></td>
@@ -474,13 +515,13 @@ $stmt->close();
                         </table>
                     </div>
 
-                    <div class="flex items-center justify-between p-4 border-t">
-                        <div class="text-sm text-gray-500">
-                            Menampilkan <span class="font-medium"><?php echo ($offset + 1) . ' - ' . min($offset + $buku_per_halaman, $total_buku); ?></span> dari <span class="font-medium"><?php echo $total_buku; ?></span> buku
+                    <div class="flex flex-col sm:flex-row items-center justify-between p-4 border-t">
+                        <div class="text-sm text-gray-500 mb-2 sm:mb-0">
+                            Menampilkan <span class="font-medium"><?php echo ($offset + 1) . ' - ' . min($offset + count($books), $total_buku_filtered); ?></span> dari <span class="font-medium"><?php echo $total_buku_filtered; ?></span> buku
                         </div>
                         <div class="flex items-center space-x-2">
                             <?php if ($halaman_saat_ini > 1): ?>
-                                <a href="?page=<?php echo $halaman_saat_ini - 1; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
+                                <a href="?page=<?php echo $halaman_saat_ini - 1; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
                                     <i class="fas fa-chevron-left text-xs"></i>
                                 </a>
                             <?php else: ?>
@@ -490,11 +531,11 @@ $stmt->close();
                             <?php endif; ?>
 
                             <?php for ($i = 1; $i <= $total_halaman; $i++): ?>
-                                <a href="?page=<?php echo $i; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 <?php echo ($i == $halaman_saat_ini) ? 'bg-[#393E46] text-white' : ''; ?>"><?php echo $i; ?></a>
+                                <a href="?page=<?php echo $i; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200 <?php echo ($i == $halaman_saat_ini) ? 'bg-[#393E46] text-white' : ''; ?>"><?php echo $i; ?></a>
                             <?php endfor; ?>
 
                             <?php if ($halaman_saat_ini < $total_halaman): ?>
-                                <a href="?page=<?php echo $halaman_saat_ini + 1; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
+                                <a href="?page=<?php echo $halaman_saat_ini + 1; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-200">
                                     <i class="fas fa-chevron-right text-xs"></i>
                                 </a>
                             <?php else: ?>
@@ -578,7 +619,7 @@ $stmt->close();
         </div>
     </div>
 
-    <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-medium text-gray-900">Detail Buku</h3>
@@ -666,7 +707,7 @@ $stmt->close();
         </div>
     </div>
 
-    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-lg p-6 w-full max-w-sm">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Konfirmasi Hapus</h3>
             <p class="text-gray-700 mb-6">Apakah Anda yakin ingin menghapus buku "<span id="bookTitle"
@@ -699,37 +740,41 @@ $stmt->close();
             const modal = document.getElementById('viewModal');
             const details = document.getElementById('bookDetails');
             
+            // Perbaiki path cover
+            const coverPath = book.cover ? `../uploads/covers/${book.cover}` : 'https://via.placeholder.com/100x120?text=No+Cover';
+            
             details.innerHTML = `
-                <div class="flex">
-                    <strong class="w-24">ID:</strong>
-                    <span>${book.id}</span>
+                ${book.cover ? `<div class="mb-4 text-center"><img src="${coverPath}" alt="Cover Buku" class="mx-auto rounded-lg shadow-md max-h-48"></div>` : ''}
+                <div class="flex flex-wrap">
+                    <strong class="w-24 font-semibold">ID:</strong>
+                    <span class="flex-1">${book.id}</span>
                 </div>
-                <div class="flex">
-                    <strong class="w-24">Judul:</strong>
-                    <span>${book.judul}</span>
+                <div class="flex flex-wrap">
+                    <strong class="w-24 font-semibold">Judul:</strong>
+                    <span class="flex-1">${book.judul}</span>
                 </div>
-                <div class="flex">
-                    <strong class="w-24">Penulis:</strong>
-                    <span>${book.penulis}</span>
+                <div class="flex flex-wrap">
+                    <strong class="w-24 font-semibold">Penulis:</strong>
+                    <span class="flex-1">${book.penulis}</span>
                 </div>
-                <div class="flex">
-                    <strong class="w-24">Tahun:</strong>
-                    <span>${book.tahun}</span>
+                <div class="flex flex-wrap">
+                    <strong class="w-24 font-semibold">Tahun:</strong>
+                    <span class="flex-1">${book.tahun}</span>
                 </div>
-                <div class="flex">
-                    <strong class="w-24">ISBN:</strong>
-                    <span>${book.isbn}</span>
+                <div class="flex flex-wrap">
+                    <strong class="w-24 font-semibold">ISBN:</strong>
+                    <span class="flex-1">${book.isbn}</span>
                 </div>
-                <div class="flex">
-                    <strong class="w-24">Halaman:</strong>
-                    <span>${book.halaman}</span>
+                <div class="flex flex-wrap">
+                    <strong class="w-24 font-semibold">Halaman:</strong>
+                    <span class="flex-1">${book.halaman}</span>
                 </div>
-                <div class="flex">
-                    <strong class="w-24">Stok:</strong>
-                    <span>${book.stok}</span>
+                <div class="flex flex-wrap">
+                    <strong class="w-24 font-semibold">Stok:</strong>
+                    <span class="flex-1">${book.stok}</span>
                 </div>
-                <div class="flex">
-                    <strong class="w-24">Status:</strong>
+                <div class="flex flex-wrap items-center">
+                    <strong class="w-24 font-semibold">Status:</strong>
                     <span class="px-2 py-1 rounded-full text-xs ${book.status === 'Tersedia' ? 'bg-green-100 text-green-800' : 'bg-red-500 text-white'}">
                         ${book.status}
                     </span>
@@ -760,8 +805,8 @@ $stmt->close();
                 const previewDiv = document.getElementById('currentCoverPreview');
                 if (book.cover) {
                     previewDiv.innerHTML = `
-                        <div class="flex items-center space-x-2">
-                            <img src="uploads/covers/${book.cover}" alt="Current Cover" class="w-16 h-20 object-cover rounded">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <img src="../uploads/covers/${book.cover}" alt="Current Cover" class="w-16 h-20 object-cover rounded shadow-sm">
                             <span class="text-sm text-gray-600">Cover saat ini</span>
                         </div>
                     `;
@@ -876,12 +921,51 @@ $stmt->close();
             }, 300);
         }
       
+        function generateBookId() {
+            // Contoh sederhana: kombinasi timestamp dan angka acak
+            return 'BOOK-' + Date.now().toString().substring(5, 12) + Math.floor(Math.random() * 1000);
+        }
+
         document.getElementById('id_buku').addEventListener('focus', function() {
             if (!this.value) {
                 this.value = generateBookId();
             }
         });
 
+        // Event listener untuk tombol hamburger menu
+        const sidebar = document.getElementById('sidebar');
+        const menuButton = document.getElementById('menuButton');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (menuButton && sidebar && sidebarOverlay) {
+            menuButton.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+                // Mengubah opasitas overlay untuk efek transisi
+                setTimeout(() => {
+                    sidebarOverlay.style.opacity = sidebar.classList.contains('-translate-x-full') ? '0' : '1';
+                }, 10);
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.style.opacity = '0'; // Set opasitas ke 0 saat overlay di-hide
+                setTimeout(() => {
+                    sidebarOverlay.classList.add('hidden');
+                }, 300); // Tunggu transisi selesai sebelum hidden
+            });
+
+            // Sembunyikan sidebar di layar mobile saat resize ke desktop
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) { // md breakpoint in Tailwind
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebarOverlay.classList.add('hidden');
+                    sidebarOverlay.style.opacity = '0';
+                }
+            });
+        }
+        
+        // Fitur keyboard shortcuts dan form status yang sudah ada
         let searchTimeout;
         const searchInput = document.querySelector('input[name="search"]');
 
@@ -923,6 +1007,7 @@ $stmt->close();
                 this.setAttribute('data-tooltip', this.getAttribute('title'));
                 this.removeAttribute('title');
             });
+            // Tidak perlu mouseleave karena title akan muncul lagi setelah dilepas
         });
     </script>
 </body>
