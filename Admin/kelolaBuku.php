@@ -921,11 +921,11 @@ $stmt->close();
             }, 300);
         }
       
-        function generateBookId() {
+        
+function generateBookId() {
             // Contoh sederhana: kombinasi timestamp dan angka acak
-            return 'BOOK-' + Date.now().toString().substring(5, 12) + Math.floor(Math.random() * 1000);
+            return 'BK-' + Date.now().toString().substring(3, 3) + Math.floor(Math.random() * 1000);
         }
-
         document.getElementById('id_buku').addEventListener('focus', function() {
             if (!this.value) {
                 this.value = generateBookId();
