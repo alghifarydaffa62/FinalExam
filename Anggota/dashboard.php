@@ -72,62 +72,6 @@ function getBookStats($conn, $user_nrp) {
 }
 
 $book_stats = getBookStats($conn, $user_nrp);
-
-$borrowing_history = [];
-try {
-    $stmt = $conn->prepare("
-        SELECT b.Judul as title, 
-               p.Tanggal_Pinjam as borrow_date, 
-               p.Tanggal_Kembali as due_date,
-               CASE 
-                   WHEN p.status_peminjaman = 'dipinjam' THEN 'Dipinjam'
-                   WHEN p.status_peminjaman = 'dikembalikan' THEN 'Dikembalikan'
-                   ELSE 'Dipinjam'
-               END as status,
-               p.ID_Peminjaman as id
-        FROM peminjaman p 
-        JOIN buku b ON p.ID_Buku = b.ID_Buku 
-        WHERE p.NRP = ? 
-        ORDER BY p.Tanggal_Pinjam DESC 
-        LIMIT 10
-    ");
-    $stmt->bind_param("s", $user_nrp);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
-        $borrow_date = date('d/m/Y', strtotime($row['borrow_date']));
-        $due_date = date('d/m/Y', strtotime($row['due_date']));
-        
-        $borrowing_history[] = [
-            'id' => $row['id'],
-            'title' => $row['title'],
-            'borrow_date' => $borrow_date,
-            'due_date' => $due_date,
-            'status' => $row['status']
-        ];
-    }
-    $stmt->close();
-} catch (Exception $e) {
-    error_log("Error getting borrowing history: " . $e->getMessage());
-
-    $borrowing_history = [
-        [
-            'id' => 0,
-            'title' => 'Harry Potter dan Batu Bertuah',
-            'borrow_date' => '15/05/2025',
-            'due_date' => '22/05/2025',
-            'status' => 'Dipinjam'
-        ],
-        [
-            'id' => 1,
-            'title' => 'Laskar Pelangi',
-            'borrow_date' => '10/05/2025',
-            'due_date' => '17/05/2025',
-            'status' => 'Dikembalikan'
-        ]
-    ];
-}
 ?>
 
 <!DOCTYPE html>
@@ -140,8 +84,22 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-[#FFFAEC]">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    
     <div class="flex h-screen">
-        <div class="w-64 bg-[#DFD0B8] flex-shrink-0">
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="fixed top-4 left-4 z-50 lg:hidden bg-[#393E46] text-white p-2 rounded-md">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="fixed lg:static lg:translate-x-0 transform -translate-x-full transition-transform duration-300 ease-in-out w-64 bg-[#DFD0B8] flex-shrink-0 h-full z-50 lg:z-auto">
+            <!-- Close button for mobile -->
+            <button id="close-sidebar" class="absolute top-4 right-4 lg:hidden text-black">
+                <i class="fas fa-times"></i>
+            </button>
+
             <div class="bg-[#DFD0B8] p-4 flex items-center space-x-3 text-black border-b border-[#FFFAEC]">
                 <div class="bg-[#393E46] p-2 rounded">
                     <span class="font-bold text-white">SP</span>
@@ -176,54 +134,97 @@ try {
             </nav>
         </div>
 
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden lg:ml-0">
+            <!-- Header -->
             <header class="bg-[#DFD0B8] shadow-sm z-10">
-                <div class="flex items-center justify-between p-4">
-                    <div class="font-bold text-lg">Dashboard Anggota</div>
+                <div class="flex items-center justify-between p-4 pl-16 lg:pl-4">
+                    <div class="font-bold text-base lg:text-lg">Dashboard Anggota</div>
                     <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-gray-500"></i>
-                            </div>
-                            <div class="text-sm">
-                                <div class="font-medium"><?php echo htmlspecialchars($user['name']); ?></div>
-                                <div class="text-gray-500 text-xs">NRP: <?php echo htmlspecialchars($user_nrp); ?></div>
-                            </div>
+                        <div class="w-6 h-6 lg:w-8 lg:h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-gray-500 text-xs lg:text-sm"></i>
+                        </div>
+                        <div class="text-xs lg:text-sm">
+                            <div class="font-medium"><?php echo htmlspecialchars($user['name']); ?></div>
+                            <div class="text-gray-500 text-xs">NRP: <?php echo htmlspecialchars($user_nrp); ?></div>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 bg-[#FFFAEC]">
-                <h2 class="text-lg font-medium mb-6">Selamat datang, <?php echo htmlspecialchars($user['name']); ?>!</h2>
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-y-auto p-4 lg:p-6 bg-[#FFFAEC]">
+                <h2 class="text-base lg:text-lg font-medium mb-4 lg:mb-6">Selamat datang, <?php echo htmlspecialchars($user['name']); ?>!</h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-4">Pinjam</h3>
-                        <a href="peminjaman.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-[#948979]">Pinjam Buku</a>
+                <!-- Action Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
+                        <h3 class="text-base lg:text-lg font-medium mb-3 lg:mb-4">Pinjam</h3>
+                        <a href="peminjaman.php" class="bg-blue-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-lg hover:bg-[#948979] text-sm lg:text-base transition-colors">Pinjam Buku</a>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-4">Kembali</h3>
-                        <a href="pengembalian.php" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-[#948979]">Kembalikan Buku</a>
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm flex flex-col items-center justify-center hover:shadow-md transition">
+                        <h3 class="text-base lg:text-lg font-medium mb-3 lg:mb-4">Kembali</h3>
+                        <a href="pengembalian.php" class="bg-green-600 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-lg hover:bg-[#948979] text-sm lg:text-base transition-colors">Kembalikan Buku</a>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-2">Total Peminjaman</h3>
-                        <p class="text-3xl font-bold text-[#948979]"><?php echo $book_stats['totalPeminjaman']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Buku yang sedang dipinjam</p>
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm hover:shadow-md transition">
+                        <h3 class="text-base lg:text-lg font-medium mb-2">Total Peminjaman</h3>
+                        <p class="text-2xl lg:text-3xl font-bold text-[#948979]"><?php echo $book_stats['totalPeminjaman']; ?></p>
+                        <p class="text-xs lg:text-sm text-gray-500 mt-1">Buku yang sedang dipinjam</p>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
-                        <h3 class="text-lg font-medium mb-2">Total Buku</h3>
-                        <p class="text-3xl font-bold text-[#948979]"><?php echo $book_stats['total_buku']; ?></p>
-                        <p class="text-sm text-gray-500 mt-1">Buku yang tersedia di perpustakaan</p>
+                    <div class="bg-white p-4 lg:p-6 rounded-lg shadow-sm hover:shadow-md transition">
+                        <h3 class="text-base lg:text-lg font-medium mb-2">Total Buku</h3>
+                        <p class="text-2xl lg:text-3xl font-bold text-[#948979]"><?php echo $book_stats['total_buku']; ?></p>
+                        <p class="text-xs lg:text-sm text-gray-500 mt-1">Buku yang tersedia di perpustakaan</p>
                     </div>
                 </div>
-
             </main>
         </div>
     </div>
 
     <script>
+        // Mobile menu functionality
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeSidebar = document.getElementById('close-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+
+        function openSidebar() {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeSidebarFunc() {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        mobileMenuBtn.addEventListener('click', openSidebar);
+        closeSidebar.addEventListener('click', closeSidebarFunc);
+        overlay.addEventListener('click', closeSidebarFunc);
+
+        // Close sidebar when clicking on navigation links on mobile
+        const navLinks = sidebar.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 1024) {
+                    closeSidebarFunc();
+                }
+            });
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                closeSidebarFunc();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard Anggota loaded');
             console.log('User NRP: <?php echo $user_nrp; ?>');
