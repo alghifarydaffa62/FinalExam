@@ -3,7 +3,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Dotenv\Dotenv;
 
-$dotenv = Dotenv::createImmutable("/Final/Exam");
+$dotenv = Dotenv::createImmutable("/FinalExam/");
 $dotenv->load();
 
 $host = getenv("MYSQLHOST");
