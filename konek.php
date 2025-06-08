@@ -3,7 +3,7 @@
 $host = getenv("MYSQLHOST") ?: "localhost";
 $user = getenv("MYSQLUSER") ?: "root";
 $pass = getenv("MYSQLPASSWORD") ?: "";
-$db   = getenv("MYSQLDATABASE") ?: "railway";
+$db   = getenv("MYSQLDATABASE") ?: "perpustakaan";
 $port = getenv("MYSQLPORT") ?: "3306";
 
 // Debug info (hapus setelah berhasil)
