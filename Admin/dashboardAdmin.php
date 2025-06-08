@@ -1,6 +1,6 @@
 <?php
 session_start();
-include_once __DIR__ . '/../konek.php';
+include '../konek.php';
 
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: loginAdmin.php");
