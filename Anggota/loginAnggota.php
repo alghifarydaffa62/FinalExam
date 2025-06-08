@@ -1,6 +1,6 @@
 <?php
 session_start();
-include __DIR__ . '/konek.php'; 
+include __DIR__ . '../konek.php'; 
 
 $error_message = '';
 $success_message = '';
