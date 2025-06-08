@@ -21,7 +21,7 @@ if (file_exists(__DIR__ . '/.env')) {
 $host = getenv("MYSQLHOST") ?: $_ENV["MYSQLHOST"] ?? "localhost";
 $user = getenv("MYSQLUSER") ?: $_ENV["MYSQLUSER"] ?? "root";
 $pass = getenv("MYSQL_ROOT_PASSWORD") ?: getenv("MYSQLPASSWORD") ?: $_ENV["MYSQL_ROOT_PASSWORD"] ?? $_ENV["MYSQLPASSWORD"] ?? "";
-$db   = getenv("MYSQL_DATABASE") ?: getenv("MYSQLDATABASE") ?: $_ENV["MYSQL_DATABASE"] ?? $_ENV["MYSQLDATABASE"] ?? "railway";
+$db   = "perpustakaan";
 $port = getenv("MYSQLPORT") ?: $_ENV["MYSQLPORT"] ?? "3306";
 
 // Debug info (hapus setelah berhasil)
