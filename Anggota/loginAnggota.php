@@ -1,6 +1,23 @@
 <?php
 session_start();
-include __DIR__ . '/../konek.php'; 
+$konek_paths = [
+    __DIR__ . '/../konek.php',         // relative path yang benar
+    '/app/konek.php',                  // absolute Railway path
+    dirname(__DIR__) . '/konek.php',   // parent directory
+];
+
+$konek_loaded = false;
+foreach ($konek_paths as $path) {
+    if (file_exists($path)) {
+        include $path;
+        $konek_loaded = true;
+        break;
+    }
+}
+
+if (!$konek_loaded) {
+    die("Error: konek.php tidak ditemukan!");
+}
 
 $error_message = '';
 $success_message = '';
