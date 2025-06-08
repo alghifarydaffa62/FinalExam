@@ -1,6 +1,6 @@
 <?php
 session_start();
-include_once __DIR__ . '/../konek.php';
+include '../konek.php';
 
 if (isset($_GET['logout'])) {
     session_destroy();
