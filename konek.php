@@ -2,7 +2,7 @@
 // Versi simple tanpa dotenv - untuk Railway deployment
 $host = getenv("MYSQLHOST") ?: "localhost";
 $user = getenv("MYSQLUSER") ?: "root";
-$pass = getenv("MYSQLPASSWORD") ?: "";
+$pass = getenv("MYSQLPASSWORD") ?: "vqioDenEpUJIYIWQvphRNxAIWJOffAvt";
 $db   = getenv("MYSQLDATABASE") ?: "perpustakaan";
 $port = getenv("MYSQLPORT") ?: "3306";
 
