@@ -1,22 +1,20 @@
 <?php
-require_once __DIR__ . '/../vendor/autoload.php'; 
+// Versi simple tanpa dotenv - untuk Railway deployment
+$host = getenv("MYSQLHOST") ?: "localhost";
+$user = getenv("MYSQLUSER") ?: "root";
+$pass = getenv("MYSQLPASSWORD") ?: "";
+$db   = getenv("MYSQLDATABASE") ?: "railway";
+$port = getenv("MYSQLPORT") ?: "3306";
 
-require_once dirname(__DIR__) . '/vendor/autoload.php';
-
-use Dotenv\Dotenv;
-
-$dotenv = Dotenv::createImmutable(dirname(__DIR__));
-$dotenv->load();
-
-$host = $_ENV["MYSQLHOST"] ?? getenv("MYSQLHOST");
-$user = $_ENV["MYSQLUSER"] ?? getenv("MYSQLUSER");
-$pass = $_ENV["MYSQLPASSWORD"] ?? getenv("MYSQLPASSWORD");
-$db   = $_ENV["MYSQLDATABASE"] ?? getenv("MYSQLDATABASE");
-$port = $_ENV["MYSQLPORT"] ?? getenv("MYSQLPORT");
+// Debug info (hapus setelah berhasil)
+echo "<!-- DB Connection Debug: Host=$host, User=$user, DB=$db, Port=$port -->";
 
 $conn = mysqli_connect($host, $user, $pass, $db, $port);
 
 if(!$conn) {
-    die("Koneksi gagal! " . mysqli_connect_error());
+    die("Koneksi database gagal! " . mysqli_connect_error());
 }
+
+// Success message (hapus setelah berhasil)
+echo "<!-- Database connected successfully! -->";
 ?>
